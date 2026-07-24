@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>เช็คลิสต์ประเมินผู้ป่วยหลังผ่าตัดตา</title>
 <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -11,49 +11,112 @@
   --teal:#146B5C; --teal-soft:#E3F0ED;
   --g1:#1E7F5C; --g1-bg:#E6F4EC; --g2:#B37416; --g2-bg:#FCF1DC; --g3:#B3382E; --g3-bg:#FBE7E4;
   --edit:#5B49B8; --edit-bg:#EEEAFB;
-  --radius:14px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--ink);line-height:1.5;padding-bottom:140px;-webkit-tap-highlight-color:transparent}
+body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--ink);line-height:1.5;padding-bottom:120px;-webkit-tap-highlight-color:transparent}
 body.editing{background:#F4F2FA}
-.wrap{max-width:680px;margin:0 auto;padding:16px 14px}
-header{padding:4px 2px 14px}
-.eyebrow{font-size:11.5px;letter-spacing:.12em;color:var(--teal);font-weight:700;text-transform:uppercase}
-h1{font-family:'Anuphan',sans-serif;font-size:22px;font-weight:700;margin-top:3px}
-header p{color:var(--sub);font-size:13px;margin-top:3px}
+.wrap{max-width:640px;margin:0 auto;padding:14px 13px}
+header{padding:2px 2px 12px;display:flex;align-items:center;gap:10px}
+header .ht{flex:1}
+.eyebrow{font-size:11px;letter-spacing:.1em;color:var(--teal);font-weight:700;text-transform:uppercase}
+h1{font-family:'Anuphan',sans-serif;font-size:19px;font-weight:700;margin-top:2px}
 
-.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px;margin-bottom:12px}
-.card h2{font-family:'Anuphan',sans-serif;font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:11px}
-.card h2 .no{font-size:11px;background:var(--teal-soft);color:var(--teal);border-radius:6px;padding:2px 7px;font-family:'Sarabun',sans-serif;font-weight:700}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
 
-.savebar{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--sub);background:#FAFCFB;border:1px solid var(--line);border-radius:9px;padding:7px 10px;margin-bottom:12px}
+/* ---------- แถบความคืบหน้า ---------- */
+.pwrap{margin-bottom:12px}
+.pbar{display:flex;gap:3px}
+.pseg{flex:1;height:6px;border-radius:3px;background:#E3E9E7;cursor:pointer;transition:background .2s}
+.pseg.cur{background:var(--ink)}
+.pseg.d0{background:var(--teal)}
+.pseg.d1{background:var(--g1)} .pseg.d2{background:var(--g2)} .pseg.d3{background:var(--g3)}
+.pmeta{display:flex;justify-content:space-between;align-items:baseline;margin-top:7px}
+.pmeta .n{font-size:12px;font-weight:700;color:var(--teal)}
+.pmeta .pct{font-size:11.5px;color:var(--sub)}
+
+/* ---------- เด็คสไลด์ ---------- */
+.deck{overflow:hidden;position:relative;touch-action:pan-y;transition:height .25s ease}
+.track{display:flex;align-items:flex-start;will-change:transform}
+.track.anim{transition:transform .28s cubic-bezier(.3,.8,.4,1)}
+.slide{min-width:100%;width:100%;padding:2px 1px 4px}
+.stitle{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.stitle .num{font-family:'Anuphan',sans-serif;font-size:12px;font-weight:700;color:var(--teal);background:var(--teal-soft);border-radius:7px;padding:3px 9px}
+.stitle h3{font-family:'Anuphan',sans-serif;font-size:18px;font-weight:700}
+
+/* ตัวเลือก */
+.opt{display:block;width:100%;text-align:left;border:1.5px solid var(--line);background:#FAFCFB;border-radius:12px;padding:13px 14px;margin-bottom:8px;font-family:'Sarabun',sans-serif;font-size:15px;font-weight:600;color:var(--ink);cursor:pointer;position:relative}
+.opt .sub{display:block;font-size:12.5px;font-weight:400;color:var(--sub);margin-top:2px}
+.opt .chip{position:absolute;right:12px;top:13px;font-size:10.5px;font-weight:700;border-radius:5px;padding:2px 7px}
+.opt .chip.c1{background:var(--g1-bg);color:var(--g1)} .opt .chip.c2{background:var(--g2-bg);color:var(--g2)} .opt .chip.c3{background:var(--g3-bg);color:var(--g3)}
+.opt.on1{border-color:var(--g1);background:var(--g1-bg)}
+.opt.on2{border-color:var(--g2);background:var(--g2-bg)}
+.opt.on3{border-color:var(--g3);background:var(--g3-bg)}
+.opt.on1 .sub,.opt.on2 .sub,.opt.on3 .sub{color:inherit;opacity:.8}
+
+/* ผู้ป่วย */
+.ptrow{display:grid;grid-template-columns:1.5fr 1fr .9fr;gap:9px;align-items:end}
+label.fl{font-size:11.5px;color:var(--sub);font-weight:600;display:block;margin-bottom:4px}
+.ptrow input{width:100%;border:1.5px solid var(--line);border-radius:11px;padding:13px 11px;font-family:'Sarabun',sans-serif;font-size:17px;font-weight:700;background:#FAFCFB}
+.ptrow input:focus{outline:2px solid var(--teal);border-color:var(--teal);background:#fff}
+.seg{display:flex;gap:6px}
+.seg button{flex:1;border:1.5px solid var(--line);background:#FAFCFB;border-radius:11px;padding:13px 2px;font-family:'Sarabun',sans-serif;font-size:15px;font-weight:700;color:var(--sub);cursor:pointer}
+.seg button.on{background:var(--teal-soft);border-color:var(--teal);color:var(--teal)}
+.quick{width:100%;border:1.5px dashed var(--g1);background:var(--g1-bg);color:var(--g1);border-radius:12px;padding:12px;font-family:'Sarabun',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:12px}
+
+/* pain */
+.pain-strip{display:grid;grid-template-columns:repeat(11,1fr);gap:4px}
+.pain-strip button{border:none;border-radius:8px;padding:16px 0;font-family:'Sarabun',sans-serif;font-weight:700;font-size:14px;cursor:pointer;color:#fff;opacity:.3;transition:opacity .12s,transform .1s}
+.pain-strip button:nth-child(-n+4){background:var(--g1)}
+.pain-strip button:nth-child(n+5):nth-child(-n+7){background:var(--g2)}
+.pain-strip button:nth-child(n+8){background:var(--g3)}
+.pain-strip button.on{opacity:1;transform:scale(1.12);box-shadow:0 3px 9px rgba(0,0,0,.2)}
+.pain-legend{display:flex;justify-content:space-between;font-size:11px;color:var(--sub);margin-top:5px}
+.worse{margin-top:10px;width:100%;border:1.5px solid var(--line);background:#FAFCFB;border-radius:11px;padding:12px;font-family:'Sarabun',sans-serif;font-size:14px;font-weight:600;color:var(--sub);cursor:pointer}
+.worse.on{background:var(--g3-bg);border-color:var(--g3);color:var(--g3)}
+
+/* สรุปในสไลด์สุดท้าย */
+.res{border-radius:13px;padding:15px;text-align:center;margin-bottom:10px}
+.res .big{font-family:'Anuphan',sans-serif;font-size:22px;font-weight:700}
+.res .rm{font-size:13.5px;font-weight:600;margin-top:3px;opacity:.9}
+.res.k1{background:var(--g1-bg);color:var(--g1)} .res.k2{background:var(--g2-bg);color:var(--g2)}
+.res.k3{background:var(--g3-bg);color:var(--g3)} .res.k0{background:#EEF2F1;color:var(--sub)}
+.act{font-size:13.5px;background:#FAFCFB;border:1px dashed var(--line);border-radius:11px;padding:11px 12px}
+.fl-list{margin-top:9px;font-size:13px}
+.fl-list li{margin-left:18px;margin-top:3px}
+.miss{background:var(--g2-bg);color:var(--g2);border-radius:11px;padding:11px;font-size:13px;font-weight:600}
+.miss b{display:block;margin-bottom:3px}
+.chg{font-size:13px;color:var(--edit);background:var(--edit-bg);border-radius:10px;padding:9px 11px;margin-top:9px}
+
+/* nav */
+.nav{display:flex;align-items:center;gap:8px;margin-top:12px;border-top:1px solid var(--line);padding-top:11px}
+.nav button{border:1px solid var(--line);background:#FAFCFB;border-radius:10px;padding:10px 14px;font-family:'Sarabun',sans-serif;font-size:13.5px;font-weight:700;color:var(--sub);cursor:pointer}
+.nav button:disabled{opacity:.35}
+.nav .hint{flex:1;text-align:center;font-size:11.5px;color:var(--sub)}
+
+/* บันทึก/สถิติ */
+.foldhead{display:flex;align-items:center;gap:8px;cursor:pointer}
+.foldhead h2{font-family:'Anuphan',sans-serif;font-size:15px;font-weight:600;flex:1}
+.foldhead .arw{font-size:13px;color:var(--sub)}
+.foldbody{display:none;margin-top:12px}
+.foldbody.open{display:block}
+.savebar{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--sub);background:#FAFCFB;border:1px solid var(--line);border-radius:9px;padding:7px 10px;margin-bottom:11px}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--g1);flex-shrink:0}
 .dot.warn{background:var(--g2)}
-
-#editBar{display:none;background:var(--edit-bg);border:1.5px solid var(--edit);border-radius:12px;padding:11px 13px;margin-bottom:12px;align-items:center;gap:10px}
-#editBar.show{display:flex}
-#editBar .t{flex:1;font-size:13.5px;color:var(--edit);font-weight:600;line-height:1.35}
-#editBar .t small{display:block;font-weight:400;font-size:11.5px;opacity:.85}
-#editBar button{background:#fff;border:1px solid var(--edit);color:var(--edit);border-radius:9px;padding:8px 12px;font-family:'Sarabun',sans-serif;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap}
-
-/* ---- สถิติ ---- */
-.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
-.stat{border-radius:11px;padding:11px 6px;text-align:center}
-.stat .n{font-family:'Anuphan',sans-serif;font-size:26px;font-weight:700;line-height:1.1}
-.stat .l{font-size:13px;font-weight:700;margin-top:2px}
-.stat .r{font-size:10.5px;font-weight:500;opacity:.85;margin-top:3px;line-height:1.3}
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat{border-radius:11px;padding:10px 5px;text-align:center}
+.stat .n{font-family:'Anuphan',sans-serif;font-size:24px;font-weight:700;line-height:1.1}
+.stat .l{font-size:12.5px;font-weight:700}
+.stat .r{font-size:10px;font-weight:500;opacity:.85;margin-top:2px;line-height:1.3}
 .stat.over{outline:2px solid var(--g3)}
 .stat.s1{background:var(--g1-bg);color:var(--g1)} .stat.s2{background:var(--g2-bg);color:var(--g2)} .stat.s3{background:var(--g3-bg);color:var(--g3)}
-.stat-total{font-size:13px;color:var(--sub);text-align:center;margin-top:9px}
-.stat-actions{display:flex;gap:7px;margin-top:11px;flex-wrap:wrap}
-.stat-actions button,.stat-actions label{flex:1 1 30%;background:#FAFCFB;border:1px solid var(--line);border-radius:9px;padding:8px 5px;font-family:'Sarabun',sans-serif;font-size:12.5px;color:var(--sub);cursor:pointer;font-weight:600;text-align:center}
+.stat-total{font-size:12.5px;color:var(--sub);text-align:center;margin-top:8px}
+.stat-actions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.stat-actions button,.stat-actions label{flex:1 1 30%;background:#FAFCFB;border:1px solid var(--line);border-radius:9px;padding:8px 4px;font-family:'Sarabun',sans-serif;font-size:12px;color:var(--sub);cursor:pointer;font-weight:600;text-align:center}
 .stat-actions button.danger{color:var(--g3);border-color:#EFCFCB}
-
-/* ---- log ---- */
-.log{margin-top:13px;border-top:1px solid var(--line);padding-top:10px}
+.log{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
 .log-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
 .log-head b{font-size:13px}
-.log-head input{border:1px solid var(--line);border-radius:8px;padding:6px 9px;font-family:'Sarabun',sans-serif;font-size:12.5px;width:118px;background:#FAFCFB}
+.log-head input{border:1px solid var(--line);border-radius:8px;padding:6px 9px;font-family:'Sarabun',sans-serif;font-size:12.5px;width:115px;background:#FAFCFB}
 .rec{display:flex;align-items:center;gap:8px;padding:8px 9px;border-radius:10px;border:1px solid var(--line);margin-bottom:6px;background:#FAFCFB}
 .rec .pill{font-size:11px;font-weight:700;border-radius:6px;padding:2px 7px;white-space:nowrap}
 .rec.r1 .pill{background:var(--g1-bg);color:var(--g1)} .rec.r2 .pill{background:var(--g2-bg);color:var(--g2)} .rec.r3 .pill{background:var(--g3-bg);color:var(--g3)}
@@ -67,88 +130,36 @@ header p{color:var(--sub);font-size:13px;margin-top:3px}
 .rec .edt{color:var(--edit)} .rec .del{color:var(--g3)}
 .empty{font-size:13px;color:var(--sub);text-align:center;padding:12px 0}
 
-/* ---- ข้อมูลผู้ป่วยแถวเดียว ---- */
-.ptrow{display:grid;grid-template-columns:1.4fr 1fr .8fr;gap:8px;align-items:end}
-label.fl{font-size:11.5px;color:var(--sub);font-weight:600;display:block;margin-bottom:3px}
-.ptrow input{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:11px 10px;font-family:'Sarabun',sans-serif;font-size:16px;background:#FAFCFB;font-weight:600}
-.ptrow input:focus{outline:2px solid var(--teal);border-color:var(--teal);background:#fff}
-.seg{display:flex;gap:6px}
-.seg button{flex:1;border:1.5px solid var(--line);background:#FAFCFB;border-radius:10px;padding:11px 2px;font-family:'Sarabun',sans-serif;font-size:14px;font-weight:600;color:var(--sub);cursor:pointer}
-.seg button.on{background:var(--teal-soft);border-color:var(--teal);color:var(--teal)}
+#editBar{display:none;background:var(--edit-bg);border:1.5px solid var(--edit);border-radius:12px;padding:10px 12px;margin-bottom:12px;align-items:center;gap:10px}
+#editBar.show{display:flex}
+#editBar .t{flex:1;font-size:13px;color:var(--edit);font-weight:600;line-height:1.3}
+#editBar .t small{display:block;font-weight:400;font-size:11px;opacity:.85}
+#editBar button{background:#fff;border:1px solid var(--edit);color:var(--edit);border-radius:9px;padding:7px 11px;font-family:'Sarabun',sans-serif;font-size:12px;font-weight:700;cursor:pointer}
 
-/* ---- แถวประเมินแบบย่อ ---- */
-.assess-head{display:flex;align-items:center;gap:8px;margin-bottom:10px}
-.assess-head h2{margin:0;flex:1}
-.prog{font-size:12px;font-weight:700;color:var(--teal);background:var(--teal-soft);border-radius:20px;padding:3px 10px;white-space:nowrap}
-.prog.done{background:var(--g1-bg);color:var(--g1)}
-.modeToggle{border:1px solid var(--line);background:#FAFCFB;border-radius:8px;padding:5px 9px;font-family:'Sarabun',sans-serif;font-size:11.5px;font-weight:600;color:var(--sub);cursor:pointer;white-space:nowrap}
-.modeToggle.on{background:var(--teal-soft);border-color:var(--teal);color:var(--teal)}
-.quick{width:100%;border:1.5px dashed var(--g1);background:var(--g1-bg);color:var(--g1);border-radius:11px;padding:11px;font-family:'Sarabun',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:12px}
-.quick:active{transform:scale(.99)}
-
-.row{border-top:1px solid var(--line);padding:9px 0}
-.row:first-child{border-top:none;padding-top:2px}
-.row.need{background:var(--edit-bg);border-radius:9px;padding-left:7px;padding-right:7px}
-.rt{display:flex;align-items:center;gap:7px;font-size:13.5px;font-weight:600;margin-bottom:6px}
-.rn{font-size:10.5px;font-weight:700;color:var(--sub);background:#EEF2F1;border-radius:5px;padding:1px 6px;flex-shrink:0}
-.row.ok .rn{background:var(--g1-bg);color:var(--g1)}
-.rb{display:flex;gap:6px;flex-wrap:wrap}
-.rb button{flex:1 1 0;min-width:78px;border:1.5px solid var(--line);background:#FAFCFB;border-radius:10px;padding:10px 8px;font-family:'Sarabun',sans-serif;font-size:13.5px;font-weight:600;color:var(--sub);cursor:pointer;text-align:center;line-height:1.25}
-.rb button .full{display:none;font-weight:400;font-size:12px;opacity:.9}
-.rb button.on1{background:var(--g1-bg);border-color:var(--g1);color:var(--g1)}
-.rb button.on2{background:var(--g2-bg);border-color:var(--g2);color:var(--g2)}
-.rb button.on3{background:var(--g3-bg);border-color:var(--g3);color:var(--g3);box-shadow:0 0 0 2px #FBE7E4}
-.rd{font-size:11.5px;color:var(--sub);margin-top:5px;display:none}
-.rd.show{display:block}
-/* โหมดละเอียด */
-#rows.detail .rb{flex-direction:column}
-#rows.detail .rb button{text-align:left;min-width:0;padding:10px 11px}
-#rows.detail .rb button .full{display:block;margin-top:1px}
-#rows.detail .rd{display:none!important}
-
-/* pain */
-.pain-strip{display:grid;grid-template-columns:repeat(11,1fr);gap:4px}
-.pain-strip button{border:none;border-radius:7px;padding:11px 0;font-family:'Sarabun',sans-serif;font-weight:700;font-size:13.5px;cursor:pointer;color:#fff;opacity:.3;transition:opacity .12s, transform .1s}
-.pain-strip button:nth-child(-n+4){background:var(--g1)}
-.pain-strip button:nth-child(n+5):nth-child(-n+7){background:var(--g2)}
-.pain-strip button:nth-child(n+8){background:var(--g3)}
-.pain-strip button.on{opacity:1;transform:scale(1.1);box-shadow:0 3px 9px rgba(0,0,0,.2)}
-.pain-legend{display:flex;justify-content:space-between;font-size:10.5px;color:var(--sub);margin-top:4px}
-.worse{margin-top:7px;width:100%;border:1.5px solid var(--line);background:#FAFCFB;border-radius:10px;padding:9px;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:600;color:var(--sub);cursor:pointer}
-.worse.on{background:var(--g3-bg);border-color:var(--g3);color:var(--g3)}
-
-/* ---- แถบผลลัพธ์ ---- */
-.result{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);box-shadow:0 -6px 24px rgba(20,50,45,.10)}
-.result-inner{max-width:680px;margin:0 auto;padding:11px 14px;display:flex;align-items:center;gap:9px}
-.badge{font-family:'Anuphan',sans-serif;font-weight:700;font-size:14px;border-radius:11px;padding:9px 11px;white-space:nowrap;border:2px solid transparent}
+/* แถบล่าง */
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);box-shadow:0 -6px 24px rgba(20,50,45,.10)}
+.bar-inner{max-width:640px;margin:0 auto;padding:10px 13px;display:flex;align-items:center;gap:9px}
+.badge{font-family:'Anuphan',sans-serif;font-weight:700;font-size:13.5px;border-radius:11px;padding:9px 11px;white-space:nowrap;border:2px solid transparent}
 .badge.b0{background:#EEF2F1;color:var(--sub)}
 .badge.b1{background:var(--g1-bg);color:var(--g1);border-color:var(--g1)}
 .badge.b2{background:var(--g2-bg);color:var(--g2);border-color:var(--g2)}
 .badge.b3{background:var(--g3-bg);color:var(--g3);border-color:var(--g3)}
-.result-txt{font-size:11.5px;color:var(--sub);flex:1;line-height:1.3;cursor:pointer}
-.submit-btn{background:var(--teal);color:#fff;border:none;border-radius:9px;padding:11px 15px;font-family:'Sarabun',sans-serif;font-weight:700;font-size:14px;cursor:pointer;white-space:nowrap}
+.bar-txt{font-size:11.5px;color:var(--sub);flex:1;line-height:1.3;cursor:pointer}
+.submit-btn{background:var(--teal);color:#fff;border:none;border-radius:10px;padding:11px 16px;font-family:'Sarabun',sans-serif;font-weight:700;font-size:14px;cursor:pointer;white-space:nowrap}
 .submit-btn.edit{background:var(--edit)}
-.submit-btn:disabled{background:#B7C9C4;cursor:not-allowed}
-
-.flags{margin-top:8px;font-size:13px}
-.flags li{margin-left:18px;margin-top:3px}
-#summaryCard{display:none}
-#summaryCard.show{display:block}
-#summaryCard h2 span.gg1{color:var(--g1)} #summaryCard h2 span.gg2{color:var(--g2)} #summaryCard h2 span.gg3{color:var(--g3)}
-.action{font-size:14px;background:#FAFCFB;border:1px dashed var(--line);border-radius:10px;padding:10px 12px;margin-top:8px}
-.changed{font-size:13px;color:var(--edit);background:var(--edit-bg);border-radius:9px;padding:8px 11px;margin-top:8px;display:none}
-
-.toast{position:fixed;top:14px;left:50%;transform:translateX(-50%) translateY(-90px);background:var(--ink);color:#fff;font-size:13.5px;font-weight:600;border-radius:10px;padding:11px 17px;transition:transform .3s;z-index:50;box-shadow:0 6px 20px rgba(0,0,0,.25);max-width:92vw;text-align:center}
+.submit-btn:disabled{background:#B7C9C4}
+.toast{position:fixed;top:13px;left:50%;transform:translateX(-50%) translateY(-90px);background:var(--ink);color:#fff;font-size:13.5px;font-weight:600;border-radius:10px;padding:11px 17px;transition:transform .3s;z-index:50;box-shadow:0 6px 20px rgba(0,0,0,.25);max-width:92vw;text-align:center}
 .toast.show{transform:translateX(-50%) translateY(0)}
-@media (max-width:400px){ .rb button{min-width:70px;font-size:13px;padding:9px 5px} .pain-strip button{padding:9px 0;font-size:12.5px} .result-txt{display:none} }
+@media (max-width:390px){ .pain-strip button{padding:13px 0;font-size:13px} .bar-txt{display:none} }
 </style>
 </head>
 <body>
 <div class="wrap">
 <header>
-  <div class="eyebrow">Post-op Eye Surgery · Discharge Triage</div>
-  <h1>เช็คลิสต์ประเมินผู้ป่วยหลังผ่าตัดตา</h1>
-  <p>สีเขียว ห้องประชุม 70 เตียง · สีเหลือง ห้องแผนไทย 20 เตียง · สีแดง ห้องคลอด 10 เตียง</p>
+  <div class="ht">
+    <div class="eyebrow">Post-op Eye · Discharge Triage</div>
+    <h1>ประเมินผู้ป่วยหลังผ่าตัดตา</h1>
+  </div>
 </header>
 
 <div id="editBar">
@@ -157,80 +168,58 @@ label.fl{font-size:11.5px;color:var(--sub);font-weight:600;display:block;margin-
 </div>
 
 <div class="card">
-  <h2><span class="no">สถิติ</span> สรุปจำนวนผู้ป่วย</h2>
-  <div class="savebar"><span class="dot" id="saveDot"></span><span id="saveMsg">กำลังโหลดข้อมูล…</span></div>
-  <div class="stats-grid">
-    <div class="stat s1"><div class="n" id="c1">0</div><div class="l">สีเขียว</div><div class="r" id="r1">ห้องประชุม<br>เหลือ <b id="f1">70</b>/70 เตียง</div></div>
-    <div class="stat s2"><div class="n" id="c2">0</div><div class="l">สีเหลือง</div><div class="r" id="r2">ห้องแผนไทย<br>เหลือ <b id="f2">20</b>/20 เตียง</div></div>
-    <div class="stat s3"><div class="n" id="c3">0</div><div class="l">สีแดง</div><div class="r" id="r3">ห้องคลอด<br>เหลือ <b id="f3">10</b>/10 เตียง</div></div>
+  <div class="pwrap">
+    <div class="pbar" id="pbar"></div>
+    <div class="pmeta"><span class="n" id="stepNo"></span><span class="pct" id="pctTxt"></span></div>
   </div>
-  <div class="stat-total" id="ctotal">รวมทั้งหมด 0 ราย</div>
-  <div class="stat-actions">
-    <button onclick="copyStats()">คัดลอกสรุป</button>
-    <button onclick="downloadCSV()">ดาวน์โหลด CSV</button>
-    <button onclick="backupJSON()">สำรองไฟล์</button>
-    <label for="restoreFile">กู้คืนไฟล์</label>
-    <input type="file" id="restoreFile" accept=".json" hidden onchange="restoreJSON(event)">
-    <button class="danger" onclick="clearAll()">ล้างทั้งหมด</button>
-  </div>
-  <div class="log">
-    <div class="log-head">
-      <b>บันทึกรายคน (Log)</b>
-      <input id="searchHN" placeholder="ค้นหา HN" oninput="renderLog()">
-    </div>
-    <div id="logList"></div>
-  </div>
-</div>
-
-<div class="card" id="ptCard">
-  <h2><span class="no">ข้อมูล</span> ผู้ป่วย</h2>
-  <div class="ptrow">
-    <div>
-      <label class="fl" for="hn">เลข HN</label>
-      <input id="hn" inputmode="numeric" placeholder="HN" oninput="onFormChange()">
-    </div>
-    <div>
-      <label class="fl">เพศ</label>
-      <div class="seg" id="sexSeg">
-        <button type="button" data-v="ชาย">ช</button>
-        <button type="button" data-v="หญิง">ญ</button>
-      </div>
-    </div>
-    <div>
-      <label class="fl" for="age">อายุ</label>
-      <input id="age" inputmode="numeric" placeholder="ปี" oninput="onFormChange()">
-    </div>
+  <div class="deck" id="deck"><div class="track" id="track"></div></div>
+  <div class="nav">
+    <button id="prevBtn" onclick="go(cur-1)">‹ ก่อนหน้า</button>
+    <div class="hint" id="navHint">ปัดซ้าย–ขวาเพื่อเปลี่ยนข้อ</div>
+    <button id="nextBtn" onclick="go(cur+1)">ถัดไป ›</button>
   </div>
 </div>
 
 <div class="card">
-  <div class="assess-head">
-    <h2><span class="no">ประเมิน</span> 9 ข้อ</h2>
-    <span class="prog" id="prog">0/9</span>
-    <button class="modeToggle" id="modeBtn" onclick="toggleMode()">แบบเต็ม</button>
+  <div class="foldhead" onclick="toggleFold()">
+    <h2>สถิติและรายการที่บันทึก</h2>
+    <span class="arw" id="foldArw">▼ เปิด</span>
   </div>
-  <button class="quick" onclick="quickNormal()">✓ ปกติทุกข้อ — แล้วแก้เฉพาะข้อที่ผิดปกติ</button>
-  <div id="rows"></div>
+  <div class="foldbody" id="foldBody">
+    <div class="savebar"><span class="dot" id="saveDot"></span><span id="saveMsg">กำลังโหลดข้อมูล…</span></div>
+    <div class="stats-grid">
+      <div class="stat s1"><div class="n" id="c1">0</div><div class="l">สีเขียว</div><div class="r" id="r1"></div></div>
+      <div class="stat s2"><div class="n" id="c2">0</div><div class="l">สีเหลือง</div><div class="r" id="r2"></div></div>
+      <div class="stat s3"><div class="n" id="c3">0</div><div class="l">สีแดง</div><div class="r" id="r3"></div></div>
+    </div>
+    <div class="stat-total" id="ctotal">รวมทั้งหมด 0 ราย</div>
+    <div class="stat-actions">
+      <button onclick="copyStats()">คัดลอกสรุป</button>
+      <button onclick="downloadCSV()">ดาวน์โหลด CSV</button>
+      <button onclick="backupJSON()">สำรองไฟล์</button>
+      <label for="restoreFile">กู้คืนไฟล์</label>
+      <input type="file" id="restoreFile" accept=".json" hidden onchange="restoreJSON(event)">
+      <button class="danger" onclick="clearAll()">ล้างทั้งหมด</button>
+    </div>
+    <div class="log">
+      <div class="log-head"><b>บันทึกรายคน (Log)</b>
+        <input id="searchHN" placeholder="ค้นหา HN" oninput="renderLog()"></div>
+      <div id="logList"></div>
+    </div>
+  </div>
+</div>
 </div>
 
-<div class="card" id="summaryCard">
-  <h2 id="sumTitle"></h2>
-  <div class="action" id="sumAction"></div>
-  <ul class="flags" id="sumFlags"></ul>
-  <div class="changed" id="sumChanged"></div>
-</div>
-</div>
-
-<div class="result">
-  <div class="result-inner">
+<div class="bar">
+  <div class="bar-inner">
     <div class="badge b0" id="badge">ยังไม่ครบ</div>
-    <div class="result-txt" id="resultTxt" onclick="jumpToMissing()">กรอกข้อมูล + ประเมินให้ครบ</div>
+    <div class="bar-txt" id="barTxt" onclick="jumpToMissing()">กรอกให้ครบเพื่อบันทึก</div>
     <button class="submit-btn" id="submitBtn" onclick="submitCase()" disabled>บันทึก</button>
   </div>
 </div>
 <div class="toast" id="toast"></div>
 <script>
-/* ================= ชั้นจัดเก็บข้อมูล (หลายช่องทาง กันข้อมูลหาย) ================= */
+/* ============ ชั้นจัดเก็บข้อมูล (หลายช่องทาง กันข้อมูลหาย) ============ */
 const KEY="eye-triage-records-v2", DRAFT_KEY="eye-triage-draft-v2";
 const IDB={
   db:null,
@@ -280,201 +269,259 @@ const Store={
   }
 };
 
-/* ================= เกณฑ์ประเมิน (s = ป้ายสั้น, t = เกณฑ์เต็ม) ================= */
+/* ============ เกณฑ์ประเมิน ============ */
 const QUESTIONS={
-  conscious:{label:"ความรู้สึกตัว",opts:[
-    {s:"รู้สึกตัวดี",t:"รู้สึกตัวดี",g:1},
-    {s:"ซึม/สับสน",t:"ซึม สับสน หรือมีอาการผิดปกติทางระบบประสาท",g:3}]},
+  conscious:{label:"ระดับความรู้สึกตัว",opts:[
+    {s:"รู้สึกตัวดี",t:"ตื่นดี ตอบสนองปกติ",g:1},
+    {s:"ซึม สับสน",t:"ซึม สับสน หรือมีอาการผิดปกติทางระบบประสาท",g:3}]},
   vitals:{label:"สัญญาณชีพ",opts:[
-    {s:"คงที่",t:"คงที่ อยู่ในเกณฑ์ปกติ",g:1},
+    {s:"คงที่ ปกติ",t:"อยู่ในเกณฑ์ปกติ ไม่เปลี่ยนแปลง",g:1},
     {s:"เปลี่ยนเล็กน้อย",t:"BP/ชีพจรเปลี่ยนแปลงเล็กน้อย แต่ยังอยู่ในเกณฑ์ปลอดภัย",g:2},
     {s:"ไม่คงที่",t:"BP สูงมาก/ต่ำมาก หรือสัญญาณชีพไม่คงที่",g:3}]},
-  pain:{label:"ปวดตา (Pain score)",pain:true},
-  nausea:{label:"คลื่นไส้/อาเจียน",opts:[
+  pain:{label:"อาการปวดตา",pain:true},
+  nausea:{label:"คลื่นไส้ อาเจียน เวียนศีรษะ",opts:[
     {s:"ไม่มี",t:"ไม่มีคลื่นไส้ อาเจียน",g:1},
     {s:"เล็กน้อย",t:"เวียนศีรษะ คลื่นไส้เล็กน้อย",g:2},
-    {s:"มาก + ปวดตา",t:"คลื่นไส้ อาเจียนมาก ร่วมกับปวดตา (สงสัยความดันลูกตาสูง)",g:3}]},
-  bleed:{label:"เลือด/สารคัดหลั่ง",opts:[
+    {s:"มาก ร่วมกับปวดตา",t:"อาเจียนมากร่วมกับปวดตา สงสัยความดันลูกตาสูง",g:3}]},
+  bleed:{label:"เลือดออก / สารคัดหลั่ง",opts:[
     {s:"ไม่มี",t:"ไม่มีเลือดออกหรือสารคัดหลั่งผิดปกติ",g:1},
-    {s:"มีเลือด/น้ำผิดปกติ",t:"มีเลือดออกจากตา หรือมีน้ำไหลผิดปกติ",g:3}]},
+    {s:"มีเลือด / น้ำผิดปกติ",t:"มีเลือดออกจากตา หรือมีน้ำไหลผิดปกติ",g:3}]},
   vision:{label:"การมองเห็น",opts:[
     {s:"มัวตามที่คาด",t:"ตามัวตามที่คาดหลังผ่าตัด",g:1},
-    {s:"มัวลง/ไม่เห็นแสง",t:"ตามัวลงมากกว่าที่คาด หรือมองไม่เห็นแสง",g:3}]},
-  shield:{label:"ผ้าปิดตา/Eye shield",opts:[
-    {s:"สภาพดี",t:"อยู่ในสภาพดี ปิดแน่นเรียบร้อย",g:1},
-    {s:"หลุด/ชำรุด",t:"หลุด ชำรุด ต้องแก้ไขและประเมินซ้ำ",g:2}]},
-  walk:{label:"การเดิน",opts:[
-    {s:"เดินได้",t:"เดินได้ (มีผู้พยุงตามความเหมาะสม)",g:1},
-    {s:"ไม่มั่นคง",t:"เดินยังไม่มั่นคง ต้องพักหรือสังเกตอาการเพิ่ม",g:2}]},
-  family:{label:"ญาติ/ความเข้าใจ",opts:[
+    {s:"มัวลง / ไม่เห็นแสง",t:"ตามัวลงมากกว่าที่คาด หรือมองไม่เห็นแสง",g:3}]},
+  shield:{label:"ผ้าปิดตา / Eye shield",opts:[
+    {s:"สภาพดี",t:"ปิดแน่นเรียบร้อย ไม่หลุด",g:1},
+    {s:"หลุด / ชำรุด",t:"ต้องแก้ไขและประเมินซ้ำก่อนกลับบ้าน",g:2}]},
+  walk:{label:"การเดิน / เคลื่อนไหว",opts:[
+    {s:"เดินได้",t:"เดินได้ มีผู้พยุงตามความเหมาะสม",g:1},
+    {s:"ยังไม่มั่นคง",t:"เดินไม่มั่นคง ต้องพักหรือสังเกตอาการเพิ่ม",g:2}]},
+  family:{label:"ญาติ / ความเข้าใจคำแนะนำ",opts:[
     {s:"พร้อม เข้าใจดี",t:"มีญาติมารับ และเข้าใจคำแนะนำการดูแลที่บ้าน",g:1},
-    {s:"ไม่พร้อม",t:"ยังไม่มีญาติมารับ หรือยังไม่เข้าใจคำแนะนำ",g:2}]}
+    {s:"ยังไม่พร้อม",t:"ยังไม่มีญาติมารับ หรือยังไม่เข้าใจคำแนะนำ",g:2}]}
 };
 const ORDER=["conscious","vitals","pain","nausea","bleed","vision","shield","walk","family"];
 const ITEMS=ORDER.filter(k=>!QUESTIONS[k].pain);
+const STEPS=["patient",...ORDER,"summary"];
 const GNAME={1:"สีเขียว",2:"สีเหลือง",3:"สีแดง"};
 const GROUP={
-  1:{name:"สีเขียว · ห้องประชุม",room:"ห้องประชุม",cap:70,
-     action:"ปกติ พร้อมกลับบ้าน — ส่งพักที่ห้องประชุม ให้คำแนะนำการดูแลที่บ้าน นัดติดตาม และจำหน่ายกลับบ้านพร้อมญาติได้"},
-  2:{name:"สีเหลือง · ห้องแผนไทย",room:"ห้องแผนไทย",cap:20,
-     action:"เฝ้าระวัง — ส่งพักที่ห้องแผนไทย สังเกตอาการต่อ แก้ไขปัจจัยที่พบ และประเมินซ้ำก่อนพิจารณาจำหน่าย"},
-  3:{name:"สีแดง · ห้องคลอด",room:"ห้องคลอด",cap:10,
-     action:"⚠ ผิดปกติ — ส่งห้องคลอดทันที รายงานแพทย์/พบจักษุแพทย์ ห้ามจำหน่ายกลับบ้านจนกว่าจักษุแพทย์จะประเมินแล้ว"}
+  1:{name:"สีเขียว",room:"ห้องประชุม",cap:70,
+     action:"ปกติ พร้อมกลับบ้าน — ส่งพักห้องประชุม ให้คำแนะนำการดูแลที่บ้าน นัดติดตาม และจำหน่ายพร้อมญาติได้"},
+  2:{name:"สีเหลือง",room:"ห้องแผนไทย",cap:20,
+     action:"เฝ้าระวัง — ส่งพักห้องแผนไทย สังเกตอาการต่อ แก้ไขปัจจัยที่พบ และประเมินซ้ำก่อนพิจารณาจำหน่าย"},
+  3:{name:"สีแดง",room:"ห้องคลอด",cap:10,
+     action:"⚠ ผิดปกติ — ส่งห้องคลอดทันที รายงานแพทย์/พบจักษุแพทย์ ห้ามจำหน่ายจนกว่าจักษุแพทย์จะประเมิน"}
 };
 
 const state={answers:{},pain:null,painWorse:false,sex:null};
-let records=[], editingId=null, detailMode=false;
+let records=[], editingId=null, cur=0;
 
-/* ================= สร้างแถวประเมินแบบย่อ ================= */
-const rowsEl=document.getElementById("rows");
-ORDER.forEach((key,idx)=>{
-  const q=QUESTIONS[key];
-  const row=document.createElement("div");
-  row.className="row"; row.dataset.key=key;
-  if(q.pain){
-    row.innerHTML=`<div class="rt"><span class="rn">${idx+1}</span>${q.label}</div>
+/* ============ สร้างสไลด์ ============ */
+const track=document.getElementById("track"), deck=document.getElementById("deck");
+STEPS.forEach((key,i)=>{
+  const sl=document.createElement("div");
+  sl.className="slide"; sl.dataset.key=key;
+  if(key==="patient"){
+    sl.innerHTML=`<div class="stitle"><span class="num">เริ่ม</span><h3>ข้อมูลผู้ป่วย</h3></div>
+      <div class="ptrow">
+        <div><label class="fl" for="hn">เลข HN</label><input id="hn" inputmode="numeric" placeholder="HN"></div>
+        <div><label class="fl">เพศ</label><div class="seg" id="sexSeg">
+          <button type="button" data-v="ชาย">ชาย</button><button type="button" data-v="หญิง">หญิง</button></div></div>
+        <div><label class="fl" for="age">อายุ</label><input id="age" inputmode="numeric" placeholder="ปี"></div>
+      </div>
+      <button class="quick" onclick="quickNormal()">✓ ปกติทุกข้อ — ข้ามไปกรอก Pain score</button>`;
+  }else if(key==="summary"){
+    sl.innerHTML=`<div class="stitle"><span class="num">สรุป</span><h3>ผลการคัดแยก</h3></div><div id="sumBox"></div>`;
+  }else if(QUESTIONS[key].pain){
+    sl.innerHTML=`<div class="stitle"><span class="num">ข้อ ${i}</span><h3>${QUESTIONS[key].label}</h3></div>
       <div class="pain-strip" id="painStrip"></div>
       <div class="pain-legend"><span>0–3 เขียว</span><span>4–6 เหลือง</span><span>7–10 แดง</span></div>
-      <button type="button" class="worse" id="worseBtn">+ ปวดเพิ่มขึ้นเรื่อย ๆ (สีแดง)</button>`;
+      <button type="button" class="worse" id="worseBtn">+ ปวดเพิ่มขึ้นเรื่อย ๆ → สีแดง</button>`;
   }else{
-    row.innerHTML=`<div class="rt"><span class="rn">${idx+1}</span>${q.label}</div>
-      <div class="rb">${q.opts.map((o,i)=>
-        `<button type="button" data-i="${i}" data-g="${o.g}">${o.s}<span class="full">${o.t}</span></button>`).join("")}</div>
-      <div class="rd"></div>`;
+    const q=QUESTIONS[key];
+    sl.innerHTML=`<div class="stitle"><span class="num">ข้อ ${i}</span><h3>${q.label}</h3></div>
+      ${q.opts.map((o,n)=>`<button type="button" class="opt" data-k="${key}" data-n="${n}">
+        <span class="chip c${o.g}">${GNAME[o.g].replace("สี","")}</span>${o.s}<span class="sub">${o.t}</span></button>`).join("")}`;
   }
-  rowsEl.appendChild(row);
+  track.appendChild(sl);
 });
-document.querySelectorAll(".row .rb").forEach(rb=>{
-  const key=rb.parentElement.dataset.key;
-  rb.querySelectorAll("button").forEach(b=>{
-    b.onclick=()=>{ pick(key, +b.dataset.i); };
-  });
+track.querySelectorAll(".opt").forEach(b=>{
+  b.onclick=()=>{ const k=b.dataset.k, n=+b.dataset.n;
+    state.answers[k]=QUESTIONS[k].opts[n].g;
+    paintStep(k); onFormChange();
+    setTimeout(()=>{ if(cur<STEPS.length-1) go(cur+1); },170);
+  };
 });
-function pick(key,i){
-  const o=QUESTIONS[key].opts[i];
-  state.answers[key]=o.g;
-  paintRow(key);
-  onFormChange();
-}
-function paintRow(key){
-  const row=document.querySelector(`.row[data-key="${key}"]`);
-  if(!row||QUESTIONS[key].pain) return;
-  const g=state.answers[key];
-  row.classList.toggle("ok", !!g);
-  row.querySelectorAll(".rb button").forEach(b=>{
-    b.className=""; if(g && +b.dataset.g===g && QUESTIONS[key].opts[+b.dataset.i].g===g) b.className="on"+g;
-  });
-  const rd=row.querySelector(".rd");
-  const idx=QUESTIONS[key].opts.findIndex(o=>o.g===g);
-  if(g && g>1 && idx>=0){ rd.textContent="→ "+QUESTIONS[key].opts[idx].t; rd.classList.add("show"); }
-  else rd.classList.remove("show");
-}
-/* pain */
 const strip=document.getElementById("painStrip");
 for(let i=0;i<=10;i++){
   const b=document.createElement("button");
-  b.type="button"; b.textContent=i; b.setAttribute("aria-label","ปวดระดับ "+i);
-  b.onclick=()=>{ state.pain=i;
-    strip.querySelectorAll("button").forEach(x=>x.classList.remove("on"));
-    b.classList.add("on"); paintPain(); onFormChange(); };
+  b.type="button"; b.textContent=i;
+  b.onclick=()=>{ state.pain=i; paintStep("pain"); onFormChange(); };
   strip.appendChild(b);
 }
 const worseBtn=document.getElementById("worseBtn");
-worseBtn.onclick=()=>{ state.painWorse=!state.painWorse; paintPain(); onFormChange(); };
-function paintPain(){
-  worseBtn.classList.toggle("on", state.painWorse);
-  strip.querySelectorAll("button").forEach((b,i)=>b.classList.toggle("on", state.pain===i));
-  document.querySelector('.row[data-key="pain"]').classList.toggle("ok", state.pain!==null);
-}
-/* เพศ */
+worseBtn.onclick=()=>{ state.painWorse=!state.painWorse; paintStep("pain"); onFormChange(); };
 document.querySelectorAll("#sexSeg button").forEach(b=>{
   b.onclick=()=>{ state.sex=b.dataset.v;
     document.querySelectorAll("#sexSeg button").forEach(x=>x.classList.remove("on"));
-    b.classList.add("on"); onFormChange(); };
+    b.classList.add("on"); onFormChange();
+    if(!document.getElementById("age").value) document.getElementById("age").focus(); };
 });
-/* ทางลัด */
-function quickNormal(){
-  ITEMS.forEach(k=>{ const i=QUESTIONS[k].opts.findIndex(o=>o.g===1); if(i>=0){ state.answers[k]=1; paintRow(k);} });
-  onFormChange();
-  showToast("ตั้งเป็นปกติทุกข้อแล้ว — แก้เฉพาะข้อที่ผิดปกติ");
-  if(state.pain===null) document.querySelector('.row[data-key="pain"]').scrollIntoView({behavior:"smooth",block:"center"});
-}
-function toggleMode(){
-  detailMode=!detailMode;
-  rowsEl.classList.toggle("detail",detailMode);
-  const b=document.getElementById("modeBtn");
-  b.classList.toggle("on",detailMode);
-  b.textContent=detailMode?"แบบย่อ":"แบบเต็ม";
-}
-function jumpToMissing(){
-  const m=missingKeys()[0]; if(!m) return;
-  if(m.k==="hn"||m.k==="age"){ document.getElementById(m.k).focus(); return; }
-  if(m.k==="sex"){ document.getElementById("ptCard").scrollIntoView({behavior:"smooth",block:"center"}); return; }
-  const row=document.querySelector(`.row[data-key="${m.k}"]`);
-  if(row) row.scrollIntoView({behavior:"smooth",block:"center"});
+document.getElementById("hn").addEventListener("input",onFormChange);
+document.getElementById("age").addEventListener("input",onFormChange);
+document.getElementById("age").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.target.blur(); go(1);} });
+document.getElementById("hn").addEventListener("keydown",e=>{ if(e.key==="Enter") document.getElementById("age").focus(); });
+
+function paintStep(key){
+  if(key==="pain"){
+    strip.querySelectorAll("button").forEach((b,i)=>b.classList.toggle("on",state.pain===i));
+    worseBtn.classList.toggle("on",state.painWorse);
+    return;
+  }
+  const g=state.answers[key];
+  track.querySelectorAll(`.opt[data-k="${key}"]`).forEach(b=>{
+    const og=QUESTIONS[key].opts[+b.dataset.n].g;
+    b.className="opt"+(g&&og===g?" on"+g:"");
+  });
 }
 
-/* ================= ตรรกะจัดกลุ่ม ================= */
+/* ============ นำทางสไลด์ + ปัด ============ */
+function go(i,instant){
+  cur=Math.max(0,Math.min(STEPS.length-1,i));
+  track.classList.toggle("anim",!instant);
+  track.style.transform=`translateX(${-cur*100}%)`;
+  const sl=track.children[cur];
+  deck.style.height=sl.offsetHeight+"px";
+  document.getElementById("prevBtn").disabled=cur===0;
+  document.getElementById("nextBtn").disabled=cur===STEPS.length-1;
+  const key=STEPS[cur];
+  document.getElementById("navHint").textContent =
+    cur===0?"กรอกแล้วปัดซ้ายเพื่อเริ่มประเมิน" :
+    cur===STEPS.length-1?"ตรวจสอบแล้วกดบันทึก":"ปัดซ้าย–ขวาเพื่อเปลี่ยนข้อ";
+  updateProgress();
+  if(key==="summary") renderSummary();
+  setTimeout(()=>{ deck.style.height=track.children[cur].offsetHeight+"px"; },30);
+}
+let sx=0,sy=0,dx=0,drag=false;
+deck.addEventListener("touchstart",e=>{ sx=e.touches[0].clientX; sy=e.touches[0].clientY; dx=0; drag=true; track.classList.remove("anim"); },{passive:true});
+deck.addEventListener("touchmove",e=>{
+  if(!drag) return;
+  const x=e.touches[0].clientX-sx, y=e.touches[0].clientY-sy;
+  if(Math.abs(y)>Math.abs(x)){ drag=false; track.style.transform=`translateX(${-cur*100}%)`; return; }
+  dx=x;
+  if((cur===0&&dx>0)||(cur===STEPS.length-1&&dx<0)) dx=x*0.28;
+  track.style.transform=`translateX(calc(${-cur*100}% + ${dx}px))`;
+},{passive:true});
+deck.addEventListener("touchend",()=>{
+  if(!drag){ return; }
+  drag=false;
+  const w=deck.offsetWidth;
+  if(dx<-w*0.18) go(cur+1); else if(dx>w*0.18) go(cur-1); else go(cur);
+});
+document.addEventListener("keydown",e=>{
+  if(e.target.tagName==="INPUT") return;
+  if(e.key==="ArrowRight") go(cur+1);
+  if(e.key==="ArrowLeft") go(cur-1);
+});
+window.addEventListener("resize",()=>go(cur,true));
+
+/* ============ แถบความคืบหน้า ============ */
+const pbar=document.getElementById("pbar");
+STEPS.forEach((k,i)=>{
+  const s=document.createElement("div");
+  s.className="pseg"; s.title=k;
+  s.onclick=()=>go(i);
+  pbar.appendChild(s);
+});
+function stepDone(key){
+  if(key==="patient") return !!(document.getElementById("hn").value.trim()&&state.sex&&document.getElementById("age").value.trim());
+  if(key==="summary") return missingKeys().length===0;
+  if(QUESTIONS[key].pain) return state.pain!==null;
+  return !!state.answers[key];
+}
+function updateProgress(){
+  STEPS.forEach((k,i)=>{
+    const el=pbar.children[i];
+    el.className="pseg";
+    if(stepDone(k)){
+      const g = (k==="patient"||k==="summary") ? 0 : (QUESTIONS[k].pain?painGroup():state.answers[k]);
+      el.classList.add("d"+(g||0));
+    }
+    if(i===cur) el.classList.add("cur");
+  });
+  const doneN=ORDER.filter(k=>stepDone(k)).length;
+  const key=STEPS[cur];
+  document.getElementById("stepNo").textContent =
+    key==="patient"?"ข้อมูลผู้ป่วย":key==="summary"?"สรุปผล":`ข้อ ${cur} / 9 · ${QUESTIONS[key].label}`;
+  document.getElementById("pctTxt").textContent=`ประเมินแล้ว ${doneN}/9 ข้อ`;
+}
+
+/* ============ ตรรกะจัดกลุ่ม ============ */
 function painGroup(){ if(state.pain===null) return null; if(state.painWorse||state.pain>=7) return 3; if(state.pain>=4) return 2; return 1; }
 function worstGroup(){ const g=[...Object.values(state.answers)]; const pg=painGroup(); if(pg) g.push(pg); return g.length?Math.max(...g):0; }
 function currentFlags(){
   const flags=[];
   ITEMS.forEach(k=>{ const g=state.answers[k];
-    if(g&&g>1){ const o=QUESTIONS[k].opts.find(o=>o.g===g); flags.push(`${QUESTIONS[k].label}: ${o.t} (${GNAME[g]})`);} });
+    if(g&&g>1){ const o=QUESTIONS[k].opts.find(o=>o.g===g); flags.push(`${QUESTIONS[k].label}: ${o.s} (${GNAME[g]})`);} });
   const pg=painGroup();
   if(pg&&pg>1) flags.push(`Pain score ${state.pain}${state.painWorse?" ปวดเพิ่มขึ้นเรื่อย ๆ":""} (${GNAME[pg]})`);
   return flags;
 }
 function missingKeys(){
   const m=[];
-  if(!document.getElementById("hn").value.trim()) m.push({k:"hn",t:"HN"});
-  if(!state.sex) m.push({k:"sex",t:"เพศ"});
-  if(!document.getElementById("age").value.trim()) m.push({k:"age",t:"อายุ"});
+  if(!document.getElementById("hn").value.trim()) m.push({k:"patient",t:"HN"});
+  if(!state.sex) m.push({k:"patient",t:"เพศ"});
+  if(!document.getElementById("age").value.trim()) m.push({k:"patient",t:"อายุ"});
   ORDER.forEach(k=>{
-    if(QUESTIONS[k].pain){ if(painGroup()===null) m.push({k:"pain",t:"Pain score"}); }
+    if(QUESTIONS[k].pain){ if(state.pain===null) m.push({k,t:"Pain score"}); }
     else if(!state.answers[k]) m.push({k,t:QUESTIONS[k].label});
   });
   return m;
 }
+function jumpToMissing(){
+  const m=missingKeys()[0]; if(!m) return go(STEPS.length-1);
+  go(STEPS.indexOf(m.k));
+  if(m.k==="patient") setTimeout(()=>{ const el=document.getElementById(m.t==="อายุ"?"age":"hn"); if(m.t!=="เพศ") el.focus(); },300);
+}
+function renderSummary(){
+  const worst=worstGroup(), miss=missingKeys(), box=document.getElementById("sumBox");
+  let h="";
+  if(miss.length){
+    h+=`<div class="miss"><b>ยังกรอกไม่ครบ ${miss.length} รายการ</b>${miss.map(m=>m.t).join(", ")}
+        <div style="margin-top:7px"><button class="worse" style="margin:0" onclick="jumpToMissing()">ไปที่ข้อที่ยังขาด ›</button></div></div>`;
+  }
+  const k=worst||0;
+  h+=`<div class="res k${k}">
+        <div class="big">${k?GROUP[k].name:"ยังสรุปไม่ได้"}</div>
+        <div class="rm">${k?GROUP[k].room+" · "+GROUP[k].cap+" เตียง":"ประเมินให้ครบก่อน"}</div>
+      </div>`;
+  if(k) h+=`<div class="act">${GROUP[k].action}</div>`;
+  const flags=currentFlags();
+  h+=`<ul class="fl-list">${flags.length?"<b style='font-size:13px'>ข้อที่พบ:</b>"+flags.map(f=>`<li>${f}</li>`).join(""):"<li>ผ่านเกณฑ์ปกติทุกข้อ</li>"}</ul>`;
+  const orig=editingId?records.find(r=>r.id===editingId):null;
+  if(orig&&!miss.length&&orig.g!==worst) h+=`<div class="chg">ผลจะเปลี่ยนจาก ${GROUP[orig.g].name} → ${GROUP[worst].name}</div>`;
+  box.innerHTML=h;
+  deck.style.height=track.children[cur].offsetHeight+"px";
+}
 function evaluate(){
-  const badge=document.getElementById("badge"), txt=document.getElementById("resultTxt"), btn=document.getElementById("submitBtn");
+  const badge=document.getElementById("badge"), txt=document.getElementById("barTxt"), btn=document.getElementById("submitBtn");
   const worst=worstGroup(), miss=missingKeys(), ready=miss.length===0;
   btn.disabled=!ready;
   btn.textContent=editingId?"บันทึกแก้ไข":"บันทึก";
   btn.classList.toggle("edit",!!editingId);
-
-  const done=ORDER.filter(k=>QUESTIONS[k].pain?painGroup()!==null:!!state.answers[k]).length;
-  const prog=document.getElementById("prog");
-  prog.textContent=done+"/9"; prog.classList.toggle("done",done===9);
-
-  document.querySelectorAll(".row").forEach(r=>r.classList.remove("need"));
-  if(editingId) miss.forEach(m=>{ const r=document.querySelector(`.row[data-key="${m.k}"]`); if(r) r.classList.add("need"); });
-
-  const assessDone=done===9;
+  const assessDone=ORDER.every(k=>stepDone(k));
   badge.className="badge b"+((assessDone||worst===3)?worst:0);
-  badge.textContent=(!assessDone&&worst!==3)?"ยังไม่ครบ":GROUP[worst].name;
-  txt.textContent=ready?(editingId?"พร้อมบันทึกทับข้อมูลเดิม":"พร้อมบันทึก"):"ยังขาด: "+miss.map(m=>m.t).join(", ")+" (แตะเพื่อไป)";
-
-  const card=document.getElementById("summaryCard");
-  if(assessDone||worst===3){
-    card.classList.add("show");
-    document.getElementById("sumTitle").innerHTML=`<span class="gg${worst}">ผลการคัดแยก: ${GROUP[worst].name} (${GROUP[worst].cap} เตียง)</span>`;
-    document.getElementById("sumAction").textContent=GROUP[worst].action;
-    const flags=currentFlags();
-    document.getElementById("sumFlags").innerHTML=flags.length?"<b style='font-size:13px'>ข้อที่พบ:</b>"+flags.map(f=>`<li>${f}</li>`).join(""):"<li>ผ่านเกณฑ์ปกติทุกข้อ</li>";
-    const ch=document.getElementById("sumChanged");
-    const orig=editingId?records.find(r=>r.id===editingId):null;
-    if(orig&&assessDone&&orig.g!==worst){ ch.style.display="block"; ch.textContent=`ผลจะเปลี่ยนจาก ${GROUP[orig.g].name} → ${GROUP[worst].name}`; }
-    else ch.style.display="none";
-  }else card.classList.remove("show");
+  badge.textContent=(!assessDone&&worst!==3)?"ยังไม่ครบ":GROUP[worst].name+" · "+GROUP[worst].room;
+  txt.textContent=ready?(editingId?"พร้อมบันทึกทับข้อมูลเดิม":"พร้อมบันทึก"):"ยังขาด "+miss.length+" รายการ (แตะเพื่อไป)";
+  updateProgress();
+  if(STEPS[cur]==="summary") renderSummary();
 }
 
-/* ================= ร่างกันรีเฟรช ================= */
+/* ============ ร่างกันรีเฟรช ============ */
 let draftTimer;
 function onFormChange(){ evaluate(); clearTimeout(draftTimer); draftTimer=setTimeout(saveDraft,400); }
 function formSnapshot(){
   return {hn:document.getElementById("hn").value,age:document.getElementById("age").value,
-          sex:state.sex,pain:state.pain,worse:state.painWorse,answers:state.answers,editingId};
+          sex:state.sex,pain:state.pain,worse:state.painWorse,answers:state.answers,editingId,cur};
 }
 async function saveDraft(){
   const d=formSnapshot();
@@ -488,12 +535,17 @@ function applyForm(d){
   document.querySelectorAll("#sexSeg button").forEach(b=>b.classList.toggle("on",!!d.sex&&b.dataset.v===d.sex));
   state.pain=(typeof d.pain==="number")?d.pain:null;
   state.painWorse=!!d.worse;
-  paintPain();
   state.answers=Object.assign({},d.answers||{});
-  ITEMS.forEach(k=>paintRow(k));
+  ORDER.forEach(k=>paintStep(k));
+}
+function quickNormal(){
+  ITEMS.forEach(k=>{ state.answers[k]=1; paintStep(k); });
+  onFormChange();
+  go(STEPS.indexOf("pain"));
+  showToast("ตั้งปกติทุกข้อแล้ว — เหลือกรอก Pain score");
 }
 
-/* ================= แก้ไขข้อมูลเก่า ================= */
+/* ============ แก้ไขข้อมูลเก่า ============ */
 function editRecord(id){
   const r=records.find(x=>x.id===id); if(!r) return;
   if(editingId&&editingId!==id&&!confirm("กำลังแก้ไขรายอื่นอยู่ เปลี่ยนมาแก้รายนี้แทนหรือไม่?")) return;
@@ -502,10 +554,10 @@ function editRecord(id){
   document.body.classList.add("editing");
   document.getElementById("editBar").classList.add("show");
   const full=r.answers&&Object.keys(r.answers).length===8;
-  document.getElementById("editText").innerHTML=`กำลังแก้ไข HN ${esc(r.hn)} · บันทึก ${esc(r.time)}<small>${full?'แก้ข้อที่ต้องการ แล้วกด "บันทึกแก้ไข"':'ข้อมูลเวอร์ชันเดิมไม่มีผลรายข้อ — กรุณาติ๊กข้อที่ไฮไลต์ม่วง'}</small>`;
+  document.getElementById("editText").innerHTML=`กำลังแก้ไข HN ${esc(r.hn)} · ${esc(r.time)}<small>${full?'ปัดไปยังข้อที่ต้องการแก้ แล้วกด "บันทึกแก้ไข"':'ข้อมูลเวอร์ชันเดิมไม่มีผลรายข้อ — กรุณาประเมินใหม่ให้ครบ'}</small>`;
   renderLog(); evaluate(); saveDraft();
-  document.getElementById("ptCard").scrollIntoView({behavior:"smooth",block:"start"});
-  showToast("เปิดข้อมูล HN "+r.hn+" เพื่อแก้ไข");
+  go(0); window.scrollTo({top:0,behavior:"smooth"});
+  showToast("เปิด HN "+r.hn+" เพื่อแก้ไข");
 }
 async function cancelEdit(){
   editingId=null;
@@ -514,9 +566,9 @@ async function cancelEdit(){
   await resetForm(); renderLog(); showToast("ยกเลิกการแก้ไขแล้ว");
 }
 
-/* ================= บันทึก / ลบ ================= */
+/* ============ บันทึก / ลบ ============ */
 async function submitCase(){
-  if(missingKeys().length) return;
+  if(missingKeys().length) return jumpToMissing();
   const hn=document.getElementById("hn").value.trim(), age=document.getElementById("age").value.trim();
   const now=new Date();
   const stamp=now.toLocaleDateString("th-TH",{day:"numeric",month:"short",year:"2-digit"})+" "+now.toLocaleTimeString("th-TH",{hour:"2-digit",minute:"2-digit"});
@@ -527,14 +579,14 @@ async function submitCase(){
     records[i]=Object.assign({},old,{hn,sex:state.sex,age,g:worstGroup(),pain:state.pain,worse:state.painWorse,
       answers:Object.assign({},state.answers),flags:currentFlags(),editedAt:stamp,editCount:(old.editCount||0)+1});
     await Store.write(KEY,records); renderAll();
-    showToast(`แก้ไข HN ${hn} แล้ว ✓ ${GNAME[records[i].g]} (${GROUP[records[i].g].room})`);
+    showToast(`แก้ไข HN ${hn} ✓ ${GNAME[records[i].g]} (${GROUP[records[i].g].room})`);
     editingId=null;
     document.body.classList.remove("editing");
     document.getElementById("editBar").classList.remove("show");
-    await resetForm(); window.scrollTo({top:0,behavior:"smooth"}); return;
+    await resetForm(); return;
   }
   const dup=records.find(r=>r.hn===hn);
-  if(dup&&!confirm(`HN ${hn} มีบันทึกอยู่แล้ว (${GNAME[dup.g]})\nกด OK เพื่อบันทึกเป็นรายการใหม่ หรือ Cancel แล้วกดดินสอที่รายการเดิมเพื่อแก้ไขแทน`)) return;
+  if(dup&&!confirm(`HN ${hn} มีบันทึกอยู่แล้ว (${GNAME[dup.g]})\nกด OK เพื่อบันทึกเป็นรายการใหม่ หรือ Cancel แล้วกดดินสอที่รายการเดิมเพื่อแก้ไข`)) return;
   records.push({id:"r"+now.getTime()+Math.random().toString(36).slice(2,6),
     hn,sex:state.sex,age,g:worstGroup(),pain:state.pain,worse:state.painWorse,
     answers:Object.assign({},state.answers),flags:currentFlags(),time:stamp,iso:now.toISOString()});
@@ -545,8 +597,6 @@ async function submitCase(){
   showToast(`บันทึก HN ${hn} ✓ ${GNAME[last.g]} → ${GROUP[last.g].room} (รวม ${records.length} ราย)`);
   if(!check||check.length!==records.length) showToast("⚠ บันทึกลงเครื่องไม่สำเร็จ กรุณาสำรองไฟล์");
   await resetForm();
-  document.getElementById("hn").focus();
-  window.scrollTo({top:0,behavior:"smooth"});
 }
 async function deleteRecord(id){
   const r=records.find(x=>x.id===id); if(!r) return;
@@ -554,27 +604,29 @@ async function deleteRecord(id){
   records=records.filter(x=>x.id!==id);
   if(editingId===id){ editingId=null; document.body.classList.remove("editing");
     document.getElementById("editBar").classList.remove("show"); await resetForm(); }
-  await Store.write(KEY,records); renderAll(); showToast("ลบข้อมูล HN "+r.hn+" แล้ว");
+  await Store.write(KEY,records); renderAll(); showToast("ลบ HN "+r.hn+" แล้ว");
 }
 async function clearAll(){
   if(!records.length) return showToast("ยังไม่มีข้อมูลให้ล้าง");
-  if(!confirm(`ล้างข้อมูลทั้งหมด ${records.length} ราย?\nข้อมูลจะถูกลบถาวร แนะนำกด "สำรองไฟล์" ก่อน`)) return;
+  if(!confirm(`ล้างข้อมูลทั้งหมด ${records.length} ราย?\nแนะนำกด "สำรองไฟล์" ก่อน`)) return;
   records=[]; editingId=null;
   document.body.classList.remove("editing");
   document.getElementById("editBar").classList.remove("show");
   await Store.remove(KEY); await resetForm(); renderAll(); showToast("ล้างข้อมูลทั้งหมดแล้ว");
 }
 
-/* ================= แสดงผล ================= */
+/* ============ แสดงผลสถิติ/log ============ */
+function toggleFold(){
+  const b=document.getElementById("foldBody"); b.classList.toggle("open");
+  document.getElementById("foldArw").textContent=b.classList.contains("open")?"▲ ปิด":"▼ เปิด";
+}
 function renderAll(){ renderStats(); renderLog(); }
 function renderStats(){
   const c={1:0,2:0,3:0}; records.forEach(r=>c[r.g]++);
   [1,2,3].forEach(g=>{
     document.getElementById("c"+g).textContent=c[g];
     const left=GROUP[g].cap-c[g], box=document.getElementById("r"+g);
-    box.innerHTML = left>=0
-      ? `${GROUP[g].room}<br>เหลือ <b>${left}</b>/${GROUP[g].cap} เตียง`
-      : `${GROUP[g].room}<br><b>เกิน ${-left}</b>/${GROUP[g].cap} เตียง`;
+    box.innerHTML=left>=0?`${GROUP[g].room}<br>เหลือ <b>${left}</b>/${GROUP[g].cap}`:`${GROUP[g].room}<br><b>เกิน ${-left}</b>/${GROUP[g].cap}`;
     box.parentElement.classList.toggle("over",left<0);
   });
   document.getElementById("ctotal").textContent="รวมทั้งหมด "+records.length+" ราย";
@@ -586,23 +638,19 @@ function renderLog(){
   list.innerHTML=shown.map(r=>`
     <div class="rec r${r.g}${r.id===editingId?" active":""}">
       <span class="pill">${GNAME[r.g]}</span>
-      <div class="info">
-        <div class="hn">HN ${esc(r.hn)}</div>
-        <div class="meta">${esc(r.sex)} ${esc(r.age)} ปี · Pain ${r.pain} · ${esc(r.time)}${r.editedAt?` · <span class="edited">แก้ไข ${esc(r.editedAt)}</span>`:""}</div>
-      </div>
-      <button class="edt" title="แก้ไข" onclick="editRecord('${r.id}')">✏️</button>
-      <button class="del" title="ลบ" onclick="deleteRecord('${r.id}')">🗑</button>
+      <div class="info"><div class="hn">HN ${esc(r.hn)}</div>
+        <div class="meta">${esc(r.sex)} ${esc(r.age)} ปี · Pain ${r.pain} · ${esc(r.time)}${r.editedAt?` · <span class="edited">แก้ไข ${esc(r.editedAt)}</span>`:""}</div></div>
+      <button class="edt" onclick="editRecord('${r.id}')">✏️</button>
+      <button class="del" onclick="deleteRecord('${r.id}')">🗑</button>
     </div>`).join("");
 }
 function esc(s){ return String(s).replace(/[<>&"]/g,c=>({"<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;"}[c])); }
 
-/* ================= ส่งออก ================= */
+/* ============ ส่งออก ============ */
 function copyStats(){
   const c={1:0,2:0,3:0}; records.forEach(r=>c[r.g]++);
   let t="สรุปการคัดแยกผู้ป่วยหลังผ่าตัดตา (ก่อนจำหน่าย)\n";
-  t+=`สีเขียว ปกติ — ห้องประชุม (${GROUP[1].cap} เตียง): ${c[1]} ราย\n`;
-  t+=`สีเหลือง เฝ้าระวัง — ห้องแผนไทย (${GROUP[2].cap} เตียง): ${c[2]} ราย\n`;
-  t+=`สีแดง ผิดปกติ — ห้องคลอด (${GROUP[3].cap} เตียง): ${c[3]} ราย\n`;
+  [1,2,3].forEach(g=>{ t+=`${GROUP[g].name} — ${GROUP[g].room} (${GROUP[g].cap} เตียง): ${c[g]} ราย\n`; });
   t+=`รวมทั้งหมด: ${records.length} ราย\n\nรายการ:\n`;
   records.forEach((r,i)=>{ t+=`${i+1}. HN ${r.hn} ${r.sex} ${r.age} ปี — ${GNAME[r.g]} (${GROUP[r.g].room}), Pain ${r.pain} (${r.time})${r.editedAt?" [แก้ไข "+r.editedAt+"]":""}${r.flags.length?" | "+r.flags.join("; "):""}\n`; });
   navigator.clipboard.writeText(t).then(()=>showToast("คัดลอกสรุปแล้ว ✓"));
@@ -627,8 +675,7 @@ function restoreJSON(ev){
   const rd=new FileReader();
   rd.onload=async()=>{
     try{
-      const data=JSON.parse(rd.result);
-      if(!Array.isArray(data)) throw 0;
+      const data=JSON.parse(rd.result); if(!Array.isArray(data)) throw 0;
       const ids=new Set(records.map(r=>r.id));
       const add=data.filter(r=>r&&r.id&&!ids.has(r.id));
       records=records.concat(add).sort((a,b)=>(a.iso||"").localeCompare(b.iso||""));
@@ -641,9 +688,10 @@ function restoreJSON(ev){
 }
 async function resetForm(){
   applyForm({hn:"",age:"",sex:null,pain:null,worse:false,answers:{}});
-  document.getElementById("summaryCard").classList.remove("show");
-  document.querySelectorAll(".row").forEach(r=>r.classList.remove("need"));
-  await Store.remove(DRAFT_KEY); evaluate();
+  await Store.remove(DRAFT_KEY);
+  go(0,true); evaluate();
+  window.scrollTo({top:0,behavior:"smooth"});
+  setTimeout(()=>document.getElementById("hn").focus(),350);
 }
 let toastTimer;
 function showToast(msg){
@@ -652,29 +700,30 @@ function showToast(msg){
   clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove("show"),2500);
 }
 
-/* ================= เริ่มต้น ================= */
+/* ============ เริ่มต้น ============ */
 (async function init(){
   await Store.detect();
   const saved=await Store.read(KEY);
   if(Array.isArray(saved)) records=saved;
   const draft=await Store.read(DRAFT_KEY);
+  let startAt=0;
   if(draft&&!Array.isArray(draft)){
     applyForm(draft);
+    startAt=typeof draft.cur==="number"?draft.cur:0;
     if(draft.editingId&&records.find(r=>r.id===draft.editingId)){
       const r=records.find(x=>x.id===draft.editingId);
       editingId=draft.editingId;
       document.body.classList.add("editing");
       document.getElementById("editBar").classList.add("show");
-      document.getElementById("editText").innerHTML=`กำลังแก้ไข HN ${esc(r.hn)} · บันทึก ${esc(r.time)}<small>แก้ไขค้างไว้ก่อนรีเฟรช — ทำต่อได้เลย</small>`;
+      document.getElementById("editText").innerHTML=`กำลังแก้ไข HN ${esc(r.hn)} · ${esc(r.time)}<small>แก้ไขค้างไว้ก่อนรีเฟรช — ทำต่อได้เลย</small>`;
     }
   }
   const dot=document.getElementById("saveDot"), msg=document.getElementById("saveMsg");
   if(Store.channels.length){ dot.className="dot";
     msg.textContent=`บันทึกถาวรอัตโนมัติ · รีเฟรชหรือปิดหน้าจอข้อมูลไม่หาย (${Store.channels.length} ช่องทางสำรอง)`; }
   else{ dot.className="dot warn"; msg.textContent='เบราว์เซอร์นี้ปิดการเก็บข้อมูล — กด "สำรองไฟล์" ก่อนปิดหน้าจอ'; }
-  renderAll();
+  renderAll(); go(startAt,true); evaluate();
   if(records.length) showToast(`โหลดข้อมูลเดิม ${records.length} ราย`);
-  evaluate();
 })();
 window.addEventListener("beforeunload",()=>{
   try{ if(Store.channels.includes("local")) localStorage.setItem(DRAFT_KEY,JSON.stringify(formSnapshot())); }catch(e){}
