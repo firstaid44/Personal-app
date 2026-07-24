@@ -2,334 +2,366 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>ระบบคลังยา — PCU สะบ้าย้อย</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>เช็คลิสต์ประเมินผู้ป่วยหลังผ่าตัดตา</title>
+<link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg: #060D18;
-  --s1: #0E1829;
-  --s2: #162236;
-  --border: rgba(255,255,255,.08);
-  --border2: rgba(255,255,255,.15);
-  --blue: #3D9EFF;
-  --teal: #00E5C4;
-  --green: #22D47A;
-  --amber: #FFB830;
-  --red: #FF5A5A;
-  --purple: #A78BFA;
-  --text1: #EEF2FF;
-  --text2: #8BA3C4;
-  --text3: #3D5470;
-  --mono: 'IBM Plex Mono', monospace;
-  --sans: 'IBM Plex Sans Thai', sans-serif;
+:root{
+  --bg:#F2F5F4; --card:#FFFFFF; --ink:#1C3833; --sub:#5B716C; --line:#DCE5E2;
+  --teal:#146B5C; --teal-soft:#E3F0ED;
+  --g1:#1E7F5C; --g1-bg:#E6F4EC; --g2:#B37416; --g2-bg:#FCF1DC; --g3:#B3382E; --g3-bg:#FBE7E4;
+  --radius:14px;
 }
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-body {
-  font-family: var(--sans);
-  background: var(--bg);
-  color: var(--text1);
-  min-height: 100vh;
-  overflow-x: hidden;
-}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--ink);line-height:1.55;padding-bottom:150px}
+.wrap{max-width:680px;margin:0 auto;padding:20px 16px}
+header{padding:8px 2px 18px}
+.eyebrow{font-size:12px;letter-spacing:.12em;color:var(--teal);font-weight:700;text-transform:uppercase}
+h1{font-family:'Anuphan',sans-serif;font-size:24px;font-weight:700;margin-top:4px}
+header p{color:var(--sub);font-size:14px;margin-top:4px}
 
-/* ── Ambient background ── */
-.ambient {
-  position: fixed; inset: 0; pointer-events: none; z-index: 0;
-  background:
-    radial-gradient(ellipse 60% 50% at 20% 10%, rgba(61,158,255,.1) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 40% at 80% 80%, rgba(0,229,196,.07) 0%, transparent 60%),
-    radial-gradient(ellipse 40% 60% at 60% 30%, rgba(167,139,250,.05) 0%, transparent 55%);
-}
-/* subtle grid */
-.grid-overlay {
-  position: fixed; inset: 0; pointer-events: none; z-index: 0;
-  background-image:
-    linear-gradient(rgba(255,255,255,.015) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,.015) 1px, transparent 1px);
-  background-size: 44px 44px;
-}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:14px}
+.card h2{font-family:'Anuphan',sans-serif;font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.card h2 .no{font-size:11px;background:var(--teal-soft);color:var(--teal);border-radius:6px;padding:2px 7px;font-family:'Sarabun',sans-serif;font-weight:700}
 
-.wrap {
-  position: relative; z-index: 1;
-  max-width: 480px; margin: 0 auto;
-  padding: calc(env(safe-area-inset-top) + 2rem) 1.25rem calc(env(safe-area-inset-bottom) + 2rem);
-}
+/* stats */
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{border-radius:11px;padding:12px 8px;text-align:center}
+.stat .n{font-family:'Anuphan',sans-serif;font-size:28px;font-weight:700;line-height:1.1}
+.stat .l{font-size:12px;font-weight:600;margin-top:2px}
+.stat.s1{background:var(--g1-bg);color:var(--g1)} .stat.s2{background:var(--g2-bg);color:var(--g2)} .stat.s3{background:var(--g3-bg);color:var(--g3)}
+.stat-total{font-size:13px;color:var(--sub);text-align:center;margin-top:10px}
+.stat-actions{display:flex;gap:8px;margin-top:10px}
+.stat-actions button{flex:1;background:#FAFCFB;border:1px solid var(--line);border-radius:9px;padding:8px;font-family:'Sarabun',sans-serif;font-size:12.5px;color:var(--sub);cursor:pointer;font-weight:600}
+.recent{margin-top:10px;font-size:12.5px;color:var(--sub);border-top:1px dashed var(--line);padding-top:8px}
+.recent div{display:flex;justify-content:space-between;padding:2px 0}
+.recent .gdot{font-weight:700}
+.gdot.d1{color:var(--g1)} .gdot.d2{color:var(--g2)} .gdot.d3{color:var(--g3)}
 
-/* ── Header ── */
-.hdr {
-  text-align: center; margin-bottom: 2.5rem;
-  animation: fadeUp .5s cubic-bezier(.34,1.2,.64,1) both;
-}
-@keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:none; } }
+/* photo */
+.photo-box{display:flex;gap:12px;align-items:center}
+.photo-btn{background:var(--teal-soft);color:var(--teal);border:1.5px dashed var(--teal);border-radius:11px;padding:14px;font-family:'Sarabun',sans-serif;font-weight:700;font-size:14px;cursor:pointer;flex:1;text-align:center}
+.photo-thumb{width:86px;height:86px;border-radius:11px;object-fit:cover;border:1.5px solid var(--line);display:none}
+.photo-hint{font-size:12px;color:var(--sub);margin-top:8px}
+.photo-retake{display:none;background:none;border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-family:'Sarabun',sans-serif;font-size:12px;color:var(--sub);cursor:pointer;margin-top:8px}
 
-.logo-ring {
-  width: 86px; height: 86px; border-radius: 26px; margin: 0 auto 1.25rem;
-  background: linear-gradient(145deg, #0F2744 0%, #0A1929 100%);
-  border: 1px solid rgba(61,158,255,.2);
-  display: flex; align-items: center; justify-content: center; font-size: 40px;
-  box-shadow: 0 0 0 1px rgba(61,158,255,.08), 0 20px 60px rgba(0,0,0,.5),
-              inset 0 1px 0 rgba(255,255,255,.05);
-  animation: logoBounce .7s cubic-bezier(.34,1.6,.64,1) .1s both;
-}
-@keyframes logoBounce { from { transform:scale(.4); opacity:0; } to { transform:none; opacity:1; } }
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{display:flex;align-items:flex-start;gap:10px;border:1.5px solid var(--line);border-radius:11px;padding:11px 12px;cursor:pointer;background:#FAFCFB;transition:border-color .15s, background .15s}
+.opt input{accent-color:var(--teal);width:18px;height:18px;margin-top:2px;flex-shrink:0}
+.opt span{font-size:14px}
+.opt .tag{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:1px 7px;margin-left:6px;vertical-align:1px}
+.tag.t1{background:var(--g1-bg);color:var(--g1)} .tag.t2{background:var(--g2-bg);color:var(--g2)} .tag.t3{background:var(--g3-bg);color:var(--g3)}
+.opt.sel1{border-color:var(--g1);background:var(--g1-bg)}
+.opt.sel2{border-color:var(--g2);background:var(--g2-bg)}
+.opt.sel3{border-color:var(--g3);background:var(--g3-bg)}
 
-.sys-title {
-  font-size: 22px; font-weight: 700; letter-spacing: -.4px;
-  background: linear-gradient(135deg, #EEF2FF 30%, var(--blue));
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  background-clip: text; margin-bottom: .35rem;
-}
-.sys-sub { font-size: 13px; color: var(--text2); line-height: 1.5; }
+.pain-strip{display:grid;grid-template-columns:repeat(11,1fr);gap:5px;margin:6px 0 10px}
+.pain-strip button{border:none;border-radius:8px;padding:12px 0;font-family:'Sarabun',sans-serif;font-weight:700;font-size:14px;cursor:pointer;color:#fff;opacity:.32;transition:opacity .15s, transform .1s}
+.pain-strip button:nth-child(-n+4){background:var(--g1)}
+.pain-strip button:nth-child(n+5):nth-child(-n+7){background:var(--g2)}
+.pain-strip button:nth-child(n+8){background:var(--g3)}
+.pain-strip button.on{opacity:1;transform:scale(1.08);box-shadow:0 3px 10px rgba(0,0,0,.18)}
+.pain-strip button:focus-visible{outline:3px solid var(--ink);opacity:.8}
+.pain-legend{display:flex;justify-content:space-between;font-size:11.5px;color:var(--sub);margin-bottom:10px}
+.chk{display:flex;align-items:center;gap:9px;font-size:14px;border-top:1px dashed var(--line);padding-top:11px;cursor:pointer}
+.chk input{accent-color:var(--g3);width:17px;height:17px}
 
-/* ── Status bar ── */
-.status-bar {
-  display: flex; align-items: center; gap: 8px;
-  background: rgba(34,212,122,.06); border: 1px solid rgba(34,212,122,.15);
-  border-radius: 12px; padding: 10px 14px; margin-bottom: 1.75rem;
-  font-size: 12px; color: var(--green); font-weight: 600;
-  animation: fadeUp .4s ease .2s both;
-}
-.status-dot {
-  width: 8px; height: 8px; border-radius: 50%; background: var(--green);
-  box-shadow: 0 0 0 3px rgba(34,212,122,.2); flex-shrink: 0;
-  animation: blink 2s ease-in-out infinite;
-}
-@keyframes blink {
-  0%,100% { box-shadow: 0 0 0 3px rgba(34,212,122,.2); }
-  50% { box-shadow: 0 0 0 6px rgba(34,212,122,.0); }
-}
+/* result bar */
+.result{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);box-shadow:0 -6px 24px rgba(20,50,45,.10)}
+.result-inner{max-width:680px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:10px}
+.badge{font-family:'Anuphan',sans-serif;font-weight:700;font-size:14px;border-radius:11px;padding:10px 12px;white-space:nowrap;border:2px solid transparent}
+.badge.b0{background:#EEF2F1;color:var(--sub)}
+.badge.b1{background:var(--g1-bg);color:var(--g1);border-color:var(--g1)}
+.badge.b2{background:var(--g2-bg);color:var(--g2);border-color:var(--g2)}
+.badge.b3{background:var(--g3-bg);color:var(--g3);border-color:var(--g3)}
+.result-txt{font-size:12px;color:var(--sub);flex:1;line-height:1.35}
+.submit-btn{background:var(--teal);color:#fff;border:none;border-radius:9px;padding:11px 16px;font-family:'Sarabun',sans-serif;font-weight:700;font-size:14px;cursor:pointer;white-space:nowrap}
+.submit-btn:disabled{background:#B7C9C4;cursor:not-allowed}
+.submit-btn:active:not(:disabled){transform:scale(.97)}
 
-/* ── Section label ── */
-.sec-label {
-  font-size: 10px; font-weight: 700; color: var(--text3);
-  text-transform: uppercase; letter-spacing: 1px; margin-bottom: .75rem;
-}
+.flags{margin-top:8px;font-size:13px}
+.flags li{margin-left:18px;margin-top:3px}
+#summaryCard{display:none}
+#summaryCard.show{display:block}
+#summaryCard h2 span.gg1{color:var(--g1)} #summaryCard h2 span.gg2{color:var(--g2)} #summaryCard h2 span.gg3{color:var(--g3)}
+.action{font-size:14px;background:#FAFCFB;border:1px dashed var(--line);border-radius:10px;padding:10px 12px;margin-top:8px}
 
-/* ── App cards ── */
-.cards { display: flex; flex-direction: column; gap: 12px; margin-bottom: 1.75rem; }
-
-.app-card {
-  background: var(--s1); border: 1px solid var(--border);
-  border-radius: 20px; overflow: hidden; cursor: pointer;
-  text-decoration: none; display: block;
-  transition: transform .18s cubic-bezier(.34,1.4,.64,1), border-color .18s, box-shadow .18s;
-  position: relative;
-  animation: cardIn .4s cubic-bezier(.34,1.2,.64,1) both;
-}
-.app-card:nth-child(1) { animation-delay: .3s; }
-.app-card:nth-child(2) { animation-delay: .4s; }
-.app-card:nth-child(3) { animation-delay: .5s; }
-@keyframes cardIn { from { opacity:0; transform:translateY(16px) scale(.97); } to { opacity:1; transform:none; } }
-
-.app-card:hover, .app-card:active {
-  transform: translateY(-2px) scale(1.005);
-  box-shadow: 0 12px 40px rgba(0,0,0,.3);
-}
-.app-card.blue:hover  { border-color: rgba(61,158,255,.3); box-shadow: 0 12px 40px rgba(61,158,255,.12); }
-.app-card.teal:hover  { border-color: rgba(0,229,196,.25); box-shadow: 0 12px 40px rgba(0,229,196,.1); }
-.app-card.amber:hover { border-color: rgba(255,184,48,.25); box-shadow: 0 12px 40px rgba(255,184,48,.1); }
-
-/* top accent line */
-.app-card::before {
-  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-  opacity: 0; transition: opacity .2s;
-}
-.app-card.blue::before  { background: linear-gradient(90deg, var(--blue), var(--teal)); }
-.app-card.teal::before  { background: linear-gradient(90deg, var(--teal), var(--green)); }
-.app-card.amber::before { background: linear-gradient(90deg, var(--amber), #FF9100); }
-.app-card:hover::before { opacity: 1; }
-
-.card-inner { padding: 18px 20px; display: flex; align-items: center; gap: 16px; }
-
-.card-icon {
-  width: 52px; height: 52px; border-radius: 15px; flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center; font-size: 24px;
-  position: relative;
-}
-.app-card.blue  .card-icon { background: rgba(61,158,255,.1); box-shadow: 0 0 0 1px rgba(61,158,255,.15); }
-.app-card.teal  .card-icon { background: rgba(0,229,196,.08); box-shadow: 0 0 0 1px rgba(0,229,196,.12); }
-.app-card.amber .card-icon { background: rgba(255,184,48,.08); box-shadow: 0 0 0 1px rgba(255,184,48,.12); }
-
-.card-text { flex: 1; min-width: 0; }
-.card-title { font-size: 15px; font-weight: 700; color: var(--text1); margin-bottom: 3px; }
-.card-desc { font-size: 12px; color: var(--text2); line-height: 1.5; }
-
-.card-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
-.tag {
-  padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 700;
-}
-.app-card.blue  .tag { background: rgba(61,158,255,.1); color: var(--blue); }
-.app-card.teal  .tag { background: rgba(0,229,196,.08); color: var(--teal); }
-.app-card.amber .tag { background: rgba(255,184,48,.08); color: var(--amber); }
-
-.card-arrow {
-  font-size: 20px; color: var(--text3); flex-shrink: 0;
-  transition: transform .2s, color .2s;
-}
-.app-card:hover .card-arrow { transform: translateX(4px); color: var(--text2); }
-
-/* ── Quick stats ── */
-.quick-stats {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
-  margin-bottom: 1.75rem;
-  animation: fadeUp .4s ease .6s both;
-}
-.qs-card {
-  background: var(--s1); border: 1px solid var(--border);
-  border-radius: 14px; padding: 14px 12px; text-align: center;
-}
-.qs-val { font-size: 24px; font-weight: 700; font-family: var(--mono); line-height: 1; margin-bottom: 4px; }
-.qs-label { font-size: 10px; color: var(--text3); font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
-.qs-blue  .qs-val { color: var(--blue); }
-.qs-teal  .qs-val { color: var(--teal); }
-.qs-amber .qs-val { color: var(--amber); }
-
-/* ── Footer ── */
-.footer {
-  text-align: center; font-size: 11px; color: var(--text3);
-  line-height: 1.8; padding-top: .5rem;
-  animation: fadeUp .4s ease .7s both;
-  border-top: 1px solid var(--border); padding-top: 1rem;
-}
-.footer strong { color: var(--text2); }
-
-/* ── Badge NEW ── */
-.new-badge {
-  display: inline-block; padding: 1px 7px; border-radius: 20px;
-  background: rgba(34,212,122,.15); color: var(--green);
-  font-size: 9px; font-weight: 700; text-transform: uppercase;
-  letter-spacing: .5px; margin-left: 6px; vertical-align: middle;
-}
-
-/* Touch ripple effect */
-.app-card:active { transform: scale(.98); }
+.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-80px);background:var(--ink);color:#fff;font-size:14px;font-weight:600;border-radius:10px;padding:11px 18px;transition:transform .3s;z-index:50;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+@media (max-width:420px){ .pain-strip button{padding:10px 0;font-size:12.5px} .badge{font-size:12.5px;padding:9px 9px} .result-txt{display:none} }
 </style>
 </head>
 <body>
-
-<div class="ambient"></div>
-<div class="grid-overlay"></div>
-
 <div class="wrap">
+<header>
+  <div class="eyebrow">Post-op Eye Surgery · Discharge Triage</div>
+  <h1>เช็คลิสต์ประเมินผู้ป่วยหลังผ่าตัดตา</h1>
+  <p>ถ่ายรูปผู้ป่วย/เอกสาร → ติ๊กประเมิน → กด "บันทึกรายนี้" เพื่อเก็บสถิติ</p>
+</header>
 
-  <!-- Header -->
-  <div class="hdr">
-    <div class="logo-ring">💊</div>
-    <div class="sys-title">ระบบบริหารจัดการคลังยา</div>
-    <div class="sys-sub">PCU สะบ้าย้อย · อ.สะบ้าย้อย จ.สงขลา</div>
+<div class="card">
+  <h2><span class="no">สถิติ</span> จำนวนผู้ป่วยที่ประเมินแล้ว</h2>
+  <div class="stats-grid">
+    <div class="stat s1"><div class="n" id="c1">0</div><div class="l">กลุ่ม 1 ปกติ</div></div>
+    <div class="stat s2"><div class="n" id="c2">0</div><div class="l">กลุ่ม 2 เฝ้าระวัง</div></div>
+    <div class="stat s3"><div class="n" id="c3">0</div><div class="l">กลุ่ม 3 ผิดปกติ</div></div>
   </div>
-
-  <!-- Status -->
-  <div class="status-bar">
-    <div class="status-dot"></div>
-    <span>ระบบพร้อมใช้งาน — GitHub Pages</span>
-    <span style="margin-left:auto;font-family:var(--mono);font-size:11px;opacity:.6;" id="cur-date"></span>
+  <div class="stat-total" id="ctotal">รวมทั้งหมด 0 ราย</div>
+  <div class="recent" id="recentList"></div>
+  <div class="stat-actions">
+    <button onclick="copyStats()">คัดลอกสถิติ</button>
+    <button onclick="clearStats()">ล้างสถิติทั้งหมด</button>
   </div>
-
-  <!-- Quick Stats -->
-  <div class="sec-label">ข้อมูลระบบ</div>
-  <div class="quick-stats">
-    <div class="qs-card qs-blue">
-      <div class="qs-val">118</div>
-      <div class="qs-label">รายการยา</div>
-    </div>
-    <div class="qs-card qs-teal">
-      <div class="qs-val">3</div>
-      <div class="qs-label">โมดูล</div>
-    </div>
-    <div class="qs-card qs-amber">
-      <div class="qs-val" id="tmt-count">—</div>
-      <div class="qs-label">จับคู่ TMT</div>
-    </div>
-  </div>
-
-  <!-- App Cards -->
-  <div class="sec-label">เมนูหลัก</div>
-  <div class="cards">
-
-    <!-- Drug Management System -->
-    <a class="app-card blue" href="drug_system.html">
-    <a class="app-card blue" href="Pharmacy.html">
-      <div class="card-inner">
-        <div class="card-icon">🏥</div>
-        <div class="card-text">
-          <div class="card-title">ระบบจัดการคลังยา</div>
-          <div class="card-desc">รับยาเข้า · เบิกยาออก · ดูคลังยา · ประวัติ · แจ้งเตือน LINE</div>
-          <div class="card-tags">
-            <span class="tag">รับยา</span>
-            <span class="tag">เบิกยา</span>
-            <span class="tag">คลังยา</span>
-            <span class="tag">LINE Notify</span>
-          </div>
-        </div>
-        <div class="card-arrow">›</div>
-      </div>
-    </a>
-
-    <!-- Barcode Scanner -->
-    <a class="app-card teal" href="barcode_scanner.html">
-      <div class="card-inner">
-        <div class="card-icon">📷</div>
-        <div class="card-text">
-          <div class="card-title">
-            สแกนบาร์โค้ดยา
-            <span class="new-badge">NEW</span>
-          </div>
-          <div class="card-desc">เปิดกล้องมือถือสแกน EAN-13, Code 128, GS1-128, QR Code</div>
-          <div class="card-tags">
-            <span class="tag">EAN-13</span>
-            <span class="tag">GS1-128</span>
-            <span class="tag">QR Code</span>
-            <span class="tag">LOT + EXP</span>
-          </div>
-        </div>
-        <div class="card-arrow">›</div>
-      </div>
-    </a>
-
-    <!-- TMT Sync -->
-    <a class="app-card amber" href="tmt_sync_tool.html">
-      <div class="card-inner">
-        <div class="card-icon">🔬</div>
-        <div class="card-text">
-          <div class="card-title">
-            TMT Sync Tool
-            <span class="new-badge">NEW</span>
-          </div>
-          <div class="card-desc">จับคู่รหัสยา PCU กับมาตรฐาน TMT ของ สมสท. ส่งออก CSV</div>
-          <div class="card-tags">
-            <span class="tag">TMT Standard</span>
-            <span class="tag">Export CSV</span>
-            <span class="tag">สมสท.</span>
-          </div>
-        </div>
-        <div class="card-arrow">›</div>
-      </div>
-    </a>
-
-  </div>
-
-  <!-- Footer -->
-  <div class="footer">
-    <strong>PCU สะบ้าย้อย</strong> · หน่วยบริการปฐมภูมิ<br>
-    อำเภอสะบ้าย้อย จังหวัดสงขลา<br>
-    <span style="color:var(--text3);font-size:10px;">Powered by GitHub Pages · jsQR · IBM Plex Sans Thai</span>
-  </div>
-
 </div>
 
-<script>
-// Date
-const n = new Date();
-document.getElementById('cur-date').textContent =
-  String(n.getDate()).padStart(2,'0') + '/' +
-  String(n.getMonth()+1).padStart(2,'0') + '/' + n.getFullYear();
+<div class="card">
+  <h2><span class="no">ข้อมูล</span> รูปถ่ายผู้ป่วย / สติกเกอร์ HN</h2>
+  <div class="photo-box">
+    <label class="photo-btn" for="photoInput">📷 ถ่ายรูปเก็บ</label>
+    <input type="file" id="photoInput" accept="image/*" capture="environment" hidden>
+    <img class="photo-thumb" id="photoThumb" alt="รูปที่ถ่าย">
+  </div>
+  <button class="photo-retake" id="retakeBtn" onclick="document.getElementById('photoInput').click()">ถ่ายใหม่</button>
+  <div class="photo-hint">รูปเก็บไว้ดูในหน้านี้ระหว่างประเมินเท่านั้น ไม่ถูกส่งหรือบันทึกลงสถิติ (แนะนำถ่ายให้ติดสติกเกอร์ HN)</div>
+</div>
 
-// TMT count from localStorage
-const tmtMap = JSON.parse(localStorage.getItem('tmt_map') || '{}');
-const matched = Object.keys(tmtMap).length;
-document.getElementById('tmt-count').textContent = matched || '0';
+<div class="card"><h2><span class="no">1</span> ระดับความรู้สึกตัว</h2><div class="opts" data-q="conscious"></div></div>
+<div class="card"><h2><span class="no">2</span> สัญญาณชีพ</h2><div class="opts" data-q="vitals"></div></div>
+<div class="card">
+  <h2><span class="no">3</span> อาการปวดตา (Pain score)</h2>
+  <div class="pain-strip" id="painStrip" role="group" aria-label="เลือกคะแนนความปวด 0 ถึง 10"></div>
+  <div class="pain-legend"><span>0–3 เล็กน้อย</span><span>4–6 ปานกลาง</span><span>7–10 มาก</span></div>
+  <label class="chk"><input type="checkbox" id="painWorse"> ปวดเพิ่มขึ้นเรื่อย ๆ <span class="tag t3">กลุ่ม 3</span></label>
+</div>
+<div class="card"><h2><span class="no">4</span> คลื่นไส้ / อาเจียน / เวียนศีรษะ</h2><div class="opts" data-q="nausea"></div></div>
+<div class="card"><h2><span class="no">5</span> เลือดออก / สารคัดหลั่งจากตา</h2><div class="opts" data-q="bleed"></div></div>
+<div class="card"><h2><span class="no">6</span> การมองเห็น</h2><div class="opts" data-q="vision"></div></div>
+<div class="card"><h2><span class="no">7</span> ผ้าปิดตา / Eye shield</h2><div class="opts" data-q="shield"></div></div>
+<div class="card"><h2><span class="no">8</span> การเดิน / การเคลื่อนไหว</h2><div class="opts" data-q="walk"></div></div>
+<div class="card"><h2><span class="no">9</span> ญาติและความเข้าใจคำแนะนำ</h2><div class="opts" data-q="family"></div></div>
+
+<div class="card" id="summaryCard">
+  <h2 id="sumTitle"></h2>
+  <div class="action" id="sumAction"></div>
+  <ul class="flags" id="sumFlags"></ul>
+</div>
+</div>
+
+<div class="result">
+  <div class="result-inner">
+    <div class="badge b0" id="badge">ยังประเมินไม่ครบ</div>
+    <div class="result-txt" id="resultTxt">ตอบครบ 9 ข้อ + Pain score</div>
+    <button class="submit-btn" id="submitBtn" onclick="submitCase()" disabled>บันทึกรายนี้</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const QUESTIONS = {
+  conscious:{label:"ระดับความรู้สึกตัว",opts:[
+    {t:"รู้สึกตัวดี",g:1},
+    {t:"ซึม สับสน หรือมีอาการผิดปกติทางระบบประสาท",g:3}]},
+  vitals:{label:"สัญญาณชีพ",opts:[
+    {t:"คงที่ อยู่ในเกณฑ์ปกติ",g:1},
+    {t:"BP/ชีพจรเปลี่ยนแปลงเล็กน้อย แต่ยังอยู่ในเกณฑ์ปลอดภัย",g:2},
+    {t:"BP สูงมาก/ต่ำมาก หรือสัญญาณชีพไม่คงที่",g:3}]},
+  nausea:{label:"คลื่นไส้/อาเจียน",opts:[
+    {t:"ไม่มีคลื่นไส้ อาเจียน",g:1},
+    {t:"เวียนศีรษะ คลื่นไส้เล็กน้อย",g:2},
+    {t:"คลื่นไส้ อาเจียนมาก ร่วมกับปวดตา (สงสัย IOP สูง)",g:3}]},
+  bleed:{label:"เลือด/สารคัดหลั่ง",opts:[
+    {t:"ไม่มีเลือดออกหรือสารคัดหลั่งผิดปกติ",g:1},
+    {t:"มีเลือดออกจากตา หรือมีน้ำไหลผิดปกติ",g:3}]},
+  vision:{label:"การมองเห็น",opts:[
+    {t:"ตามัวตามที่คาดหลังผ่าตัด",g:1},
+    {t:"ตามัวลงมากกว่าที่คาด หรือมองไม่เห็นแสง",g:3}]},
+  shield:{label:"ผ้าปิดตา/Eye shield",opts:[
+    {t:"อยู่ในสภาพดี ปิดแน่นเรียบร้อย",g:1},
+    {t:"หลุด/ชำรุด ต้องแก้ไขและประเมินซ้ำ",g:2}]},
+  walk:{label:"การเดิน",opts:[
+    {t:"เดินได้ (มีผู้พยุงตามความเหมาะสม)",g:1},
+    {t:"เดินยังไม่มั่นคง ต้องพักหรือสังเกตอาการเพิ่ม",g:2}]},
+  family:{label:"ญาติ/ความเข้าใจ",opts:[
+    {t:"มีญาติมารับ และเข้าใจคำแนะนำการดูแลที่บ้าน",g:1},
+    {t:"ยังไม่มีญาติมารับ หรือยังไม่เข้าใจคำแนะนำ",g:2}]}
+};
+const GROUP = {
+  1:{name:"กลุ่มที่ 1 · ปกติ (พร้อมกลับบ้าน)",action:"ให้คำแนะนำการดูแลที่บ้าน นัดติดตาม และจำหน่ายกลับบ้านพร้อมญาติได้"},
+  2:{name:"กลุ่มที่ 2 · เฝ้าระวัง",action:"ให้พักสังเกตอาการต่อ แก้ไขปัจจัยที่พบ และประเมินซ้ำก่อนพิจารณาจำหน่าย"},
+  3:{name:"กลุ่มที่ 3 · ผิดปกติ",action:"⚠ รายงานแพทย์/ส่งพบจักษุแพทย์ทันที ห้ามจำหน่ายกลับบ้านจนกว่าจักษุแพทย์จะประเมินแล้ว"}
+};
+const state = {answers:{}, pain:null, painWorse:false};
+let stats = {counts:{1:0,2:0,3:0}, records:[]};
+const STORE_KEY = "eyetriage-stats";
+let memoryOnly = false;
+
+// ---- persistence (window.storage เมื่อเปิดใน Claude, ถ้าไม่มีจะเก็บชั่วคราวในหน้า) ----
+async function loadStats(){
+  try{
+    if(window.storage){
+      const r = await window.storage.get(STORE_KEY);
+      if(r && r.value) stats = JSON.parse(r.value);
+    } else memoryOnly = true;
+  }catch(e){ /* ยังไม่มีข้อมูล */ }
+  renderStats();
+}
+async function saveStats(){
+  try{ if(window.storage) await window.storage.set(STORE_KEY, JSON.stringify(stats)); }
+  catch(e){ console.error("save failed", e); }
+}
+
+function renderStats(){
+  document.getElementById("c1").textContent = stats.counts[1];
+  document.getElementById("c2").textContent = stats.counts[2];
+  document.getElementById("c3").textContent = stats.counts[3];
+  const total = stats.counts[1]+stats.counts[2]+stats.counts[3];
+  document.getElementById("ctotal").textContent = "รวมทั้งหมด "+total+" ราย" + (memoryOnly?" (เก็บชั่วคราว — คัดลอกสถิติก่อนปิดหน้า)":"");
+  const rl = document.getElementById("recentList");
+  const last = stats.records.slice(-5).reverse();
+  rl.innerHTML = last.length ? "<b>รายล่าสุด:</b>" + last.map(r=>
+    `<div><span>${r.time}</span><span class="gdot d${r.g}">กลุ่ม ${r.g} · Pain ${r.pain}</span></div>`).join("") : "";
+}
+
+// ---- build options ----
+document.querySelectorAll(".opts").forEach(box=>{
+  const q = box.dataset.q;
+  QUESTIONS[q].opts.forEach((o,i)=>{
+    const lb = document.createElement("label");
+    lb.className = "opt";
+    lb.innerHTML = `<input type="radio" name="${q}" value="${i}"><span>${o.t}<span class="tag t${o.g}">กลุ่ม ${o.g}</span></span>`;
+    lb.querySelector("input").addEventListener("change",()=>{
+      state.answers[q]=o.g;
+      box.querySelectorAll(".opt").forEach(e=>e.classList.remove("sel1","sel2","sel3"));
+      lb.classList.add("sel"+o.g);
+      evaluate();
+    });
+    box.appendChild(lb);
+  });
+});
+
+// ---- pain strip ----
+const strip = document.getElementById("painStrip");
+for(let i=0;i<=10;i++){
+  const b=document.createElement("button");
+  b.type="button"; b.textContent=i; b.setAttribute("aria-label","ปวดระดับ "+i);
+  b.onclick=()=>{ state.pain=i;
+    strip.querySelectorAll("button").forEach(x=>x.classList.remove("on"));
+    b.classList.add("on"); evaluate(); };
+  strip.appendChild(b);
+}
+document.getElementById("painWorse").addEventListener("change",e=>{state.painWorse=e.target.checked;evaluate();});
+
+// ---- photo ----
+document.getElementById("photoInput").addEventListener("change",e=>{
+  const f = e.target.files[0]; if(!f) return;
+  const img = document.getElementById("photoThumb");
+  img.src = URL.createObjectURL(f);
+  img.style.display = "block";
+  document.getElementById("retakeBtn").style.display = "inline-block";
+});
+
+function painGroup(){ if(state.pain===null) return null; if(state.painWorse||state.pain>=7) return 3; if(state.pain>=4) return 2; return 1; }
+function isComplete(){ return Object.keys(state.answers).length===8 && painGroup()!==null; }
+function worstGroup(){
+  const g=[...Object.values(state.answers)]; const pg=painGroup(); if(pg) g.push(pg);
+  return g.length?Math.max(...g):0;
+}
+function currentFlags(){
+  const flags=[];
+  for(const q in state.answers){ if(state.answers[q]>1){
+    const o=QUESTIONS[q].opts.find(o=>o.g===state.answers[q]);
+    flags.push(`${QUESTIONS[q].label}: ${o.t} (กลุ่ม ${o.g})`); } }
+  const pg=painGroup();
+  if(pg&&pg>1) flags.push(`Pain score ${state.pain}${state.painWorse?" ปวดเพิ่มขึ้นเรื่อย ๆ":""} (กลุ่ม ${pg})`);
+  return flags;
+}
+
+function evaluate(){
+  const badge=document.getElementById("badge"), txt=document.getElementById("resultTxt");
+  const worst=worstGroup(), complete=isComplete(), answered=Object.keys(state.answers).length;
+  document.getElementById("submitBtn").disabled = !complete;
+
+  badge.className="badge b"+(complete?worst:(worst===3?3:0));
+  if(!complete && worst!==3){
+    badge.textContent="ยังประเมินไม่ครบ";
+    txt.textContent=`ตอบแล้ว ${answered}/8 ข้อ${painGroup()!==null?" + Pain "+state.pain:" (ยังไม่เลือก Pain)"}`;
+  } else if(worst===3 && !complete){
+    badge.textContent="กลุ่มที่ 3 · ผิดปกติ";
+    txt.textContent="พบข้อกลุ่ม 3 — พบจักษุแพทย์ทันที (ประเมินให้ครบก่อนบันทึก)";
+  } else {
+    badge.textContent=GROUP[worst].name;
+    txt.textContent= worst===3 ? "ห้ามกลับบ้าน — กดบันทึกเพื่อเก็บสถิติ" : "กด \"บันทึกรายนี้\" เพื่อเก็บสถิติและเริ่มรายถัดไป";
+  }
+
+  const card=document.getElementById("summaryCard");
+  if(complete||worst===3){
+    card.classList.add("show");
+    document.getElementById("sumTitle").innerHTML=`<span class="gg${worst}">ผลการจัดกลุ่ม: ${GROUP[worst].name}</span>`;
+    document.getElementById("sumAction").textContent=GROUP[worst].action;
+    const flags=currentFlags();
+    document.getElementById("sumFlags").innerHTML = flags.length? "<b style='font-size:13px'>ข้อที่พบ:</b>"+flags.map(f=>`<li>${f}</li>`).join("") : "<li>ผ่านเกณฑ์ปกติทุกข้อ</li>";
+  } else card.classList.remove("show");
+}
+
+// ---- submit per patient ----
+async function submitCase(){
+  if(!isComplete()) return;
+  const g=worstGroup();
+  const now=new Date();
+  stats.counts[g]++;
+  stats.records.push({
+    time: now.toLocaleDateString("th-TH",{day:"numeric",month:"short"})+" "+now.toLocaleTimeString("th-TH",{hour:"2-digit",minute:"2-digit"}),
+    g, pain: state.pain, flags: currentFlags()
+  });
+  if(stats.records.length>300) stats.records = stats.records.slice(-300);
+  await saveStats();
+  renderStats();
+  showToast(`บันทึกแล้ว ✓ กลุ่ม ${g} (รวม ${stats.counts[1]+stats.counts[2]+stats.counts[3]} ราย)`);
+  resetForm();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function resetForm(){
+  state.answers={}; state.pain=null; state.painWorse=false;
+  document.querySelectorAll(".opts .opt").forEach(e=>{e.classList.remove("sel1","sel2","sel3"); e.querySelector("input").checked=false;});
+  strip.querySelectorAll("button").forEach(x=>x.classList.remove("on"));
+  document.getElementById("painWorse").checked=false;
+  const img=document.getElementById("photoThumb"); img.style.display="none"; img.src="";
+  document.getElementById("photoInput").value="";
+  document.getElementById("retakeBtn").style.display="none";
+  document.getElementById("summaryCard").classList.remove("show");
+  evaluate();
+}
+
+function copyStats(){
+  const total=stats.counts[1]+stats.counts[2]+stats.counts[3];
+  let t=`สถิติการประเมินผู้ป่วยหลังผ่าตัดตา (ก่อนจำหน่าย)\n`;
+  t+=`กลุ่มที่ 1 ปกติ (พร้อมกลับบ้าน): ${stats.counts[1]} ราย\n`;
+  t+=`กลุ่มที่ 2 เฝ้าระวัง: ${stats.counts[2]} ราย\n`;
+  t+=`กลุ่มที่ 3 ผิดปกติ (พบจักษุแพทย์ทันที): ${stats.counts[3]} ราย\n`;
+  t+=`รวมทั้งหมด: ${total} ราย\n\nรายการ:\n`;
+  stats.records.forEach((r,i)=>{ t+=`${i+1}. ${r.time} — กลุ่ม ${r.g}, Pain ${r.pain}${r.flags.length?" ("+r.flags.join("; ")+")":""}\n`; });
+  navigator.clipboard.writeText(t).then(()=>showToast("คัดลอกสถิติแล้ว ✓"));
+}
+
+async function clearStats(){
+  if(!confirm("ล้างสถิติทั้งหมด? ข้อมูลจำนวนผู้ป่วยจะถูกลบถาวร")) return;
+  stats={counts:{1:0,2:0,3:0},records:[]};
+  try{ if(window.storage) await window.storage.delete(STORE_KEY); }catch(e){}
+  renderStats();
+  showToast("ล้างสถิติแล้ว");
+}
+
+let toastTimer;
+function showToast(msg){
+  const t=document.getElementById("toast");
+  t.textContent=msg; t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove("show"),2200);
+}
+
+loadStats();
+evaluate();
 </script>
 </body>
 </html>
