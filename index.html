@@ -10,10 +10,12 @@
   --bg:#F2F5F4; --card:#FFFFFF; --ink:#1C3833; --sub:#5B716C; --line:#DCE5E2;
   --teal:#146B5C; --teal-soft:#E3F0ED;
   --g1:#1E7F5C; --g1-bg:#E6F4EC; --g2:#B37416; --g2-bg:#FCF1DC; --g3:#B3382E; --g3-bg:#FBE7E4;
+  --edit:#5B49B8; --edit-bg:#EEEAFB;
   --radius:14px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--ink);line-height:1.55;padding-bottom:150px}
+body.editing{background:#F4F2FA}
 .wrap{max-width:680px;margin:0 auto;padding:20px 16px}
 header{padding:8px 2px 18px}
 .eyebrow{font-size:12px;letter-spacing:.12em;color:var(--teal);font-weight:700;text-transform:uppercase}
@@ -27,6 +29,13 @@ header p{color:var(--sub);font-size:14px;margin-top:4px}
 .savebar{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--sub);background:#FAFCFB;border:1px solid var(--line);border-radius:9px;padding:7px 10px;margin-bottom:12px}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--g1);flex-shrink:0}
 .dot.warn{background:var(--g2)}
+
+/* edit banner */
+#editBar{display:none;background:var(--edit-bg);border:1.5px solid var(--edit);border-radius:12px;padding:11px 13px;margin-bottom:14px;align-items:center;gap:10px}
+#editBar.show{display:flex}
+#editBar .t{flex:1;font-size:13.5px;color:var(--edit);font-weight:600;line-height:1.35}
+#editBar .t small{display:block;font-weight:400;font-size:11.5px;opacity:.85}
+#editBar button{background:#fff;border:1px solid var(--edit);color:var(--edit);border-radius:9px;padding:8px 12px;font-family:'Sarabun',sans-serif;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap}
 
 /* stats */
 .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
@@ -44,15 +53,18 @@ header p{color:var(--sub);font-size:14px;margin-top:4px}
 .log-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
 .log-head b{font-size:13px}
 .log-head input{border:1px solid var(--line);border-radius:8px;padding:6px 9px;font-family:'Sarabun',sans-serif;font-size:12.5px;width:120px;background:#FAFCFB}
-.rec{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:10px;border:1px solid var(--line);margin-bottom:7px;background:#FAFCFB}
+.rec{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:10px;border:1px solid var(--line);margin-bottom:7px;background:#FAFCFB}
 .rec .pill{font-size:11px;font-weight:700;border-radius:6px;padding:2px 7px;white-space:nowrap}
 .rec.r1 .pill{background:var(--g1-bg);color:var(--g1)} .rec.r2 .pill{background:var(--g2-bg);color:var(--g2)} .rec.r3 .pill{background:var(--g3-bg);color:var(--g3)}
 .rec.r1{border-left:4px solid var(--g1)} .rec.r2{border-left:4px solid var(--g2)} .rec.r3{border-left:4px solid var(--g3)}
+.rec.active{background:var(--edit-bg);border-color:var(--edit)}
 .rec .info{flex:1;min-width:0}
 .rec .hn{font-size:13.5px;font-weight:700}
 .rec .meta{font-size:11.5px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.rec .del{background:none;border:1px solid var(--line);color:var(--g3);border-radius:8px;width:32px;height:32px;font-size:15px;cursor:pointer;flex-shrink:0}
-.rec .del:active{background:var(--g3-bg)}
+.rec .edited{color:var(--edit);font-weight:600}
+.rec button{border:1px solid var(--line);background:#fff;border-radius:8px;width:33px;height:33px;font-size:14px;cursor:pointer;flex-shrink:0}
+.rec .edt{color:var(--edit)} .rec .edt:active{background:var(--edit-bg)}
+.rec .del{color:var(--g3)} .rec .del:active{background:var(--g3-bg)}
 .empty{font-size:13px;color:var(--sub);text-align:center;padding:14px 0}
 
 /* patient info */
@@ -74,6 +86,7 @@ label.fl{font-size:12px;color:var(--sub);font-weight:600;display:block;margin-bo
 .opt.sel1{border-color:var(--g1);background:var(--g1-bg)}
 .opt.sel2{border-color:var(--g2);background:var(--g2-bg)}
 .opt.sel3{border-color:var(--g3);background:var(--g3-bg)}
+.card.need{border-color:var(--edit);box-shadow:0 0 0 3px var(--edit-bg)}
 
 .pain-strip{display:grid;grid-template-columns:repeat(11,1fr);gap:5px;margin:6px 0 10px}
 .pain-strip button{border:none;border-radius:8px;padding:12px 0;font-family:'Sarabun',sans-serif;font-weight:700;font-size:14px;cursor:pointer;color:#fff;opacity:.32;transition:opacity .15s, transform .1s}
@@ -95,6 +108,7 @@ label.fl{font-size:12px;color:var(--sub);font-weight:600;display:block;margin-bo
 .badge.b3{background:var(--g3-bg);color:var(--g3);border-color:var(--g3)}
 .result-txt{font-size:12px;color:var(--sub);flex:1;line-height:1.35}
 .submit-btn{background:var(--teal);color:#fff;border:none;border-radius:9px;padding:11px 16px;font-family:'Sarabun',sans-serif;font-weight:700;font-size:14px;cursor:pointer;white-space:nowrap}
+.submit-btn.edit{background:var(--edit)}
 .submit-btn:disabled{background:#B7C9C4;cursor:not-allowed}
 .submit-btn:active:not(:disabled){transform:scale(.97)}
 
@@ -104,6 +118,7 @@ label.fl{font-size:12px;color:var(--sub);font-weight:600;display:block;margin-bo
 #summaryCard.show{display:block}
 #summaryCard h2 span.gg1{color:var(--g1)} #summaryCard h2 span.gg2{color:var(--g2)} #summaryCard h2 span.gg3{color:var(--g3)}
 .action{font-size:14px;background:#FAFCFB;border:1px dashed var(--line);border-radius:10px;padding:10px 12px;margin-top:8px}
+.changed{font-size:13px;color:var(--edit);background:var(--edit-bg);border-radius:9px;padding:8px 11px;margin-top:8px}
 
 .toast{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-90px);background:var(--ink);color:#fff;font-size:14px;font-weight:600;border-radius:10px;padding:11px 18px;transition:transform .3s;z-index:50;box-shadow:0 6px 20px rgba(0,0,0,.25);max-width:90vw;text-align:center}
 .toast.show{transform:translateX(-50%) translateY(0)}
@@ -115,8 +130,13 @@ label.fl{font-size:12px;color:var(--sub);font-weight:600;display:block;margin-bo
 <header>
   <div class="eyebrow">Post-op Eye Surgery · Discharge Triage</div>
   <h1>เช็คลิสต์ประเมินผู้ป่วยหลังผ่าตัดตา</h1>
-  <p>กรอก HN เพศ อายุ → ติ๊กประเมิน → กด "บันทึกรายนี้" ข้อมูลอยู่ครบแม้รีเฟรชหรือปิดหน้าจอ</p>
+  <p>กรอก HN เพศ อายุ → ติ๊กประเมิน → บันทึก · กดดินสอในรายการเพื่อแก้ไขผลย้อนหลังได้</p>
 </header>
+
+<div id="editBar">
+  <div class="t" id="editText"></div>
+  <button onclick="cancelEdit()">ยกเลิก</button>
+</div>
 
 <div class="card">
   <h2><span class="no">สถิติ</span> สรุปจำนวนผู้ป่วย</h2>
@@ -145,7 +165,7 @@ label.fl{font-size:12px;color:var(--sub);font-weight:600;display:block;margin-bo
   </div>
 </div>
 
-<div class="card">
+<div class="card" id="ptCard">
   <h2><span class="no">ข้อมูล</span> ผู้ป่วย</h2>
   <div class="pt-grid">
     <div class="full">
@@ -166,25 +186,26 @@ label.fl{font-size:12px;color:var(--sub);font-weight:600;display:block;margin-bo
   </div>
 </div>
 
-<div class="card"><h2><span class="no">1</span> ระดับความรู้สึกตัว</h2><div class="opts" data-q="conscious"></div></div>
-<div class="card"><h2><span class="no">2</span> สัญญาณชีพ</h2><div class="opts" data-q="vitals"></div></div>
-<div class="card">
+<div class="card" data-card="conscious"><h2><span class="no">1</span> ระดับความรู้สึกตัว</h2><div class="opts" data-q="conscious"></div></div>
+<div class="card" data-card="vitals"><h2><span class="no">2</span> สัญญาณชีพ</h2><div class="opts" data-q="vitals"></div></div>
+<div class="card" data-card="pain">
   <h2><span class="no">3</span> อาการปวดตา (Pain score)</h2>
   <div class="pain-strip" id="painStrip" role="group" aria-label="เลือกคะแนนความปวด 0 ถึง 10"></div>
   <div class="pain-legend"><span>0–3 เล็กน้อย</span><span>4–6 ปานกลาง</span><span>7–10 มาก</span></div>
   <label class="chk"><input type="checkbox" id="painWorse"> ปวดเพิ่มขึ้นเรื่อย ๆ <span class="tag t3">กลุ่ม 3</span></label>
 </div>
-<div class="card"><h2><span class="no">4</span> คลื่นไส้ / อาเจียน / เวียนศีรษะ</h2><div class="opts" data-q="nausea"></div></div>
-<div class="card"><h2><span class="no">5</span> เลือดออก / สารคัดหลั่งจากตา</h2><div class="opts" data-q="bleed"></div></div>
-<div class="card"><h2><span class="no">6</span> การมองเห็น</h2><div class="opts" data-q="vision"></div></div>
-<div class="card"><h2><span class="no">7</span> ผ้าปิดตา / Eye shield</h2><div class="opts" data-q="shield"></div></div>
-<div class="card"><h2><span class="no">8</span> การเดิน / การเคลื่อนไหว</h2><div class="opts" data-q="walk"></div></div>
-<div class="card"><h2><span class="no">9</span> ญาติและความเข้าใจคำแนะนำ</h2><div class="opts" data-q="family"></div></div>
+<div class="card" data-card="nausea"><h2><span class="no">4</span> คลื่นไส้ / อาเจียน / เวียนศีรษะ</h2><div class="opts" data-q="nausea"></div></div>
+<div class="card" data-card="bleed"><h2><span class="no">5</span> เลือดออก / สารคัดหลั่งจากตา</h2><div class="opts" data-q="bleed"></div></div>
+<div class="card" data-card="vision"><h2><span class="no">6</span> การมองเห็น</h2><div class="opts" data-q="vision"></div></div>
+<div class="card" data-card="shield"><h2><span class="no">7</span> ผ้าปิดตา / Eye shield</h2><div class="opts" data-q="shield"></div></div>
+<div class="card" data-card="walk"><h2><span class="no">8</span> การเดิน / การเคลื่อนไหว</h2><div class="opts" data-q="walk"></div></div>
+<div class="card" data-card="family"><h2><span class="no">9</span> ญาติและความเข้าใจคำแนะนำ</h2><div class="opts" data-q="family"></div></div>
 
 <div class="card" id="summaryCard">
   <h2 id="sumTitle"></h2>
   <div class="action" id="sumAction"></div>
   <ul class="flags" id="sumFlags"></ul>
+  <div class="changed" id="sumChanged" style="display:none"></div>
 </div>
 </div>
 
@@ -198,96 +219,58 @@ label.fl{font-size:12px;color:var(--sub);font-weight:600;display:block;margin-bo
 <div class="toast" id="toast"></div>
 
 <script>
-/* =====================================================================
-   ชั้นจัดเก็บข้อมูล — เขียนพร้อมกันทุกช่องทางที่ใช้ได้ และอ่านจากช่องทาง
-   ที่มีข้อมูลใหม่สุด ทำให้รีเฟรช/ปิดหน้าจอแล้วข้อมูลยังอยู่
-   ช่องทาง: window.storage (ในหน้า Claude) + localStorage + IndexedDB
-   ===================================================================== */
+/* ================= ชั้นจัดเก็บข้อมูล (เขียนหลายช่องทางกันข้อมูลหาย) ================= */
 const KEY = "eye-triage-records-v2";
 const DRAFT_KEY = "eye-triage-draft-v2";
-
 const IDB = {
   db:null,
-  open(){
-    return new Promise(res=>{
-      if(this.db) return res(this.db);
-      try{
-        const rq = indexedDB.open("eyeTriage",1);
-        rq.onupgradeneeded = ()=> rq.result.createObjectStore("kv");
-        rq.onsuccess = ()=>{ this.db=rq.result; res(this.db); };
-        rq.onerror = ()=> res(null);
-      }catch(e){ res(null); }
-    });
-  },
-  async get(k){
-    const db = await this.open(); if(!db) return null;
-    return new Promise(res=>{
-      try{ const rq = db.transaction("kv","readonly").objectStore("kv").get(k);
-        rq.onsuccess=()=>res(rq.result||null); rq.onerror=()=>res(null);
-      }catch(e){ res(null); }
-    });
-  },
-  async set(k,v){
-    const db = await this.open(); if(!db) return;
-    return new Promise(res=>{
-      try{ const rq = db.transaction("kv","readwrite").objectStore("kv").put(v,k);
-        rq.onsuccess=()=>res(); rq.onerror=()=>res();
-      }catch(e){ res(); }
-    });
-  },
-  async del(k){
-    const db = await this.open(); if(!db) return;
-    return new Promise(res=>{
-      try{ const rq = db.transaction("kv","readwrite").objectStore("kv").delete(k);
-        rq.onsuccess=()=>res(); rq.onerror=()=>res();
-      }catch(e){ res(); }
-    });
-  }
+  open(){ return new Promise(res=>{ if(this.db) return res(this.db);
+    try{ const rq=indexedDB.open("eyeTriage",1);
+      rq.onupgradeneeded=()=>rq.result.createObjectStore("kv");
+      rq.onsuccess=()=>{this.db=rq.result;res(this.db);}; rq.onerror=()=>res(null);
+    }catch(e){res(null);} }); },
+  async get(k){ const db=await this.open(); if(!db) return null;
+    return new Promise(res=>{ try{ const rq=db.transaction("kv","readonly").objectStore("kv").get(k);
+      rq.onsuccess=()=>res(rq.result||null); rq.onerror=()=>res(null);}catch(e){res(null);} }); },
+  async set(k,v){ const db=await this.open(); if(!db) return;
+    return new Promise(res=>{ try{ const rq=db.transaction("kv","readwrite").objectStore("kv").put(v,k);
+      rq.onsuccess=()=>res(); rq.onerror=()=>res();}catch(e){res();} }); },
+  async del(k){ const db=await this.open(); if(!db) return;
+    return new Promise(res=>{ try{ const rq=db.transaction("kv","readwrite").objectStore("kv").delete(k);
+      rq.onsuccess=()=>res(); rq.onerror=()=>res();}catch(e){res();} }); }
 };
-
 const Store = {
-  channels: [],
+  channels:[],
   async detect(){
-    this.channels = [];
-    if(window.storage){
-      try{ await window.storage.set("__probe__","1"); this.channels.push("cloud"); }catch(e){}
-    }
+    this.channels=[];
+    if(window.storage){ try{ await window.storage.set("__probe__","1"); this.channels.push("cloud"); }catch(e){} }
     try{ localStorage.setItem("__probe__","1"); localStorage.removeItem("__probe__"); this.channels.push("local"); }catch(e){}
     if(await IDB.open()) this.channels.push("idb");
   },
   async read(key){
-    const found = [];
-    if(this.channels.includes("cloud")){
-      try{ const r = await window.storage.get(key); if(r && r.value) found.push(r.value); }catch(e){}
-    }
-    if(this.channels.includes("local")){
-      try{ const v = localStorage.getItem(key); if(v) found.push(v); }catch(e){}
-    }
-    if(this.channels.includes("idb")){
-      try{ const v = await IDB.get(key); if(v) found.push(v); }catch(e){}
-    }
-    // เลือกชุดที่มีจำนวนรายการมากที่สุด กัน channel ใดหายแล้วข้อมูลหด
-    let best=null, bestLen=-1;
-    for(const raw of found){
-      try{ const p = JSON.parse(raw); const len = Array.isArray(p)? p.length : (p? 1:0);
-        if(len>bestLen){ bestLen=len; best=p; } }catch(e){}
-    }
+    const found=[];
+    if(this.channels.includes("cloud")){ try{ const r=await window.storage.get(key); if(r&&r.value) found.push(r.value);}catch(e){} }
+    if(this.channels.includes("local")){ try{ const v=localStorage.getItem(key); if(v) found.push(v);}catch(e){} }
+    if(this.channels.includes("idb")){ try{ const v=await IDB.get(key); if(v) found.push(v);}catch(e){} }
+    let best=null,bestLen=-1;
+    for(const raw of found){ try{ const p=JSON.parse(raw);
+      const len=Array.isArray(p)?p.length:(p?1:0); if(len>bestLen){bestLen=len;best=p;} }catch(e){} }
     return best;
   },
   async write(key,obj){
-    const raw = JSON.stringify(obj);
-    if(this.channels.includes("cloud")){ try{ await window.storage.set(key,raw); }catch(e){} }
-    if(this.channels.includes("local")){ try{ localStorage.setItem(key,raw); }catch(e){} }
-    if(this.channels.includes("idb")){ try{ await IDB.set(key,raw); }catch(e){} }
+    const raw=JSON.stringify(obj);
+    if(this.channels.includes("cloud")){ try{ await window.storage.set(key,raw);}catch(e){} }
+    if(this.channels.includes("local")){ try{ localStorage.setItem(key,raw);}catch(e){} }
+    if(this.channels.includes("idb")){ try{ await IDB.set(key,raw);}catch(e){} }
   },
   async remove(key){
-    if(this.channels.includes("cloud")){ try{ await window.storage.delete(key); }catch(e){} }
-    if(this.channels.includes("local")){ try{ localStorage.removeItem(key); }catch(e){} }
-    if(this.channels.includes("idb")){ try{ await IDB.del(key); }catch(e){} }
+    if(this.channels.includes("cloud")){ try{ await window.storage.delete(key);}catch(e){} }
+    if(this.channels.includes("local")){ try{ localStorage.removeItem(key);}catch(e){} }
+    if(this.channels.includes("idb")){ try{ await IDB.del(key);}catch(e){} }
   }
 };
 
-/* ---------- เกณฑ์ประเมิน ---------- */
+/* ================= เกณฑ์ประเมิน ================= */
 const QUESTIONS = {
   conscious:{label:"ระดับความรู้สึกตัว",opts:[
     {t:"รู้สึกตัวดี",g:1},
@@ -324,14 +307,15 @@ const GROUP = {
 
 const state = {answers:{}, pain:null, painWorse:false, sex:null};
 let records = [];
+let editingId = null;   // กำลังแก้ไขรายการไหนอยู่
 
-/* ---------- สร้าง UI ---------- */
+/* ================= สร้าง UI ================= */
 document.querySelectorAll(".opts").forEach(box=>{
   const q = box.dataset.q;
   QUESTIONS[q].opts.forEach((o,i)=>{
-    const lb = document.createElement("label");
-    lb.className = "opt";
-    lb.innerHTML = `<input type="radio" name="${q}" value="${i}"><span>${o.t}<span class="tag t${o.g}">กลุ่ม ${o.g}</span></span>`;
+    const lb=document.createElement("label");
+    lb.className="opt";
+    lb.innerHTML=`<input type="radio" name="${q}" value="${i}"><span>${o.t}<span class="tag t${o.g}">กลุ่ม ${o.g}</span></span>`;
     lb.querySelector("input").addEventListener("change",()=>{
       state.answers[q]=o.g;
       box.querySelectorAll(".opt").forEach(e=>e.classList.remove("sel1","sel2","sel3"));
@@ -341,7 +325,7 @@ document.querySelectorAll(".opts").forEach(box=>{
     box.appendChild(lb);
   });
 });
-const strip = document.getElementById("painStrip");
+const strip=document.getElementById("painStrip");
 for(let i=0;i<=10;i++){
   const b=document.createElement("button");
   b.type="button"; b.textContent=i; b.setAttribute("aria-label","ปวดระดับ "+i);
@@ -357,12 +341,9 @@ document.querySelectorAll("#sexSeg button").forEach(b=>{
     b.classList.add("on"); onFormChange(); };
 });
 
-/* ---------- ตรรกะ ---------- */
+/* ================= ตรรกะ ================= */
 function painGroup(){ if(state.pain===null) return null; if(state.painWorse||state.pain>=7) return 3; if(state.pain>=4) return 2; return 1; }
-function worstGroup(){
-  const g=[...Object.values(state.answers)]; const pg=painGroup(); if(pg) g.push(pg);
-  return g.length?Math.max(...g):0;
-}
+function worstGroup(){ const g=[...Object.values(state.answers)]; const pg=painGroup(); if(pg) g.push(pg); return g.length?Math.max(...g):0; }
 function currentFlags(){
   const flags=[];
   for(const q in state.answers){ if(state.answers[q]>1){
@@ -372,24 +353,32 @@ function currentFlags(){
   if(pg&&pg>1) flags.push(`Pain score ${state.pain}${state.painWorse?" ปวดเพิ่มขึ้นเรื่อย ๆ":""} (กลุ่ม ${pg})`);
   return flags;
 }
-function missing(){
+function missingKeys(){
   const m=[];
-  if(!document.getElementById("hn").value.trim()) m.push("HN");
-  if(!state.sex) m.push("เพศ");
-  if(!document.getElementById("age").value.trim()) m.push("อายุ");
-  const left = 8 - Object.keys(state.answers).length;
-  if(left>0) m.push(`ประเมินอีก ${left} ข้อ`);
-  if(painGroup()===null) m.push("Pain score");
+  if(!document.getElementById("hn").value.trim()) m.push({k:"hn",t:"HN"});
+  if(!state.sex) m.push({k:"sex",t:"เพศ"});
+  if(!document.getElementById("age").value.trim()) m.push({k:"age",t:"อายุ"});
+  for(const q in QUESTIONS){ if(!state.answers[q]) m.push({k:q,t:QUESTIONS[q].label}); }
+  if(painGroup()===null) m.push({k:"pain",t:"Pain score"});
   return m;
 }
 function evaluate(){
-  const badge=document.getElementById("badge"), txt=document.getElementById("resultTxt");
-  const worst=worstGroup(), miss=missing(), ready=miss.length===0;
-  document.getElementById("submitBtn").disabled = !ready;
+  const badge=document.getElementById("badge"), txt=document.getElementById("resultTxt"), btn=document.getElementById("submitBtn");
+  const worst=worstGroup(), miss=missingKeys(), ready=miss.length===0;
+  btn.disabled=!ready;
+  btn.textContent = editingId ? "บันทึกการแก้ไข" : "บันทึกรายนี้";
+  btn.classList.toggle("edit", !!editingId);
+
+  // ไฮไลต์การ์ดที่ยังไม่ได้ตอบ (ช่วยมากตอนแก้ไขข้อมูลเก่า)
+  document.querySelectorAll(".card[data-card]").forEach(c=>c.classList.remove("need"));
+  if(editingId) miss.forEach(m=>{
+    const c=document.querySelector(`.card[data-card="${m.k}"]`); if(c) c.classList.add("need");
+  });
+
   const assessDone = Object.keys(state.answers).length===8 && painGroup()!==null;
   badge.className="badge b"+((assessDone||worst===3)?worst:0);
-  badge.textContent = (!assessDone && worst!==3) ? "ยังประเมินไม่ครบ" : GROUP[worst].name;
-  txt.textContent = ready ? 'พร้อมบันทึก — กด "บันทึกรายนี้"' : "ยังขาด: "+miss.join(", ");
+  badge.textContent=(!assessDone&&worst!==3)?"ยังประเมินไม่ครบ":GROUP[worst].name;
+  txt.textContent = ready ? (editingId?'พร้อมบันทึกทับข้อมูลเดิม':'พร้อมบันทึก — กด "บันทึกรายนี้"') : "ยังขาด: "+miss.map(m=>m.t).join(", ");
 
   const card=document.getElementById("summaryCard");
   if(assessDone||worst===3){
@@ -398,28 +387,38 @@ function evaluate(){
     document.getElementById("sumAction").textContent=GROUP[worst].action;
     const flags=currentFlags();
     document.getElementById("sumFlags").innerHTML = flags.length? "<b style='font-size:13px'>ข้อที่พบ:</b>"+flags.map(f=>`<li>${f}</li>`).join("") : "<li>ผ่านเกณฑ์ปกติทุกข้อ</li>";
+    const ch=document.getElementById("sumChanged");
+    const orig = editingId ? records.find(r=>r.id===editingId) : null;
+    if(orig && assessDone && orig.g!==worst){
+      ch.style.display="block";
+      ch.textContent=`ผลจะเปลี่ยนจาก ${GROUP[orig.g].name} → ${GROUP[worst].name}`;
+    } else ch.style.display="none";
   } else card.classList.remove("show");
 }
 
-/* ---------- ร่างที่ยังกรอกไม่เสร็จ (กันรีเฟรชกลางคัน) ---------- */
+/* ================= ร่าง (กันรีเฟรชกลางคัน) ================= */
 let draftTimer;
 function onFormChange(){ evaluate(); clearTimeout(draftTimer); draftTimer=setTimeout(saveDraft,400); }
+function formSnapshot(){
+  return {hn:document.getElementById("hn").value, age:document.getElementById("age").value,
+          sex:state.sex, pain:state.pain, worse:state.painWorse, answers:state.answers, editingId};
+}
 async function saveDraft(){
-  const d = {hn:document.getElementById("hn").value, age:document.getElementById("age").value,
-             sex:state.sex, pain:state.pain, worse:state.painWorse, answers:state.answers};
-  const empty = !d.hn && !d.age && !d.sex && d.pain===null && !Object.keys(d.answers).length;
+  const d=formSnapshot();
+  const empty=!d.hn&&!d.age&&!d.sex&&d.pain===null&&!Object.keys(d.answers).length&&!d.editingId;
   if(empty) await Store.remove(DRAFT_KEY); else await Store.write(DRAFT_KEY,d);
 }
-function applyDraft(d){
-  if(!d) return;
-  document.getElementById("hn").value = d.hn||"";
-  document.getElementById("age").value = d.age||"";
-  if(d.sex){ state.sex=d.sex;
-    document.querySelectorAll("#sexSeg button").forEach(b=>b.classList.toggle("on", b.dataset.v===d.sex)); }
-  if(typeof d.pain === "number"){ state.pain=d.pain;
-    strip.querySelectorAll("button").forEach((b,i)=>b.classList.toggle("on", i===d.pain)); }
-  if(d.worse){ state.painWorse=true; document.getElementById("painWorse").checked=true; }
-  state.answers = d.answers||{};
+function applyForm(d){
+  document.getElementById("hn").value=d.hn||"";
+  document.getElementById("age").value=d.age||"";
+  state.sex=d.sex||null;
+  document.querySelectorAll("#sexSeg button").forEach(b=>b.classList.toggle("on", !!d.sex && b.dataset.v===d.sex));
+  state.pain = (typeof d.pain==="number")? d.pain : null;
+  strip.querySelectorAll("button").forEach((b,i)=>b.classList.toggle("on", state.pain===i));
+  state.painWorse=!!d.worse;
+  document.getElementById("painWorse").checked=state.painWorse;
+  state.answers = Object.assign({}, d.answers||{});
+  document.querySelectorAll(".opts .opt").forEach(e=>{e.classList.remove("sel1","sel2","sel3"); e.querySelector("input").checked=false;});
   for(const q in state.answers){
     const box=document.querySelector(`.opts[data-q="${q}"]`); if(!box) continue;
     const idx=QUESTIONS[q].opts.findIndex(o=>o.g===state.answers[q]);
@@ -428,45 +427,95 @@ function applyDraft(d){
   }
 }
 
-/* ---------- บันทึก / ลบ ---------- */
+/* ================= แก้ไขข้อมูลเก่า ================= */
+function editRecord(id){
+  const r=records.find(x=>x.id===id); if(!r) return;
+  if(editingId && editingId!==id && !confirm("กำลังแก้ไขรายอื่นอยู่ ต้องการเปลี่ยนไปแก้ไขรายนี้แทนหรือไม่?")) return;
+  editingId=id;
+  applyForm({hn:r.hn, age:r.age, sex:r.sex, pain:r.pain, worse:r.worse, answers:r.answers||{}});
+  document.body.classList.add("editing");
+  const bar=document.getElementById("editBar"); bar.classList.add("show");
+  const hasAnswers = r.answers && Object.keys(r.answers).length===8;
+  document.getElementById("editText").innerHTML =
+    `กำลังแก้ไข HN ${esc(r.hn)} · บันทึกเมื่อ ${esc(r.time)}` +
+    `<small>${hasAnswers ? "แก้ไขผลรายข้อได้เลย แล้วกด \"บันทึกการแก้ไข\"" : "ข้อมูลนี้บันทึกจากเวอร์ชันเดิม ไม่มีผลรายข้อ — กรุณาติ๊กข้อที่กรอบม่วงให้ครบ"}</small>`;
+  renderLog(); evaluate(); saveDraft();
+  document.getElementById("ptCard").scrollIntoView({behavior:"smooth",block:"start"});
+  showToast("เปิดข้อมูล HN "+r.hn+" เพื่อแก้ไข");
+}
+async function cancelEdit(){
+  editingId=null;
+  document.body.classList.remove("editing");
+  document.getElementById("editBar").classList.remove("show");
+  await resetForm();
+  renderLog();
+  showToast("ยกเลิกการแก้ไขแล้ว");
+}
+
+/* ================= บันทึก / ลบ ================= */
 async function submitCase(){
-  if(missing().length) return;
-  const hn = document.getElementById("hn").value.trim();
-  const age = document.getElementById("age").value.trim();
-  const dup = records.find(r=>r.hn===hn);
-  if(dup && !confirm(`HN ${hn} มีบันทึกอยู่แล้ว (กลุ่ม ${dup.g})\nต้องการบันทึกเพิ่มอีกครั้งหรือไม่?`)) return;
+  if(missingKeys().length) return;
+  const hn=document.getElementById("hn").value.trim();
+  const age=document.getElementById("age").value.trim();
   const now=new Date();
+  const stamp = now.toLocaleDateString("th-TH",{day:"numeric",month:"short",year:"2-digit"})+" "+now.toLocaleTimeString("th-TH",{hour:"2-digit",minute:"2-digit"});
+
+  if(editingId){
+    const i=records.findIndex(r=>r.id===editingId);
+    if(i<0){ editingId=null; return showToast("ไม่พบข้อมูลเดิม อาจถูกลบไปแล้ว"); }
+    const old=records[i];
+    records[i]=Object.assign({},old,{
+      hn, sex:state.sex, age, g:worstGroup(), pain:state.pain, worse:state.painWorse,
+      answers:Object.assign({},state.answers), flags:currentFlags(),
+      editedAt:stamp, editCount:(old.editCount||0)+1
+    });
+    await Store.write(KEY,records);
+    renderAll();
+    showToast(`แก้ไข HN ${hn} แล้ว ✓ ผลเป็นกลุ่ม ${records[i].g}`);
+    editingId=null;
+    document.body.classList.remove("editing");
+    document.getElementById("editBar").classList.remove("show");
+    await resetForm();
+    window.scrollTo({top:0,behavior:"smooth"});
+    return;
+  }
+
+  const dup=records.find(r=>r.hn===hn);
+  if(dup && !confirm(`HN ${hn} มีบันทึกอยู่แล้ว (กลุ่ม ${dup.g})\nกด OK เพื่อบันทึกเป็นรายการใหม่ หรือ Cancel แล้วกดดินสอที่รายการเดิมเพื่อแก้ไขแทน`)) return;
   records.push({
     id:"r"+now.getTime()+Math.random().toString(36).slice(2,6),
     hn, sex:state.sex, age, g:worstGroup(), pain:state.pain, worse:state.painWorse,
-    flags:currentFlags(),
-    time: now.toLocaleDateString("th-TH",{day:"numeric",month:"short",year:"2-digit"})+" "+now.toLocaleTimeString("th-TH",{hour:"2-digit",minute:"2-digit"}),
-    iso: now.toISOString()
+    answers:Object.assign({},state.answers), flags:currentFlags(),
+    time:stamp, iso:now.toISOString()
   });
   await Store.write(KEY,records);
-  const check = await Store.read(KEY);
+  const check=await Store.read(KEY);
   renderAll();
   showToast(`บันทึก HN ${hn} แล้ว ✓ กลุ่ม ${records[records.length-1].g} (รวม ${records.length} ราย)`);
-  if(!check || check.length!==records.length) showToast("⚠ บันทึกลงเครื่องไม่สำเร็จ กรุณาสำรองไฟล์");
+  if(!check||check.length!==records.length) showToast("⚠ บันทึกลงเครื่องไม่สำเร็จ กรุณาสำรองไฟล์");
   await resetForm();
   window.scrollTo({top:0,behavior:"smooth"});
 }
 async function deleteRecord(id){
-  const r = records.find(x=>x.id===id); if(!r) return;
+  const r=records.find(x=>x.id===id); if(!r) return;
   if(!confirm(`ลบข้อมูล HN ${r.hn} (กลุ่ม ${r.g}) ออกจากระบบ?`)) return;
-  records = records.filter(x=>x.id!==id);
+  records=records.filter(x=>x.id!==id);
+  if(editingId===id){ editingId=null; document.body.classList.remove("editing");
+    document.getElementById("editBar").classList.remove("show"); await resetForm(); }
   await Store.write(KEY,records); renderAll();
   showToast("ลบข้อมูล HN "+r.hn+" แล้ว");
 }
 async function clearAll(){
   if(!records.length) return showToast("ยังไม่มีข้อมูลให้ล้าง");
   if(!confirm(`ล้างข้อมูลทั้งหมด ${records.length} ราย?\nข้อมูลจะถูกลบถาวร แนะนำกด "สำรองไฟล์" เก็บไว้ก่อน`)) return;
-  records = [];
-  await Store.remove(KEY);
-  renderAll(); showToast("ล้างข้อมูลทั้งหมดแล้ว");
+  records=[]; editingId=null;
+  document.body.classList.remove("editing");
+  document.getElementById("editBar").classList.remove("show");
+  await Store.remove(KEY); await resetForm(); renderAll();
+  showToast("ล้างข้อมูลทั้งหมดแล้ว");
 }
 
-/* ---------- แสดงผล ---------- */
+/* ================= แสดงผล ================= */
 function renderAll(){ renderStats(); renderLog(); }
 function renderStats(){
   const c={1:0,2:0,3:0}; records.forEach(r=>c[r.g]++);
@@ -480,19 +529,20 @@ function renderLog(){
   const list=document.getElementById("logList");
   const shown=records.filter(r=>!q||r.hn.includes(q)).slice().reverse();
   if(!shown.length){ list.innerHTML=`<div class="empty">${records.length?"ไม่พบ HN ที่ค้นหา":"ยังไม่มีข้อมูลที่บันทึก"}</div>`; return; }
-  list.innerHTML = shown.map(r=>`
-    <div class="rec r${r.g}">
+  list.innerHTML=shown.map(r=>`
+    <div class="rec r${r.g}${r.id===editingId?" active":""}">
       <span class="pill">กลุ่ม ${r.g}</span>
       <div class="info">
         <div class="hn">HN ${esc(r.hn)}</div>
-        <div class="meta">${esc(r.sex)} ${esc(r.age)} ปี · Pain ${r.pain} · ${esc(r.time)}</div>
+        <div class="meta">${esc(r.sex)} ${esc(r.age)} ปี · Pain ${r.pain} · ${esc(r.time)}${r.editedAt?` · <span class="edited">แก้ไข ${esc(r.editedAt)}</span>`:""}</div>
       </div>
+      <button class="edt" title="แก้ไขรายนี้" onclick="editRecord('${r.id}')">✏️</button>
       <button class="del" title="ลบรายนี้" onclick="deleteRecord('${r.id}')">🗑</button>
     </div>`).join("");
 }
 function esc(s){ return String(s).replace(/[<>&"]/g,c=>({"<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;"}[c])); }
 
-/* ---------- ส่งออก / สำรอง ---------- */
+/* ================= ส่งออก / สำรอง ================= */
 function copyStats(){
   const c={1:0,2:0,3:0}; records.forEach(r=>c[r.g]++);
   let t=`สรุปการประเมินผู้ป่วยหลังผ่าตัดตา (ก่อนจำหน่าย)\n`;
@@ -500,18 +550,17 @@ function copyStats(){
   t+=`กลุ่มที่ 2 เฝ้าระวัง: ${c[2]} ราย\n`;
   t+=`กลุ่มที่ 3 ผิดปกติ (พบจักษุแพทย์ทันที): ${c[3]} ราย\n`;
   t+=`รวมทั้งหมด: ${records.length} ราย\n\nรายการ:\n`;
-  records.forEach((r,i)=>{ t+=`${i+1}. HN ${r.hn} ${r.sex} ${r.age} ปี — กลุ่ม ${r.g}, Pain ${r.pain} (${r.time})${r.flags.length?" | "+r.flags.join("; "):""}\n`; });
+  records.forEach((r,i)=>{ t+=`${i+1}. HN ${r.hn} ${r.sex} ${r.age} ปี — กลุ่ม ${r.g}, Pain ${r.pain} (${r.time})${r.editedAt?" [แก้ไข "+r.editedAt+"]":""}${r.flags.length?" | "+r.flags.join("; "):""}\n`; });
   navigator.clipboard.writeText(t).then(()=>showToast("คัดลอกสรุปแล้ว ✓"));
 }
 function saveBlob(text,type,name){
   const url=URL.createObjectURL(new Blob([text],{type}));
-  const a=document.createElement("a"); a.href=url; a.download=name; a.click();
-  URL.revokeObjectURL(url);
+  const a=document.createElement("a"); a.href=url; a.download=name; a.click(); URL.revokeObjectURL(url);
 }
 function downloadCSV(){
   if(!records.length) return showToast("ยังไม่มีข้อมูลให้ดาวน์โหลด");
-  const head=["ลำดับ","HN","เพศ","อายุ","กลุ่ม","Pain","ปวดเพิ่มขึ้น","วันเวลา","ข้อที่พบ"];
-  const rows=records.map((r,i)=>[i+1,r.hn,r.sex,r.age,r.g,r.pain,r.worse?"ใช่":"ไม่","'"+r.time,r.flags.join(" ; ")]);
+  const head=["ลำดับ","HN","เพศ","อายุ","กลุ่ม","Pain","ปวดเพิ่มขึ้น","วันเวลา","แก้ไขล่าสุด","ข้อที่พบ"];
+  const rows=records.map((r,i)=>[i+1,r.hn,r.sex,r.age,r.g,r.pain,r.worse?"ใช่":"ไม่","'"+r.time,r.editedAt?"'"+r.editedAt:"",r.flags.join(" ; ")]);
   const csv="\uFEFF"+[head,...rows].map(a=>a.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n");
   saveBlob(csv,"text/csv;charset=utf-8","eye-triage-log.csv");
   showToast("ดาวน์โหลด CSV แล้ว");
@@ -529,9 +578,8 @@ function restoreJSON(ev){
       const data=JSON.parse(rd.result);
       if(!Array.isArray(data)) throw 0;
       const ids=new Set(records.map(r=>r.id));
-      const add=data.filter(r=>r && r.id && !ids.has(r.id));
-      records=records.concat(add);
-      records.sort((a,b)=>(a.iso||"").localeCompare(b.iso||""));
+      const add=data.filter(r=>r&&r.id&&!ids.has(r.id));
+      records=records.concat(add).sort((a,b)=>(a.iso||"").localeCompare(b.iso||""));
       await Store.write(KEY,records); renderAll();
       showToast(`กู้คืนสำเร็จ เพิ่ม ${add.length} ราย (รวม ${records.length} ราย)`);
     }catch(e){ showToast("ไฟล์ไม่ถูกต้อง ใช้ได้เฉพาะไฟล์สำรองจากเครื่องมือนี้"); }
@@ -540,13 +588,9 @@ function restoreJSON(ev){
   rd.readAsText(f);
 }
 async function resetForm(){
-  state.answers={}; state.pain=null; state.painWorse=false; state.sex=null;
-  document.getElementById("hn").value=""; document.getElementById("age").value="";
-  document.querySelectorAll("#sexSeg button").forEach(x=>x.classList.remove("on"));
-  document.querySelectorAll(".opts .opt").forEach(e=>{e.classList.remove("sel1","sel2","sel3"); e.querySelector("input").checked=false;});
-  strip.querySelectorAll("button").forEach(x=>x.classList.remove("on"));
-  document.getElementById("painWorse").checked=false;
+  applyForm({hn:"",age:"",sex:null,pain:null,worse:false,answers:{}});
   document.getElementById("summaryCard").classList.remove("show");
+  document.querySelectorAll(".card[data-card]").forEach(c=>c.classList.remove("need"));
   await Store.remove(DRAFT_KEY);
   evaluate();
 }
@@ -557,34 +601,37 @@ function showToast(msg){
   clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove("show"),2600);
 }
 
-/* ---------- เริ่มต้น ---------- */
+/* ================= เริ่มต้น ================= */
 (async function init(){
   await Store.detect();
-  const saved = await Store.read(KEY);
-  if(Array.isArray(saved)) records = saved;
-  const draft = await Store.read(DRAFT_KEY);
-  if(draft && !Array.isArray(draft)) applyDraft(draft);
-
+  const saved=await Store.read(KEY);
+  if(Array.isArray(saved)) records=saved;
+  const draft=await Store.read(DRAFT_KEY);
+  if(draft && !Array.isArray(draft)){
+    applyForm(draft);
+    if(draft.editingId && records.find(r=>r.id===draft.editingId)){
+      const r=records.find(x=>x.id===draft.editingId);
+      editingId=draft.editingId;
+      document.body.classList.add("editing");
+      document.getElementById("editBar").classList.add("show");
+      document.getElementById("editText").innerHTML=`กำลังแก้ไข HN ${esc(r.hn)} · บันทึกเมื่อ ${esc(r.time)}<small>แก้ไขค้างไว้ก่อนรีเฟรช — ทำต่อได้เลย</small>`;
+    }
+  }
   const dot=document.getElementById("saveDot"), msg=document.getElementById("saveMsg");
   if(Store.channels.length){
     dot.className="dot";
     msg.textContent=`บันทึกถาวรอัตโนมัติ · ปิดหรือรีเฟรชหน้าจอข้อมูลไม่หาย (${Store.channels.length} ช่องทางสำรอง)`;
   }else{
     dot.className="dot warn";
-    msg.textContent="เบราว์เซอร์นี้ปิดการเก็บข้อมูล — กรุณากด \"สำรองไฟล์\" ทุกครั้งก่อนปิดหน้าจอ";
+    msg.textContent='เบราว์เซอร์นี้ปิดการเก็บข้อมูล — กรุณากด "สำรองไฟล์" ทุกครั้งก่อนปิดหน้าจอ';
   }
   renderAll();
   if(records.length) showToast(`โหลดข้อมูลเดิม ${records.length} ราย`);
   evaluate();
 })();
 
-// บันทึกร่างซ้ำอีกครั้งตอนกำลังจะปิด/รีเฟรช
 window.addEventListener("beforeunload",()=>{
-  try{
-    const d={hn:document.getElementById("hn").value,age:document.getElementById("age").value,
-             sex:state.sex,pain:state.pain,worse:state.painWorse,answers:state.answers};
-    if(Store.channels.includes("local")) localStorage.setItem(DRAFT_KEY,JSON.stringify(d));
-  }catch(e){}
+  try{ if(Store.channels.includes("local")) localStorage.setItem(DRAFT_KEY,JSON.stringify(formSnapshot())); }catch(e){}
 });
 </script>
 </body>
