@@ -564,9 +564,10 @@ function evaluate(){
   btn.textContent=editingId?"บันทึกแก้ไข":"บันทึก";
   btn.classList.toggle("edit",!!editingId);
   const assessDone=ORDER.every(k=>stepDone(k));
-  badge.className="badge b"+((assessDone||worst===3)?worst:0);
-  badge.textContent=(!assessDone&&worst!==3)?"ยังไม่ครบ":GROUP[worst].name+" · "+GROUP[worst].room;
-  txt.textContent=ready?(editingId?"พร้อมบันทึกทับข้อมูลเดิม":"พร้อมบันทึก"):"ยังขาด "+miss.length+" รายการ (แตะเพื่อไป)";
+  const showGroup = state.manualG ? ready : (assessDone||worst===3);
+  badge.className="badge b"+(showGroup?worst:0);
+  badge.textContent = showGroup ? GROUP[worst].name+" · "+GROUP[worst].room+(isOverridden()?" ◆":"") : "ยังไม่ครบ";
+  txt.textContent=ready?(editingId?"พร้อมบันทึกทับข้อมูลเดิม":(state.manualG?"พร้อมบันทึก (เลือกกลุ่มเอง)":"พร้อมบันทึก")):"ยังขาด "+miss.length+" รายการ (แตะเพื่อไป)";
   updateProgress();
   if(STEPS[cur]==="summary") renderSummary();
 }
