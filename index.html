@@ -344,7 +344,20 @@ STEPS.forEach((key,i)=>{
       <button class="quick" onclick="quickNormal()">✓ ปกติทุกข้อ — ข้ามไปกรอก Pain score</button>
       <button class="quick alt" onclick="quickHNonly()">⚡ บันทึกด้วย HN อย่างเดียว — เลือกกลุ่มเอง</button>`;
   }else if(key==="summary"){
-    sl.innerHTML=`<div class="stitle"><span class="num">สรุป</span><h3>ผลการคัดแยก</h3></div><div id="sumBox"></div>`;
+    sl.innerHTML=`<div class="stitle"><span class="num">สรุป</span><h3>ผลการคัดแยก</h3></div>
+      <div id="sumResult"></div>
+      <div class="manual">
+        <div class="mlabel">กำหนดกลุ่มเอง (ทับผลอัตโนมัติ)</div>
+        <div class="mseg">
+          ${[1,2,3].map(g=>`<button type="button" class="mg mg${g}" data-mg="${g}">${GNAME[g]}<small>${GROUP[g].room}</small></button>`).join("")}
+        </div>
+        <button type="button" class="mclear" id="mClear" onclick="setManual(0)" style="display:none">↺ ใช้ผลประเมินอัตโนมัติแทน</button>
+        <div id="reasonWrap" style="display:none">
+          <label class="fl" style="margin-top:10px">เหตุผลที่กำหนดกลุ่มนี้ <span style="color:var(--g3)">*จำเป็น</span></label>
+          <textarea id="reasonTxt" class="reason" placeholder="เช่น แพทย์สั่งสังเกตอาการเพิ่ม / มีโรคประจำตัวต้องเฝ้าระวัง / ญาติขอพักต่อ"></textarea>
+        </div>
+      </div>
+      <div id="sumMiss"></div>`;
   }else if(QUESTIONS[key].pain){
     sl.innerHTML=`<div class="stitle"><span class="num">ข้อ ${i}</span><h3>${QUESTIONS[key].label}</h3></div>
       <div class="pain-strip" id="painStrip"></div>
@@ -364,6 +377,14 @@ track.querySelectorAll(".opt").forEach(b=>{
     paintStep(k); onFormChange();
     setTimeout(()=>{ if(cur<STEPS.length-1) go(cur+1); },170);
   };
+});
+// ปุ่มเลือกกลุ่มเอง (ผูก listener ครั้งเดียว — ไม่สร้างใหม่ทุก render)
+track.querySelectorAll(".mg[data-mg]").forEach(b=>{
+  b.onclick=()=>setManual(+b.dataset.mg);
+});
+// textarea เหตุผล (ผูก listener ครั้งเดียว — ไม่โดนสร้างใหม่ จึงพิมพ์ต่อเนื่องได้)
+document.getElementById("reasonTxt").addEventListener("input",e=>{
+  state.manualReason=e.target.value; onFormChange();
 });
 const strip=document.getElementById("painStrip");
 for(let i=0;i<=10;i++){
@@ -514,11 +535,11 @@ function jumpToMissing(){
   if(m.k==="patient") setTimeout(()=>{ const el=document.getElementById(m.t==="อายุ"?"age":"hn"); if(m.t!=="เพศ") el.focus(); },300);
 }
 function renderSummary(){
-  const auto=autoGroup(), worst=worstGroup(), miss=missingKeys(), box=document.getElementById("sumBox");
-  const over=isOverridden();
-  let h="";
-  const k=worst||0;
-  h+=`<div class="res k${k}">
+  const auto=autoGroup(), worst=worstGroup(), miss=missingKeys();
+  const over=isOverridden(), k=worst||0;
+
+  // --- กล่องผลลัพธ์ (สร้างใหม่ได้ ไม่มี input) ---
+  let h=`<div class="res k${k}">
         <div class="big">${k?GROUP[k].name:"ยังสรุปไม่ได้"}</div>
         <div class="rm">${k?GROUP[k].room+" · "+GROUP[k].cap+" เตียง":"ประเมินให้ครบก่อน"}</div>
         ${over?`<div class="rm" style="margin-top:5px;font-weight:700">◆ กำหนดกลุ่มเอง (ระบบประเมินอัตโนมัติได้ ${GROUP[auto].name})</div>`:""}
@@ -527,35 +548,35 @@ function renderSummary(){
   const flags=currentFlags();
   if(!state.manualG || Object.keys(state.answers).length || state.pain!==null)
     h+=`<ul class="fl-list">${flags.length?"<b style='font-size:13px'>ข้อที่พบ:</b>"+flags.map(f=>`<li>${f}</li>`).join(""):(Object.keys(state.answers).length||state.pain!==null?"<li>ผ่านเกณฑ์ปกติทุกข้อ</li>":"")}</ul>`;
+  document.getElementById("sumResult").innerHTML=h;
 
-  // เลือกกลุ่มเอง
-  h+=`<div class="manual">
-        <div class="mlabel">กำหนดกลุ่มเอง (ทับผลอัตโนมัติ)</div>
-        <div class="mseg">
-          ${[1,2,3].map(g=>`<button type="button" class="mg mg${g}${state.manualG===g?" on":""}" onclick="setManual(${g})">${GNAME[g]}<small>${GROUP[g].room}</small></button>`).join("")}
-        </div>
-        ${state.manualG?`<button type="button" class="mclear" onclick="setManual(0)">↺ ใช้ผลประเมินอัตโนมัติแทน</button>
-          <label class="fl" style="margin-top:10px">เหตุผลที่กำหนดกลุ่มนี้ <span style="color:var(--g3)">*จำเป็น</span></label>
-          <textarea id="reasonTxt" class="reason" placeholder="เช่น แพทย์สั่งสังเกตอาการเพิ่ม / มีโรคประจำตัวต้องเฝ้าระวัง / ญาติขอพักต่อ" oninput="onReason()">${esc(state.manualReason)}</textarea>`:""}
-      </div>`;
+  // --- ส่วนเลือกกลุ่มเอง: อัปเดตในที่ ไม่แตะ textarea ที่มีอยู่ ---
+  track.querySelectorAll(".mg[data-mg]").forEach(b=>{
+    b.classList.toggle("on", state.manualG===+b.dataset.mg);
+  });
+  document.getElementById("mClear").style.display = state.manualG ? "block" : "none";
+  const rw=document.getElementById("reasonWrap");
+  rw.style.display = state.manualG ? "block" : "none";
+  const rt=document.getElementById("reasonTxt");
+  if(rt && rt.value!==state.manualReason && document.activeElement!==rt) rt.value=state.manualReason;
 
+  // --- กล่องแจ้งเตือน/เปลี่ยนกลุ่ม ---
+  let m="";
   if(miss.length){
-    h+=`<div class="miss"><b>ยังกรอกไม่ครบ ${miss.length} รายการ</b>${miss.map(m=>m.t).join(", ")}
+    m+=`<div class="miss"><b>ยังกรอกไม่ครบ ${miss.length} รายการ</b>${miss.map(x=>x.t).join(", ")}
         <div style="margin-top:7px"><button class="worse" style="margin:0" onclick="jumpToMissing()">ไปที่ข้อที่ยังขาด ›</button></div></div>`;
   }
   const orig=editingId?records.find(r=>r.id===editingId):null;
-  if(orig&&!miss.length&&orig.g!==worst) h+=`<div class="chg">ผลจะเปลี่ยนจาก ${GROUP[orig.g].name} → ${GROUP[worst].name}</div>`;
-  box.innerHTML=h;
+  if(orig&&!miss.length&&orig.g!==worst) m+=`<div class="chg">ผลจะเปลี่ยนจาก ${GROUP[orig.g].name} → ${GROUP[worst].name}</div>`;
+  document.getElementById("sumMiss").innerHTML=m;
+
   deck.style.height=track.children[cur].offsetHeight+"px";
 }
 function setManual(g){
   state.manualG = g||null;
-  if(!g) state.manualReason="";
+  if(!g){ state.manualReason=""; const rt=document.getElementById("reasonTxt"); if(rt) rt.value=""; }
   renderSummary(); onFormChange();
-}
-function onReason(){
-  const el=document.getElementById("reasonTxt");
-  if(el){ state.manualReason=el.value; onFormChange(); }
+  if(g){ const rt=document.getElementById("reasonTxt"); if(rt) setTimeout(()=>rt.focus(),50); }
 }
 function evaluate(){
   const badge=document.getElementById("badge"), txt=document.getElementById("barTxt"), btn=document.getElementById("submitBtn");
