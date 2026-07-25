@@ -86,19 +86,6 @@ label.fl{font-size:11.5px;color:var(--sub);font-weight:600;display:block;margin-
 .miss{background:var(--g2-bg);color:var(--g2);border-radius:11px;padding:11px;font-size:13px;font-weight:600}
 .miss b{display:block;margin-bottom:3px}
 .chg{font-size:13px;color:var(--edit);background:var(--edit-bg);border-radius:10px;padding:9px 11px;margin-top:9px}
-.quick.alt{border-color:var(--edit);background:var(--edit-bg);color:var(--edit);margin-top:8px}
-.manual{border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:12px;background:#FBFCFD}
-.mlabel{font-size:12.5px;font-weight:700;color:var(--sub);margin-bottom:8px}
-.mseg{display:flex;gap:7px}
-.mg{flex:1;border:1.5px solid var(--line);background:#fff;border-radius:11px;padding:10px 4px;font-family:'Sarabun',sans-serif;font-size:13.5px;font-weight:700;color:var(--sub);cursor:pointer;line-height:1.2}
-.mg small{display:block;font-weight:400;font-size:10.5px;opacity:.8;margin-top:2px}
-.mg1.on{background:var(--g1-bg);border-color:var(--g1);color:var(--g1)}
-.mg2.on{background:var(--g2-bg);border-color:var(--g2);color:var(--g2)}
-.mg3.on{background:var(--g3-bg);border-color:var(--g3);color:var(--g3)}
-.mclear{margin-top:9px;width:100%;border:1px solid var(--line);background:#fff;border-radius:9px;padding:8px;font-family:'Sarabun',sans-serif;font-size:12.5px;color:var(--sub);cursor:pointer;font-weight:600}
-.reason{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:10px;font-family:'Sarabun',sans-serif;font-size:14px;background:#fff;margin-top:5px;resize:vertical;min-height:64px}
-.reason:focus{outline:2px solid var(--edit);border-color:var(--edit)}
-.rec .rsn{color:var(--edit);font-style:italic}
 
 /* nav */
 .nav{display:flex;align-items:center;gap:8px;margin-top:12px;border-top:1px solid var(--line);padding-top:11px}
@@ -325,7 +312,7 @@ const GROUP={
      action:"⚠ ผิดปกติ — ส่งห้องคลอดทันที รายงานแพทย์/พบจักษุแพทย์ ห้ามจำหน่ายจนกว่าจักษุแพทย์จะประเมิน"}
 };
 
-const state={answers:{},pain:null,painWorse:false,sex:null,manualG:null,manualReason:""};
+const state={answers:{},pain:null,painWorse:false,sex:null};
 let records=[], editingId=null, cur=0;
 
 /* ============ สร้างสไลด์ ============ */
@@ -341,23 +328,9 @@ STEPS.forEach((key,i)=>{
           <button type="button" data-v="ชาย">ชาย</button><button type="button" data-v="หญิง">หญิง</button></div></div>
         <div><label class="fl" for="age">อายุ</label><input id="age" inputmode="numeric" placeholder="ปี"></div>
       </div>
-      <button class="quick" onclick="quickNormal()">✓ ปกติทุกข้อ — ข้ามไปกรอก Pain score</button>
-      <button class="quick alt" onclick="quickHNonly()">⚡ บันทึกด้วย HN อย่างเดียว — เลือกกลุ่มเอง</button>`;
+      <button class="quick" onclick="quickNormal()">✓ ปกติทุกข้อ — ข้ามไปกรอก Pain score</button>`;
   }else if(key==="summary"){
-    sl.innerHTML=`<div class="stitle"><span class="num">สรุป</span><h3>ผลการคัดแยก</h3></div>
-      <div id="sumResult"></div>
-      <div class="manual">
-        <div class="mlabel">กำหนดกลุ่มเอง (ทับผลอัตโนมัติ)</div>
-        <div class="mseg">
-          ${[1,2,3].map(g=>`<button type="button" class="mg mg${g}" data-mg="${g}">${GNAME[g]}<small>${GROUP[g].room}</small></button>`).join("")}
-        </div>
-        <button type="button" class="mclear" id="mClear" onclick="setManual(0)" style="display:none">↺ ใช้ผลประเมินอัตโนมัติแทน</button>
-        <div id="reasonWrap" style="display:none">
-          <label class="fl" style="margin-top:10px">เหตุผลที่กำหนดกลุ่มนี้ <span style="color:var(--g3)">*จำเป็น</span></label>
-          <textarea id="reasonTxt" class="reason" placeholder="เช่น แพทย์สั่งสังเกตอาการเพิ่ม / มีโรคประจำตัวต้องเฝ้าระวัง / ญาติขอพักต่อ"></textarea>
-        </div>
-      </div>
-      <div id="sumMiss"></div>`;
+    sl.innerHTML=`<div class="stitle"><span class="num">สรุป</span><h3>ผลการคัดแยก</h3></div><div id="sumBox"></div>`;
   }else if(QUESTIONS[key].pain){
     sl.innerHTML=`<div class="stitle"><span class="num">ข้อ ${i}</span><h3>${QUESTIONS[key].label}</h3></div>
       <div class="pain-strip" id="painStrip"></div>
@@ -377,14 +350,6 @@ track.querySelectorAll(".opt").forEach(b=>{
     paintStep(k); onFormChange();
     setTimeout(()=>{ if(cur<STEPS.length-1) go(cur+1); },170);
   };
-});
-// ปุ่มเลือกกลุ่มเอง (ผูก listener ครั้งเดียว — ไม่สร้างใหม่ทุก render)
-track.querySelectorAll(".mg[data-mg]").forEach(b=>{
-  b.onclick=()=>setManual(+b.dataset.mg);
-});
-// textarea เหตุผล (ผูก listener ครั้งเดียว — ไม่โดนสร้างใหม่ จึงพิมพ์ต่อเนื่องได้)
-document.getElementById("reasonTxt").addEventListener("input",e=>{
-  state.manualReason=e.target.value; onFormChange();
 });
 const strip=document.getElementById("painStrip");
 for(let i=0;i<=10;i++){
@@ -467,13 +432,8 @@ STEPS.forEach((k,i)=>{
   s.onclick=()=>go(i);
   pbar.appendChild(s);
 });
-function hnOnlyMode(){ return state.manualG && !Object.keys(state.answers).length && state.pain===null; }
 function stepDone(key){
-  if(key==="patient"){
-    const hn=document.getElementById("hn").value.trim();
-    if(hnOnlyMode()) return !!hn;   // โหมด HN อย่างเดียว
-    return !!(hn&&state.sex&&document.getElementById("age").value.trim());
-  }
+  if(key==="patient") return !!(document.getElementById("hn").value.trim()&&state.sex&&document.getElementById("age").value.trim());
   if(key==="summary") return missingKeys().length===0;
   if(QUESTIONS[key].pain) return state.pain!==null;
   return !!state.answers[key];
@@ -492,35 +452,23 @@ function updateProgress(){
   const key=STEPS[cur];
   document.getElementById("stepNo").textContent =
     key==="patient"?"ข้อมูลผู้ป่วย":key==="summary"?"สรุปผล":`ข้อ ${cur} / 9 · ${QUESTIONS[key].label}`;
-  document.getElementById("pctTxt").textContent = hnOnlyMode()
-    ? "โหมด HN อย่างเดียว · เลือกกลุ่มเอง"
-    : `ประเมินแล้ว ${doneN}/9 ข้อ`;
+  document.getElementById("pctTxt").textContent=`ประเมินแล้ว ${doneN}/9 ข้อ`;
 }
 
 /* ============ ตรรกะจัดกลุ่ม ============ */
 function painGroup(){ if(state.pain===null) return null; if(state.painWorse||state.pain>=7) return 3; if(state.pain>=4) return 2; return 1; }
-function autoGroup(){ const g=[...Object.values(state.answers)]; const pg=painGroup(); if(pg) g.push(pg); return g.length?Math.max(...g):0; }
-function worstGroup(){ return state.manualG || autoGroup(); }
-function isOverridden(){ return state.manualG && state.manualG!==autoGroup(); }
+function worstGroup(){ const g=[...Object.values(state.answers)]; const pg=painGroup(); if(pg) g.push(pg); return g.length?Math.max(...g):0; }
 function currentFlags(){
   const flags=[];
   ITEMS.forEach(k=>{ const g=state.answers[k];
     if(g&&g>1){ const o=QUESTIONS[k].opts.find(o=>o.g===g); flags.push(`${QUESTIONS[k].label}: ${o.s} (${GNAME[g]})`);} });
   const pg=painGroup();
   if(pg&&pg>1) flags.push(`Pain score ${state.pain}${state.painWorse?" ปวดเพิ่มขึ้นเรื่อย ๆ":""} (${GNAME[pg]})`);
-  if(isOverridden()||( state.manualG && !Object.keys(state.answers).length && state.pain===null))
-    flags.unshift(`◆ กำหนดกลุ่มเอง: ${state.manualReason||"(ไม่ระบุเหตุผล)"}`);
   return flags;
 }
 function missingKeys(){
   const m=[];
-  const hn=document.getElementById("hn").value.trim();
-  if(!hn) m.push({k:"patient",t:"HN"});
-  // ถ้าเลือกกลุ่มเอง (พร้อมเหตุผล) + มี HN แล้ว => บันทึกได้เลย ไม่ต้องกรอกอย่างอื่น
-  if(state.manualG){
-    if(!state.manualReason.trim()) m.push({k:"summary",t:"เหตุผลการเลือกกลุ่มเอง"});
-    return m;
-  }
+  if(!document.getElementById("hn").value.trim()) m.push({k:"patient",t:"HN"});
   if(!state.sex) m.push({k:"patient",t:"เพศ"});
   if(!document.getElementById("age").value.trim()) m.push({k:"patient",t:"อายุ"});
   ORDER.forEach(k=>{
@@ -535,48 +483,24 @@ function jumpToMissing(){
   if(m.k==="patient") setTimeout(()=>{ const el=document.getElementById(m.t==="อายุ"?"age":"hn"); if(m.t!=="เพศ") el.focus(); },300);
 }
 function renderSummary(){
-  const auto=autoGroup(), worst=worstGroup(), miss=missingKeys();
-  const over=isOverridden(), k=worst||0;
-
-  // --- กล่องผลลัพธ์ (สร้างใหม่ได้ ไม่มี input) ---
-  let h=`<div class="res k${k}">
+  const worst=worstGroup(), miss=missingKeys(), box=document.getElementById("sumBox");
+  let h="";
+  if(miss.length){
+    h+=`<div class="miss"><b>ยังกรอกไม่ครบ ${miss.length} รายการ</b>${miss.map(m=>m.t).join(", ")}
+        <div style="margin-top:7px"><button class="worse" style="margin:0" onclick="jumpToMissing()">ไปที่ข้อที่ยังขาด ›</button></div></div>`;
+  }
+  const k=worst||0;
+  h+=`<div class="res k${k}">
         <div class="big">${k?GROUP[k].name:"ยังสรุปไม่ได้"}</div>
         <div class="rm">${k?GROUP[k].room+" · "+GROUP[k].cap+" เตียง":"ประเมินให้ครบก่อน"}</div>
-        ${over?`<div class="rm" style="margin-top:5px;font-weight:700">◆ กำหนดกลุ่มเอง (ระบบประเมินอัตโนมัติได้ ${GROUP[auto].name})</div>`:""}
       </div>`;
   if(k) h+=`<div class="act">${GROUP[k].action}</div>`;
   const flags=currentFlags();
-  if(!state.manualG || Object.keys(state.answers).length || state.pain!==null)
-    h+=`<ul class="fl-list">${flags.length?"<b style='font-size:13px'>ข้อที่พบ:</b>"+flags.map(f=>`<li>${f}</li>`).join(""):(Object.keys(state.answers).length||state.pain!==null?"<li>ผ่านเกณฑ์ปกติทุกข้อ</li>":"")}</ul>`;
-  document.getElementById("sumResult").innerHTML=h;
-
-  // --- ส่วนเลือกกลุ่มเอง: อัปเดตในที่ ไม่แตะ textarea ที่มีอยู่ ---
-  track.querySelectorAll(".mg[data-mg]").forEach(b=>{
-    b.classList.toggle("on", state.manualG===+b.dataset.mg);
-  });
-  document.getElementById("mClear").style.display = state.manualG ? "block" : "none";
-  const rw=document.getElementById("reasonWrap");
-  rw.style.display = state.manualG ? "block" : "none";
-  const rt=document.getElementById("reasonTxt");
-  if(rt && rt.value!==state.manualReason && document.activeElement!==rt) rt.value=state.manualReason;
-
-  // --- กล่องแจ้งเตือน/เปลี่ยนกลุ่ม ---
-  let m="";
-  if(miss.length){
-    m+=`<div class="miss"><b>ยังกรอกไม่ครบ ${miss.length} รายการ</b>${miss.map(x=>x.t).join(", ")}
-        <div style="margin-top:7px"><button class="worse" style="margin:0" onclick="jumpToMissing()">ไปที่ข้อที่ยังขาด ›</button></div></div>`;
-  }
+  h+=`<ul class="fl-list">${flags.length?"<b style='font-size:13px'>ข้อที่พบ:</b>"+flags.map(f=>`<li>${f}</li>`).join(""):"<li>ผ่านเกณฑ์ปกติทุกข้อ</li>"}</ul>`;
   const orig=editingId?records.find(r=>r.id===editingId):null;
-  if(orig&&!miss.length&&orig.g!==worst) m+=`<div class="chg">ผลจะเปลี่ยนจาก ${GROUP[orig.g].name} → ${GROUP[worst].name}</div>`;
-  document.getElementById("sumMiss").innerHTML=m;
-
+  if(orig&&!miss.length&&orig.g!==worst) h+=`<div class="chg">ผลจะเปลี่ยนจาก ${GROUP[orig.g].name} → ${GROUP[worst].name}</div>`;
+  box.innerHTML=h;
   deck.style.height=track.children[cur].offsetHeight+"px";
-}
-function setManual(g){
-  state.manualG = g||null;
-  if(!g){ state.manualReason=""; const rt=document.getElementById("reasonTxt"); if(rt) rt.value=""; }
-  renderSummary(); onFormChange();
-  if(g){ const rt=document.getElementById("reasonTxt"); if(rt) setTimeout(()=>rt.focus(),50); }
 }
 function evaluate(){
   const badge=document.getElementById("badge"), txt=document.getElementById("barTxt"), btn=document.getElementById("submitBtn");
@@ -585,10 +509,9 @@ function evaluate(){
   btn.textContent=editingId?"บันทึกแก้ไข":"บันทึก";
   btn.classList.toggle("edit",!!editingId);
   const assessDone=ORDER.every(k=>stepDone(k));
-  const showGroup = state.manualG ? ready : (assessDone||worst===3);
-  badge.className="badge b"+(showGroup?worst:0);
-  badge.textContent = showGroup ? GROUP[worst].name+" · "+GROUP[worst].room+(isOverridden()?" ◆":"") : "ยังไม่ครบ";
-  txt.textContent=ready?(editingId?"พร้อมบันทึกทับข้อมูลเดิม":(state.manualG?"พร้อมบันทึก (เลือกกลุ่มเอง)":"พร้อมบันทึก")):"ยังขาด "+miss.length+" รายการ (แตะเพื่อไป)";
+  badge.className="badge b"+((assessDone||worst===3)?worst:0);
+  badge.textContent=(!assessDone&&worst!==3)?"ยังไม่ครบ":GROUP[worst].name+" · "+GROUP[worst].room;
+  txt.textContent=ready?(editingId?"พร้อมบันทึกทับข้อมูลเดิม":"พร้อมบันทึก"):"ยังขาด "+miss.length+" รายการ (แตะเพื่อไป)";
   updateProgress();
   if(STEPS[cur]==="summary") renderSummary();
 }
@@ -598,8 +521,7 @@ let draftTimer;
 function onFormChange(){ evaluate(); clearTimeout(draftTimer); draftTimer=setTimeout(saveDraft,400); }
 function formSnapshot(){
   return {hn:document.getElementById("hn").value,age:document.getElementById("age").value,
-          sex:state.sex,pain:state.pain,worse:state.painWorse,answers:state.answers,
-          manualG:state.manualG,reason:state.manualReason,editingId,cur};
+          sex:state.sex,pain:state.pain,worse:state.painWorse,answers:state.answers,editingId,cur};
 }
 async function saveDraft(){
   const d=formSnapshot();
@@ -614,8 +536,6 @@ function applyForm(d){
   state.pain=(typeof d.pain==="number")?d.pain:null;
   state.painWorse=!!d.worse;
   state.answers=Object.assign({},d.answers||{});
-  state.manualG=d.manualG||null;
-  state.manualReason=d.reason||"";
   ORDER.forEach(k=>paintStep(k));
 }
 function quickNormal(){
@@ -624,23 +544,13 @@ function quickNormal(){
   go(STEPS.indexOf("pain"));
   showToast("ตั้งปกติทุกข้อแล้ว — เหลือกรอก Pain score");
 }
-function quickHNonly(){
-  if(!document.getElementById("hn").value.trim()){
-    showToast("กรุณากรอก HN ก่อน");
-    document.getElementById("hn").focus(); return;
-  }
-  if(!state.manualG) state.manualG=1;   // ตั้งค่าเริ่มต้นเป็นสีเขียว ให้เปลี่ยนได้
-  onFormChange();
-  go(STEPS.length-1);   // ไปสไลด์สรุปเพื่อเลือกกลุ่ม + ใส่เหตุผล
-  showToast("เลือกกลุ่มและระบุเหตุผล แล้วกดบันทึก");
-}
 
 /* ============ แก้ไขข้อมูลเก่า ============ */
 function editRecord(id){
   const r=records.find(x=>x.id===id); if(!r) return;
   if(editingId&&editingId!==id&&!confirm("กำลังแก้ไขรายอื่นอยู่ เปลี่ยนมาแก้รายนี้แทนหรือไม่?")) return;
   editingId=id;
-  applyForm({hn:r.hn,age:r.age,sex:r.sex,pain:r.pain,worse:r.worse,answers:r.answers||{},manualG:r.manualG,reason:r.reason});
+  applyForm({hn:r.hn,age:r.age,sex:r.sex,pain:r.pain,worse:r.worse,answers:r.answers||{}});
   document.body.classList.add("editing");
   document.getElementById("editBar").classList.add("show");
   const full=r.answers&&Object.keys(r.answers).length===8;
@@ -667,9 +577,7 @@ async function submitCase(){
     if(i<0){ editingId=null; return showToast("ไม่พบข้อมูลเดิม อาจถูกลบไปแล้ว"); }
     const old=records[i];
     records[i]=Object.assign({},old,{hn,sex:state.sex,age,g:worstGroup(),pain:state.pain,worse:state.painWorse,
-      answers:Object.assign({},state.answers),manualG:state.manualG||null,reason:state.manualReason||"",
-      hnOnly: state.manualG && !Object.keys(state.answers).length && state.pain===null,
-      flags:currentFlags(),editedAt:stamp,editCount:(old.editCount||0)+1});
+      answers:Object.assign({},state.answers),flags:currentFlags(),editedAt:stamp,editCount:(old.editCount||0)+1});
     await Store.write(KEY,records); renderAll();
     showToast(`แก้ไข HN ${hn} ✓ ${GNAME[records[i].g]} (${GROUP[records[i].g].room})`);
     editingId=null;
@@ -681,9 +589,7 @@ async function submitCase(){
   if(dup&&!confirm(`HN ${hn} มีบันทึกอยู่แล้ว (${GNAME[dup.g]})\nกด OK เพื่อบันทึกเป็นรายการใหม่ หรือ Cancel แล้วกดดินสอที่รายการเดิมเพื่อแก้ไข`)) return;
   records.push({id:"r"+now.getTime()+Math.random().toString(36).slice(2,6),
     hn,sex:state.sex,age,g:worstGroup(),pain:state.pain,worse:state.painWorse,
-    answers:Object.assign({},state.answers),manualG:state.manualG||null,reason:state.manualReason||"",
-    hnOnly: !!(state.manualG && !Object.keys(state.answers).length && state.pain===null),
-    flags:currentFlags(),time:stamp,iso:now.toISOString()});
+    answers:Object.assign({},state.answers),flags:currentFlags(),time:stamp,iso:now.toISOString()});
   await Store.write(KEY,records);
   const check=await Store.read(KEY);
   renderAll();
@@ -729,20 +635,14 @@ function renderLog(){
   const q=document.getElementById("searchHN").value.trim(), list=document.getElementById("logList");
   const shown=records.filter(r=>!q||r.hn.includes(q)).slice().reverse();
   if(!shown.length){ list.innerHTML=`<div class="empty">${records.length?"ไม่พบ HN ที่ค้นหา":"ยังไม่มีข้อมูลที่บันทึก"}</div>`; return; }
-  list.innerHTML=shown.map(r=>{
-    const man = r.manualG;
-    const line1 = r.hnOnly
-      ? `${man?"◆ เลือกกลุ่มเอง":""}`
-      : `${esc(r.sex||"-")} ${esc(r.age||"-")} ปี · Pain ${r.pain!=null?r.pain:"-"}${man?" · ◆เลือกเอง":""}`;
-    return `
+  list.innerHTML=shown.map(r=>`
     <div class="rec r${r.g}${r.id===editingId?" active":""}">
       <span class="pill">${GNAME[r.g]}</span>
       <div class="info"><div class="hn">HN ${esc(r.hn)}</div>
-        <div class="meta">${line1} · ${esc(r.time)}${r.editedAt?` · <span class="edited">แก้ไข ${esc(r.editedAt)}</span>`:""}</div>
-        ${man&&r.reason?`<div class="meta rsn">เหตุผล: ${esc(r.reason)}</div>`:""}</div>
+        <div class="meta">${esc(r.sex)} ${esc(r.age)} ปี · Pain ${r.pain} · ${esc(r.time)}${r.editedAt?` · <span class="edited">แก้ไข ${esc(r.editedAt)}</span>`:""}</div></div>
       <button class="edt" onclick="editRecord('${r.id}')">✏️</button>
       <button class="del" onclick="deleteRecord('${r.id}')">🗑</button>
-    </div>`; }).join("");
+    </div>`).join("");
 }
 function esc(s){ return String(s).replace(/[<>&"]/g,c=>({"<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;"}[c])); }
 
@@ -752,7 +652,7 @@ function copyStats(){
   let t="สรุปการคัดแยกผู้ป่วยหลังผ่าตัดตา (ก่อนจำหน่าย)\n";
   [1,2,3].forEach(g=>{ t+=`${GROUP[g].name} — ${GROUP[g].room} (${GROUP[g].cap} เตียง): ${c[g]} ราย\n`; });
   t+=`รวมทั้งหมด: ${records.length} ราย\n\nรายการ:\n`;
-  records.forEach((r,i)=>{ t+=`${i+1}. HN ${r.hn} ${r.sex||"-"} ${r.age||"-"} ปี — ${GNAME[r.g]} (${GROUP[r.g].room})${r.pain!=null?", Pain "+r.pain:""} (${r.time})${r.manualG?" ◆เลือกเอง: "+(r.reason||"-"):""}${r.editedAt?" [แก้ไข "+r.editedAt+"]":""}${r.flags.length&&!r.hnOnly?" | "+r.flags.join("; "):""}\n`; });
+  records.forEach((r,i)=>{ t+=`${i+1}. HN ${r.hn} ${r.sex} ${r.age} ปี — ${GNAME[r.g]} (${GROUP[r.g].room}), Pain ${r.pain} (${r.time})${r.editedAt?" [แก้ไข "+r.editedAt+"]":""}${r.flags.length?" | "+r.flags.join("; "):""}\n`; });
   navigator.clipboard.writeText(t).then(()=>showToast("คัดลอกสรุปแล้ว ✓"));
 }
 function saveBlob(text,type,name){
@@ -761,8 +661,8 @@ function saveBlob(text,type,name){
 }
 function downloadCSV(){
   if(!records.length) return showToast("ยังไม่มีข้อมูลให้ดาวน์โหลด");
-  const head=["ลำดับ","HN","เพศ","อายุ","กลุ่มสี","ห้อง","Pain","ปวดเพิ่มขึ้น","เลือกกลุ่มเอง","เหตุผล","วันเวลา","แก้ไขล่าสุด","ข้อที่พบ"];
-  const rows=records.map((r,i)=>[i+1,r.hn,r.sex||"",r.age||"",GNAME[r.g],GROUP[r.g].room,r.pain!=null?r.pain:"",r.worse?"ใช่":"ไม่",r.manualG?"ใช่":"",r.reason||"","'"+r.time,r.editedAt?"'"+r.editedAt:"",r.flags.join(" ; ")]);
+  const head=["ลำดับ","HN","เพศ","อายุ","กลุ่มสี","ห้อง","Pain","ปวดเพิ่มขึ้น","วันเวลา","แก้ไขล่าสุด","ข้อที่พบ"];
+  const rows=records.map((r,i)=>[i+1,r.hn,r.sex,r.age,GNAME[r.g],GROUP[r.g].room,r.pain,r.worse?"ใช่":"ไม่","'"+r.time,r.editedAt?"'"+r.editedAt:"",r.flags.join(" ; ")]);
   const csv="\uFEFF"+[head,...rows].map(a=>a.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n");
   saveBlob(csv,"text/csv;charset=utf-8","eye-triage-log.csv"); showToast("ดาวน์โหลด CSV แล้ว");
 }
@@ -787,7 +687,7 @@ function restoreJSON(ev){
   rd.readAsText(f);
 }
 async function resetForm(){
-  applyForm({hn:"",age:"",sex:null,pain:null,worse:false,answers:{},manualG:null,reason:""});
+  applyForm({hn:"",age:"",sex:null,pain:null,worse:false,answers:{}});
   await Store.remove(DRAFT_KEY);
   go(0,true); evaluate();
   window.scrollTo({top:0,behavior:"smooth"});
