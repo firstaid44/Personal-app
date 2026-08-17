@@ -98,6 +98,40 @@
   .card.ticket .stub span{writing-mode:vertical-rl;transform:rotate(180deg);color:#fff;font-weight:700;font-size:10.5px;letter-spacing:.14em}
   .card.ticket .tbody{flex:1;min-width:0;padding:13px 14px}
 
+  /* ---- flight route detail header ---- */
+  .routehead{background:var(--ac,var(--c-flight));color:#fff;border-radius:18px;padding:16px 16px 15px;margin-bottom:12px}
+  .routehead .rlabel{font-size:11.5px;opacity:.85;margin-bottom:11px;font-weight:600}
+  .routehead .rrow{display:flex;align-items:center;gap:8px}
+  .routehead .rpt{flex:0 0 auto}
+  .routehead .rpt b{font-size:27px;font-weight:700;letter-spacing:.02em}
+  .routehead .rpath{flex:1;position:relative;height:2px;
+    background:repeating-linear-gradient(90deg,rgba(255,255,255,.55) 0 6px,transparent 6px 11px);margin:0 4px}
+  .routehead .rplane{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(90deg);
+    width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;font-size:12px}
+
+  /* ---- illustrated scene banner (hotel detail) ---- */
+  .scene{height:128px;position:relative;border-radius:18px;overflow:hidden;margin-bottom:14px}
+  .scene-dusk{background:linear-gradient(180deg,#2B4A63 0%,#C98A5E 78%,#12303F 100%)}
+  .scene-dusk::before{content:"";position:absolute;left:0;right:0;bottom:0;height:40%;
+    background:repeating-linear-gradient(90deg,rgba(18,48,63,.9) 0 14px,transparent 14px 22px)}
+  .scene-temple{background:linear-gradient(160deg,#C4573B 0%,#B0842C 100%)}
+  .scene-shophouse{background:repeating-linear-gradient(90deg,#C97B5E 0 34px,#8F6E9C 34px 68px,#6E8E7A 68px 102px,#D9A441 102px 136px)}
+  .scene-vortex{background:radial-gradient(circle at 50% 50%,#EFE9D6 0%,#8FB6C4 100%)}
+  .scene-vortex::before{content:"";position:absolute;inset:16%;border-radius:50%;border:2px solid rgba(23,27,18,.2)}
+  .scene-vortex::after{content:"";position:absolute;inset:32%;border-radius:50%;border:2px solid rgba(23,27,18,.25)}
+  .scene-carnival{background:radial-gradient(circle at 50% 40%,var(--lime) 0%,#3C7FB1 75%)}
+  .scenetag{position:absolute;left:12px;bottom:10px;background:rgba(23,27,18,.55);color:#fff;padding:6px 11px;
+    border-radius:999px;font-size:11.5px;font-weight:600;backdrop-filter:blur(2px)}
+
+  /* ---- destination grid (place category) ---- */
+  .pgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+  .gcard{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);cursor:pointer}
+  .gcard:active{transform:scale(.987)}
+  .gscene{height:92px;position:relative}
+  .gcp{padding:9px 10px 11px}
+  .gcp small{display:block;font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
+  .gcp b{font-size:12.5px;font-weight:600;line-height:1.32;display:block}
+
   /* ===== top bar (sub views) ===== */
   .bar{position:sticky;top:0;z-index:20;background:var(--paper);display:flex;align-items:center;gap:11px;
     padding:calc(env(safe-area-inset-top) + 10px) 14px 11px;border-bottom:1px solid var(--line)}
@@ -258,6 +292,10 @@ const CATS={
 };
 const ICON={emergency:"🆘",flight:"✈️",hotel:"🏨",booking:"🎫",plan:"🗺️",place:"📍",food:"🍜",esim:"📱",prep:"🎒",money:"💰",info:"ℹ️"};
 const ORDER=["emergency","flight","hotel","booking","plan","place","food","esim","prep","money","info"];
+const PLACE_SCENE={"pc-marina":"scene-dusk","pc-barrage":"scene-dusk","pc-clarke":"scene-dusk",
+  "pc-krishnan":"scene-temple","pc-tooth":"scene-temple",
+  "pc-katong":"scene-shophouse","pc-newbahru":"scene-shophouse","pc-hillfount":"scene-shophouse",
+  "pc-jewel":"scene-vortex","pc-uss":"scene-carnival"};
 
 function kv(k,v){return `<div class="kv"><span class="k">${k}</span><span class="v">${v}</span></div>`;}
 
@@ -408,26 +446,39 @@ function renderList(){
       .filter(i=>!term||(i.title+" "+i.sub+" "+(i.kw||"")+" "+(i.body||"").replace(/<[^>]+>/g," ")).toLowerCase().includes(term));
     if(!items.length)return;
     html+=`<div class="sech"><span class="dot" style="background:${CATS[cat].color}"></span><b>${CATS[cat].label}</b><span class="cnt">${items.length}</span></div>`;
-    items.forEach(it=>{
-      shown++;
-      if(cat==="flight"){
-        html+=`<div class="card ticket" style="--ac:${CATS[cat].color}" data-open="${it.id}">
-          <div class="stub"><span>เที่ยวบิน</span></div>
-          <div class="tbody">
-            <h3>${hi(it.title,term)}<span class="chev">›</span></h3>
-            <div class="sub">${hi(it.sub,term)}</div>
-          </div></div>`;
-      }else{
-        html+=`<div class="card" style="--ac:${CATS[cat].color}" data-open="${it.id}">
-          <div class="ctop">
-            <div class="stamp">${ICON[cat]}</div>
-            <div class="ctext">
+    if(cat==="place"){
+      html+='<div class="pgrid">';
+      items.forEach(it=>{
+        shown++;
+        const sc=PLACE_SCENE[it.id]||"scene-dusk";
+        html+=`<div class="gcard" data-open="${it.id}">
+          <div class="gscene ${sc}"></div>
+          <div class="gcp"><small>${hi(it.sub,term)}</small><b>${hi(it.title,term)}</b></div>
+        </div>`;
+      });
+      html+='</div>';
+    }else{
+      items.forEach(it=>{
+        shown++;
+        if(cat==="flight"){
+          html+=`<div class="card ticket" style="--ac:${CATS[cat].color}" data-open="${it.id}">
+            <div class="stub"><span>เที่ยวบิน</span></div>
+            <div class="tbody">
               <h3>${hi(it.title,term)}<span class="chev">›</span></h3>
               <div class="sub">${hi(it.sub,term)}</div>
-            </div>
-          </div></div>`;
-      }
-    });
+            </div></div>`;
+        }else{
+          html+=`<div class="card" style="--ac:${CATS[cat].color}" data-open="${it.id}">
+            <div class="ctop">
+              <div class="stamp">${ICON[cat]}</div>
+              <div class="ctext">
+                <h3>${hi(it.title,term)}<span class="chev">›</span></h3>
+                <div class="sub">${hi(it.sub,term)}</div>
+              </div>
+            </div></div>`;
+        }
+      });
+    }
   });
   $("#list").innerHTML=html;
   $("#nores").style.display=shown?"none":"block";
@@ -447,10 +498,16 @@ function openItem(id){
   let thumbs="";
   if(it.imgs&&it.imgs.length){thumbs='<div class="thumbs"><span class="lbl">📎 รูปแนบ (แตะเพื่อดู)</span>'+
     it.imgs.map((k,i)=>`<img class="th" src="${IMG[k]||''}" data-lb="${id}:${i}" alt="รูปแนบ">`).join("")+'</div>';}
+  let routehead="";
+  const rm=it.cat==="flight"&&it.title.match(/([A-Z]{3})\s*→\s*([A-Z]{3})/);
+  if(rm){routehead=`<div class="routehead" style="--ac:${ac}"><div class="rlabel">${it.sub}</div>
+    <div class="rrow"><div class="rpt"><b>${rm[1]}</b></div><div class="rpath"><span class="rplane">✈</span></div><div class="rpt end"><b>${rm[2]}</b></div></div></div>`;}
+  let scene="";
+  if(it.cat==="hotel"){scene=`<div class="scene scene-dusk"><span class="scenetag">${it.sub}</span></div>`;}
+  const head=rm?"":`<div class="head"><div class="ic" style="--ac:${ac}">${ICON[it.cat]}</div>
+      <div><h2>${it.title}</h2><div class="sub">${it.sub}</div></div></div>`;
   $("#d-title").textContent=CATS[it.cat].label;
-  $("#detailBody").innerHTML=`
-    <div class="head"><div class="ic" style="--ac:${ac}">${ICON[it.cat]}</div>
-      <div><h2>${it.title}</h2><div class="sub">${it.sub}</div></div></div>
+  $("#detailBody").innerHTML=`${routehead}${scene}${head}
     <div class="panel" style="--ac:${ac}"><div class="body">${it.body||""}</div>${maps}${tel}${thumbs}</div>`;
   push("detail");
 }
