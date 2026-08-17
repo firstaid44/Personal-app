@@ -93,10 +93,28 @@
 
   /* ---- boarding-pass card (flight category) ---- */
   .card.ticket{display:flex;padding:0;overflow:hidden}
+  .i{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;vertical-align:-3px;flex-shrink:0}
   .card.ticket .stub{width:34px;flex:0 0 auto;background:var(--ac,var(--c-flight));border-right:2px dashed rgba(255,255,255,.5);
-    display:flex;align-items:center;justify-content:center}
+    display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:12px 0}
   .card.ticket .stub span{writing-mode:vertical-rl;transform:rotate(180deg);color:#fff;font-weight:700;font-size:10.5px;letter-spacing:.14em}
+  .card.ticket .stub svg{stroke:#fff;width:13px;height:13px}
   .card.ticket .tbody{flex:1;min-width:0;padding:13px 14px}
+
+  /* ---- flight route preview (list header) ---- */
+  .routeprev{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin-bottom:10px;box-shadow:var(--shadow)}
+  .rprow{display:flex;align-items:center;gap:8px}
+  .rppt{flex:0 0 auto}
+  .rppt b{display:block;font-size:19px;font-weight:700}
+  .rppt span{font-size:10.5px;color:var(--muted)}
+  .rppt.end{text-align:right}
+  .rppath{flex:1;position:relative;height:2px;background:repeating-linear-gradient(90deg,var(--line) 0 6px,transparent 6px 11px);margin:0 6px}
+  .rpplane{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:26px;height:26px;border-radius:50%;background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:center}
+  .datestrip{display:flex;gap:6px;margin-top:12px}
+  .dcell{flex:1;text-align:center;padding:8px 0;border-radius:11px;background:var(--paper);border:1px solid var(--line)}
+  .dcell .d{font-size:9px;color:var(--muted);text-transform:uppercase;margin-bottom:2px}
+  .dcell .n{font-size:13px;font-weight:700}
+  .dcell.on{background:var(--lime);border-color:var(--lime)}
+  .dcell.on .d,.dcell.on .n{color:var(--lime-ink)}
 
   /* ---- flight route detail header ---- */
   .routehead{background:var(--ac,var(--c-flight));color:#fff;border-radius:18px;padding:16px 16px 15px;margin-bottom:12px}
@@ -104,13 +122,14 @@
   .routehead .rrow{display:flex;align-items:center;gap:8px}
   .routehead .rpt{flex:0 0 auto}
   .routehead .rpt b{font-size:27px;font-weight:700;letter-spacing:.02em}
+  .routehead .rpt span{display:block;font-size:11px;opacity:.8;margin-top:2px}
   .routehead .rpath{flex:1;position:relative;height:2px;
     background:repeating-linear-gradient(90deg,rgba(255,255,255,.55) 0 6px,transparent 6px 11px);margin:0 4px}
   .routehead .rplane{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(90deg);
     width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;font-size:12px}
 
   /* ---- illustrated scene banner (hotel detail) ---- */
-  .scene{height:128px;position:relative;border-radius:18px;overflow:hidden;margin-bottom:14px}
+  .scene{height:150px;position:relative;border-radius:18px;overflow:hidden;margin-bottom:12px}
   .scene-dusk{background:linear-gradient(180deg,#2B4A63 0%,#C98A5E 78%,#12303F 100%)}
   .scene-dusk::before{content:"";position:absolute;left:0;right:0;bottom:0;height:40%;
     background:repeating-linear-gradient(90deg,rgba(18,48,63,.9) 0 14px,transparent 14px 22px)}
@@ -120,17 +139,36 @@
   .scene-vortex::before{content:"";position:absolute;inset:16%;border-radius:50%;border:2px solid rgba(23,27,18,.2)}
   .scene-vortex::after{content:"";position:absolute;inset:32%;border-radius:50%;border:2px solid rgba(23,27,18,.25)}
   .scene-carnival{background:radial-gradient(circle at 50% 40%,var(--lime) 0%,#3C7FB1 75%)}
-  .scenetag{position:absolute;left:12px;bottom:10px;background:rgba(23,27,18,.55);color:#fff;padding:6px 11px;
+  .scenetag{position:absolute;left:12px;bottom:12px;background:rgba(23,27,18,.55);color:#fff;padding:6px 11px;
     border-radius:999px;font-size:11.5px;font-weight:600;backdrop-filter:blur(2px)}
+  .sceneoverlay{position:absolute;top:12px;right:12px;display:flex;gap:8px}
+  .iconbtn{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:0 0 auto;border:none;cursor:pointer}
+  .iconbtn.ghost{background:rgba(255,255,255,.85);color:var(--ink);backdrop-filter:blur(2px)}
+  .iconbtn.ghost.on{background:var(--lime);color:var(--lime-ink)}
+  .pillrow{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  .pillrow .pill{display:inline-flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:8px 12px;font-size:12px;font-weight:500;color:var(--ink)}
+  .amenrow{display:flex;gap:9px;margin-bottom:4px}
+  .amen{flex:1;background:var(--card);border:1px solid var(--line);border-radius:13px;padding:11px;display:flex;flex-direction:column;gap:7px;align-items:flex-start}
+  .amen span{font-size:11px;font-weight:600}
 
   /* ---- destination grid (place category) ---- */
+  .pdaychips{display:flex;gap:7px;overflow-x:auto;margin-bottom:10px;scrollbar-width:none;padding-bottom:2px}
+  .pdaychips::-webkit-scrollbar{display:none}
+  .pchip{white-space:nowrap;border:1.5px solid var(--line);background:var(--card);color:var(--muted);padding:6px 12px;border-radius:999px;font-size:12px;font-weight:600;cursor:pointer;flex:0 0 auto}
+  .pchip.on{background:var(--lime);border-color:var(--lime);color:var(--lime-ink)}
   .pgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
   .gcard{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);cursor:pointer}
   .gcard:active{transform:scale(.987)}
+  .gcard.dimmed{display:none}
   .gscene{height:92px;position:relative}
+  .gtag{position:absolute;left:8px;top:8px;background:rgba(23,27,18,.55);color:#fff;font-size:9px;font-weight:700;letter-spacing:.06em;padding:4px 8px;border-radius:999px;backdrop-filter:blur(2px)}
+  .gfav{position:absolute;right:8px;top:8px;width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,.85);display:flex;align-items:center;justify-content:center;pointer-events:none}
+  .gfav svg{width:12px;height:12px}
   .gcp{padding:9px 10px 11px}
   .gcp small{display:block;font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
   .gcp b{font-size:12.5px;font-weight:600;line-height:1.32;display:block}
+  .gridcta{padding:2px 0 4px}
+  .gridcta button{width:100%;background:var(--lime);color:var(--lime-ink);padding:13px;border-radius:999px;font-weight:700;font-size:13.5px;border:none;cursor:pointer}
 
   /* ===== top bar (sub views) ===== */
   .bar{position:sticky;top:0;z-index:20;background:var(--paper);display:flex;align-items:center;gap:11px;
@@ -296,6 +334,18 @@ const PLACE_SCENE={"pc-marina":"scene-dusk","pc-barrage":"scene-dusk","pc-clarke
   "pc-krishnan":"scene-temple","pc-tooth":"scene-temple",
   "pc-katong":"scene-shophouse","pc-newbahru":"scene-shophouse","pc-hillfount":"scene-shophouse",
   "pc-jewel":"scene-vortex","pc-uss":"scene-carnival"};
+const CITY={HDY:"หาดใหญ่",SIN:"สิงคโปร์"};
+const SVG={
+  share:'<svg class="i" viewBox="0 0 24 24"><path d="M12 16V4M12 4l-4 4M12 4l4 4"/><path d="M4 14v4a2 2 0 002 2h12a2 2 0 002-2v-4"/></svg>',
+  star:'<svg class="i" viewBox="0 0 24 24"><path d="M12 3l2.6 5.7 6.2.6-4.7 4.2 1.4 6.1L12 16.9 6.5 19.6l1.4-6.1L3.2 9.3l6.2-.6L12 3z"/></svg>',
+  pin:'<svg class="i" viewBox="0 0 24 24"><path d="M12 21s7-6.5 7-11.5A7 7 0 105 9.5C5 14.5 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.3"/></svg>',
+  users:'<svg class="i" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.4"/></svg>',
+  moon:'<svg class="i" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 119.5 4a7 7 0 0010.5 10.5z"/></svg>',
+  bed:'<svg class="i" viewBox="0 0 24 24"><path d="M3 18v-6a2 2 0 012-2h4a2 2 0 012 2v1"/><path d="M3 13V7a2 2 0 012-2h2a2 2 0 012 2"/><path d="M13 13h6a2 2 0 012 2v3"/><path d="M3 18h18"/></svg>',
+  wifi:'<svg class="i" viewBox="0 0 24 24"><path d="M5 12.5a11 11 0 0114 0"/><path d="M8.5 16a6 6 0 017 0"/><circle cx="12" cy="19.5" r="1"/></svg>',
+  dumb:'<svg class="i" viewBox="0 0 24 24"><path d="M6 8v8M18 8v8M3 10v4M21 10v4M6 12h12"/></svg>',
+  plane:'<svg class="i" viewBox="0 0 24 24"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>',
+};
 
 function kv(k,v){return `<div class="kv"><span class="k">${k}</span><span class="v">${v}</span></div>`;}
 
@@ -447,22 +497,43 @@ function renderList(){
     if(!items.length)return;
     html+=`<div class="sech"><span class="dot" style="background:${CATS[cat].color}"></span><b>${CATS[cat].label}</b><span class="cnt">${items.length}</span></div>`;
     if(cat==="place"){
-      html+='<div class="pgrid">';
+      html+=`<div class="pdaychips" id="pdaychips">
+        <button class="pchip on" data-pd="all">ทั้งหมด</button>
+        <button class="pchip" data-pd="1">Day 1</button>
+        <button class="pchip" data-pd="2">Day 2</button>
+        <button class="pchip" data-pd="3">Day 3</button>
+        <button class="pchip" data-pd="4">Day 4</button>
+      </div><div class="pgrid" id="pgrid">`;
       items.forEach(it=>{
         shown++;
         const sc=PLACE_SCENE[it.id]||"scene-dusk";
-        html+=`<div class="gcard" data-open="${it.id}">
-          <div class="gscene ${sc}"></div>
+        const dm=it.sub.match(/Day (\d)/);
+        const dayNum=dm?dm[1]:"";
+        html+=`<div class="gcard" data-open="${it.id}" data-pday="${dayNum}">
+          <div class="gscene ${sc}"><span class="gtag">DAY ${dayNum||"–"}</span><span class="gfav">${SVG.star}</span></div>
           <div class="gcp"><small>${hi(it.sub,term)}</small><b>${hi(it.title,term)}</b></div>
         </div>`;
       });
-      html+='</div>';
+      html+=`</div><div class="gridcta"><button data-open="pl-d1">ดูแผนเที่ยว 4 วัน</button></div>`;
     }else{
+      if(cat==="flight"){
+        html+=`<div class="routeprev"><div class="rprow">
+          <div class="rppt"><b>HDY</b><span>หาดใหญ่</span></div>
+          <div class="rppath"><span class="rpplane">${SVG.plane.replace('class="i"','class="i" style="stroke:currentColor;width:13px;height:13px"')}</span></div>
+          <div class="rppt end"><b>SIN</b><span>สิงคโปร์</span></div>
+        </div>
+        <div class="datestrip">
+          <div class="dcell on"><div class="d">ศ</div><div class="n">4</div></div>
+          <div class="dcell"><div class="d">ส</div><div class="n">5</div></div>
+          <div class="dcell"><div class="d">อา</div><div class="n">6</div></div>
+          <div class="dcell on"><div class="d">จ</div><div class="n">7</div></div>
+        </div></div>`;
+      }
       items.forEach(it=>{
         shown++;
         if(cat==="flight"){
           html+=`<div class="card ticket" style="--ac:${CATS[cat].color}" data-open="${it.id}">
-            <div class="stub"><span>เที่ยวบิน</span></div>
+            <div class="stub"><span>เที่ยวบิน</span>${SVG.plane}</div>
             <div class="tbody">
               <h3>${hi(it.title,term)}<span class="chev">›</span></h3>
               <div class="sub">${hi(it.sub,term)}</div>
@@ -501,13 +572,25 @@ function openItem(id){
   let routehead="";
   const rm=it.cat==="flight"&&it.title.match(/([A-Z]{3})\s*→\s*([A-Z]{3})/);
   if(rm){routehead=`<div class="routehead" style="--ac:${ac}"><div class="rlabel">${it.sub}</div>
-    <div class="rrow"><div class="rpt"><b>${rm[1]}</b></div><div class="rpath"><span class="rplane">✈</span></div><div class="rpt end"><b>${rm[2]}</b></div></div></div>`;}
-  let scene="";
-  if(it.cat==="hotel"){scene=`<div class="scene scene-dusk"><span class="scenetag">${it.sub}</span></div>`;}
+    <div class="rrow"><div class="rpt"><b>${rm[1]}</b><span>${CITY[rm[1]]||""}</span></div><div class="rpath"><span class="rplane">${SVG.plane.replace('class="i"','style="stroke:#fff;width:13px;height:13px"')}</span></div><div class="rpt end"><b>${rm[2]}</b><span>${CITY[rm[2]]||""}</span></div></div></div>`;}
+  let scene="",pillrow="",amenrow="";
+  if(it.cat==="hotel"){
+    scene=`<div class="scene scene-dusk">
+      <div class="sceneoverlay"><button class="iconbtn ghost" data-share>${SVG.share}</button><button class="iconbtn ghost" data-fav>${SVG.star}</button></div>
+      <span class="scenetag">${it.sub}</span></div>`;
+    pillrow=`<div class="pillrow">
+      <span class="pill">${SVG.pin}ใกล้ Lavender MRT</span>
+      <span class="pill">${SVG.users}3 ผู้ใหญ่ + 1 เด็ก</span>
+      <span class="pill">${SVG.moon}3 คืน</span></div>`;
+    amenrow=`<div class="amenrow">
+      <div class="amen">${SVG.bed}<span>ควีน+เดี่ยว</span></div>
+      <div class="amen">${SVG.wifi}<span>Free WiFi</span></div>
+      <div class="amen">${SVG.dumb}<span>ฟิตเนส</span></div></div>`;
+  }
   const head=rm?"":`<div class="head"><div class="ic" style="--ac:${ac}">${ICON[it.cat]}</div>
       <div><h2>${it.title}</h2><div class="sub">${it.sub}</div></div></div>`;
   $("#d-title").textContent=CATS[it.cat].label;
-  $("#detailBody").innerHTML=`${routehead}${scene}${head}
+  $("#detailBody").innerHTML=`${routehead}${scene}${head}${pillrow}${amenrow}
     <div class="panel" style="--ac:${ac}"><div class="body">${it.body||""}</div>${maps}${tel}${thumbs}</div>`;
   push("detail");
 }
@@ -547,6 +630,14 @@ document.addEventListener("click",e=>{
   const th=e.target.closest("[data-lb]");if(th){const[id,i]=th.dataset.lb.split(":");openLB(ITEMS.find(x=>x.id===id).imgs,+i);return;}
   const tp=e.target.closest("[data-lbplan]");if(tp){openLB(PLAN_IMGS,+tp.dataset.lbplan);return;}
   const chip=e.target.closest(".chip");if(chip){activeChip=chip.dataset.c;$$("#chips .chip").forEach(x=>x.classList.toggle("on",x===chip));renderList();return;}
+  const pd=e.target.closest(".pchip");
+  if(pd){$$("#pdaychips .pchip").forEach(x=>x.classList.toggle("on",x===pd));
+    const d=pd.dataset.pd;
+    $$("#pgrid .gcard").forEach(g=>g.classList.toggle("dimmed",d!=="all"&&g.dataset.pday!==d));
+    return;}
+  if(e.target.closest("[data-share]")){toast("กำลังแชร์ลิงก์…");return;}
+  const favb=e.target.closest("[data-fav]");
+  if(favb){favb.classList.toggle("on");toast(favb.classList.contains("on")?"บันทึกแล้ว ⭐":"เอาออกจากรายการบันทึก");return;}
   if(e.target.closest(".btn.map,.navlink"))toast("กำลังเปิด Google Maps…");
   if(e.target.closest(".btn.call,a.tel"))toast("กำลังโทรออก…");
 });
