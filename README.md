@@ -1,44 +1,39 @@
-# 💊 ระบบบริหารจัดการคลังยา — PCU สะบ้าย้อย
+# 🇸🇬 คลังทริปสิงคโปร์ 2026
 
-ระบบจัดการคลังยาสำหรับหน่วยบริการปฐมภูมิ (PCU) สะบ้าย้อย อำเภอสะบ้าย้อย จังหวัดสงขลา  
-พัฒนาด้วย Vanilla HTML/CSS/JS — ใช้งานได้ทันทีบน Browser ไม่ต้องติดตั้ง
+เว็บแอปสรุปข้อมูลทริปสิงคโปร์ทั้งหมดไว้ในที่เดียว — ตั๋วเครื่องบิน ที่พัก แผนเที่ยว สถานที่ ร้านอาหาร และเรื่องต้องเตรียมตัว ค้นหา/กรองได้ทันที ใช้งานได้ทันทีบนมือถือ ไม่ต้องติดตั้ง
 
 ---
 
 ## 🌐 เปิดใช้งาน
 
-> **GitHub Pages:** `https://USERNAME.github.io/pcu-sabayoi-drug-system/`
+**GitHub Pages:** `https://firstaid44.github.io/Personal-app/`
 
 ---
 
-## 📁 โครงสร้างไฟล์
+## ✈️ ข้อมูลทริป
 
-```
-pcu-sabayoi-drug-system/
-├── index.html                ← หน้า Landing — เชื่อมทุกระบบ
-├── barcode_scanner.html      ← สแกนบาร์โค้ดด้วยกล้องมือถือ
-├── tmt_sync_tool.html        ← จับคู่รหัสยา PCU กับมาตรฐาน TMT
-└── README.md
-```
+- **เส้นทาง:** หาดใหญ่ (HDY) → สิงคโปร์ (Changi) ไป-กลับด้วย Scoot
+- **วันที่:** 4–7 กันยายน 2569 (4 วัน 3 คืน)
+- **ที่พัก:** Hotel Boss ย่าน Jalan Besar / Lavender (ใกล้ Lavender MRT & Bugis)
+- **ผู้เดินทาง:** 3 ผู้ใหญ่ + เด็ก 1 คน (2 ขวบ)
+
+### แผนเที่ยว 4 วัน
+| วัน | ไฮไลต์ |
+|-----|--------|
+| Day 1 · ศุกร์ 4 ก.ย. | Marina Bay + Garden by the Bay |
+| Day 2 · เสาร์ 5 ก.ย. | Universal Studios Singapore |
+| Day 3 · อาทิตย์ 6 ก.ย. | คาเฟ่ + จุดถ่ายรูป + วัด (Katong, Chinatown ฯลฯ) |
+| Day 4 · จันทร์ 7 ก.ย. | Jewel Changi ก่อนบินกลับ |
 
 ---
 
-## 🔧 ฟีเจอร์แต่ละหน้า
+## 🔧 ฟีเจอร์
 
-### 📷 Barcode Scanner (`barcode_scanner.html`)
-- เปิดกล้องมือถือสแกนบาร์โค้ดอัตโนมัติ
-- รองรับ **EAN-13, Code 128, QR Code, GS1-128**
-- แปลข้อมูล GS1 → LOT, วันหมดอายุ, จำนวน อัตโนมัติ
-- ค้นหายาจากฐานข้อมูล 118 รายการของ PCU สะบ้าย้อย
-- บันทึกประวัติสแกนใน localStorage
-- รองรับปุ่มไฟฉาย + กลับกล้อง
-
-### 🔬 TMT Sync Tool (`tmt_sync_tool.html`)
-- จับคู่รหัสยา PCU กับ **รหัสมาตรฐาน TMT** (Thai Medicines Terminology)
-- Auto-map ยา 118 รายการอัตโนมัติ
-- ค้นหาและแก้ไข TMT Code ได้ทุกรายการ
-- Export เป็น CSV (UTF-8 BOM, เปิด Excel ได้ทันที)
-- บันทึกการแก้ไขใน localStorage
+- 🔍 **ค้นหา + ตัวกรองหมวดหมู่** — เที่ยวบิน, ที่พัก, การจอง, แผนเที่ยว, สถานที่, ร้านอาหาร, ซิม/eSIM, เตรียมตัว, เงิน, ข้อมูลทั่วไป, เบอร์ฉุกเฉิน
+- 🗺️ **แผนเที่ยวรายวัน** พร้อมปุ่มนำทางไป Google Maps และปุ่มโทรตรงจากหน้าเว็บ
+- 🖼️ **แกลเลอรีรูปแนบ** (ใบจอง/สลิป/สถานที่) แบบ inline base64 — ดูได้แม้ไม่มีอินเทอร์เน็ต
+- 🆘 เบอร์ฉุกเฉินสิงคโปร์ (ตำรวจ 999 · รถพยาบาล/ดับเพลิง 995) กดโทรออกได้ทันที
+- 💰 สรุปงบประมาณ และเช็กลิสต์เตรียมตัวก่อนเดินทาง (เอกสาร, เงิน/แอป, ของใช้เด็ก, อุปกรณ์ไฟฟ้า)
 
 ---
 
@@ -46,51 +41,30 @@ pcu-sabayoi-drug-system/
 
 | ส่วน | เทคโนโลยี |
 |------|-----------|
-| Frontend | HTML5, CSS3, Vanilla JavaScript |
-| Barcode scanning | [jsQR v1.4.0](https://github.com/cozmo/jsQR) |
-| ฟอนต์ | IBM Plex Sans Thai + IBM Plex Mono |
-| ข้อมูลยามาตรฐาน | TMT (สมสท. — สำนักพัฒนามาตรฐานระบบข้อมูลสุขภาพไทย) |
+| Frontend | HTML5, CSS3, Vanilla JavaScript (ไฟล์เดียว ไม่มี build step) |
+| ฟอนต์ | Noto Sans Thai + Anuphan (Google Fonts) |
+| รูปภาพ | ฝังเป็น base64 ในไฟล์เดียวกัน |
 | Hosting | GitHub Pages |
 
 ---
 
-## 📱 รองรับ
+## 📁 โครงสร้างไฟล์
 
-- ✅ Android Chrome
-- ✅ iOS Safari
-- ✅ Desktop Chrome / Edge / Firefox
-- ✅ ไม่ต้องติดตั้ง App ใดๆ
-
----
-
-## 🚀 วิธีนำไปใช้งาน
-
-1. Fork หรือ Clone repository นี้
-2. เปิด **Settings → Pages** → เลือก branch `main`
-3. รอ 1–2 นาที จะได้ URL พร้อมใช้งาน
+```
+Personal-app/
+├── index.html   ← แอปทั้งหมด (หน้าแรก, ค้นหา, รายละเอียด, แผนเที่ยว)
+└── README.md
+```
 
 ---
 
-## 📋 ฐานข้อมูลยา
+## 🚀 วิธีนำไปใช้งาน / เปิด GitHub Pages
 
-ระบบมียา **118 รายการ** ครอบคลุมกลุ่ม:
-
-| กลุ่ม | ตัวอย่าง |
-|-------|---------|
-| Antibiotic | Amoxicillin, Norfloxacin, Metronidazole |
-| Antihypertensive | Amlodipine, Losartan, Enalapril |
-| Antidiabetic | Metformin, Glipizide, Pioglitazone |
-| Analgesic / NSAID | Paracetamol, Ibuprofen, Diclofenac |
-| Supplement | Folic acid, Ferrous fumarate, Calcium |
-| และอื่นๆ | Corticosteroid, GI, Bronchodilator... |
+1. ไปที่ **Settings → Pages**
+2. Source เลือก **"Deploy from a branch"**
+3. Branch เลือก **`main`** / โฟลเดอร์ **`/ (root)`** → Save
+4. รอ 1–2 นาที จะได้ URL พร้อมใช้งานที่ `https://firstaid44.github.io/Personal-app/`
 
 ---
 
-## 👥 ผู้พัฒนา
-
-**PCU สะบ้าย้อย** — หน่วยบริการปฐมภูมิ  
-อำเภอสะบ้าย้อย จังหวัดสงขลา
-
----
-
-*พัฒนาเพื่อการใช้งานจริงในระบบสาธารณสุขชุมชน*
+*ทำไว้ใช้ส่วนตัวสำหรับทริปสิงคโปร์ 2026*
