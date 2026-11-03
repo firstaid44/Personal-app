@@ -165,6 +165,7 @@ details.more>summary::before{content:'▸ ';color:var(--muted)}details.more[open
     <div class="hdr-r">
       <button class="btn" id="mask" aria-pressed="false" title="ซ่อนชื่อและเบอร์โทร เวลาแชร์หน้าจอ">ซ่อนชื่อ/เบอร์</button>
       <label class="btn" title="เลือกไฟล์ทะเบียน Excel (เลือกได้หลายไฟล์ เช่น ไฟล์หลัก + ไฟล์ ANC)">⬆ อัปเดตข้อมูลผู้ป่วย (Excel)<input type="file" id="reg-file" accept=".xlsx,.xls" multiple hidden></label>
+      <button class="btn" id="sheet-sync" title="ดึงข้อมูลล่าสุดจาก Google Sheet ทะเบียนกลุ่มเปราะบาง">🔄 ดึงจาก Google Sheet</button>
       <button class="btn" id="export-btn">⬇ ส่งออก Excel</button>
       <button class="btn" id="reg-reset" style="display:none">ล้างข้อมูลที่แก้ไข/อัปโหลด</button>
       <button class="btn" id="theme" title="สลับโหมดสว่าง/มืด">โหมดมืด</button>
@@ -185,10 +186,11 @@ details.more>summary::before{content:'▸ ';color:var(--muted)}details.more[open
   <section class="card emptycard" id="emptycard" style="display:none">
     <h2>ยังไม่มีข้อมูลผู้ป่วยในเครื่องนี้</h2>
     <ol class="small">
-      <li>กด <b>⬆ อัปเดตข้อมูลผู้ป่วย (Excel)</b> แล้วเลือกไฟล์ทะเบียนกลุ่มเปราะบาง (แบบแยกชีตตามหมู่ หรือแบบแยกชีตตามกลุ่ม · เลือกได้หลายไฟล์)</li>
+      <li>กำลังลองดึงข้อมูลล่าสุดจาก Google Sheet ทะเบียนกลุ่มเปราะบางให้อัตโนมัติ (ต้องต่ออินเทอร์เน็ต) — ถ้าไม่สำเร็จ กดปุ่ม <b>🔄 ดึงจาก Google Sheet</b> ที่มุมบนเพื่อลองใหม่</li>
+      <li>หรือกด <b>⬆ อัปเดตข้อมูลผู้ป่วย (Excel)</b> แล้วเลือกไฟล์ทะเบียนกลุ่มเปราะบาง (แบบแยกชีตตามหมู่ หรือแบบแยกชีตตามกลุ่ม · เลือกได้หลายไฟล์)</li>
       <li>ถ้าต้องการหมุดบนแผนที่ ไปที่แผนที่ → <b>ตั้งค่าแผนที่ · พิกัด</b> → <b>นำเข้าไฟล์พิกัด</b> แล้วเลือกไฟล์ export พิกัดบ้านจาก JHCIS</li>
     </ol>
-    <div class="small muted">ข้อมูลที่อัปโหลดจะอ่านและเก็บไว้ในเบราว์เซอร์ของเครื่องนี้เท่านั้น ไม่ถูกส่งขึ้นเว็บไซต์หรือ GitHub · กด “ล้างข้อมูลที่แก้ไข/อัปโหลด” เมื่อใช้เครื่องร่วมกับผู้อื่น</div>
+    <div class="small muted">ข้อมูลจะถูกอ่านมาเก็บไว้ในเบราว์เซอร์ของเครื่องนี้เท่านั้น (ไม่ถูกส่งออกไปที่อื่นหรือขึ้น GitHub) · กด “ล้างข้อมูลที่แก้ไข/อัปโหลด” เมื่อใช้เครื่องร่วมกับผู้อื่น</div>
     <label class="btn" style="margin-top:10px;display:inline-block;background:var(--accent);color:#fff;border-color:var(--accent)">⬆ เลือกไฟล์ทะเบียน Excel<input type="file" id="reg-file2" accept=".xlsx,.xls" multiple hidden></label>
   </section>
   <div class="kpis" id="kpis"></div>
@@ -886,6 +888,46 @@ document.getElementById('reg-reset').onclick=()=>{if(confirm('ลบข้อม
 document.getElementById('reg-reset').style.display=META.uploaded?'inline-block':'none';
 document.getElementById('reg-file2').onchange=document.getElementById('reg-file').onchange;
 if(!DATA.length){document.getElementById('emptycard').style.display='';}
+// ===================================================
+
+// ============ ซิงก์ข้อมูลจาก Google Sheet (ทะเบียนกลุ่มเปราะบาง ต.สะบ้าย้อย) ============
+const GSHEET_ID='16XkqV2NSTsNo6l7aVQDpoZ7RVrUc_DBiINJmoamiTIc';
+const GSHEET_TABS=['สำบ้าย้อย','หมู่1','หมู่2','หมู่3','หมู่4','หมู่5','หมู่6','หมู่7','หมู่8','หมู่9'];
+async function fetchSheetTab(name){
+  const url=`https://docs.google.com/spreadsheets/d/${GSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(name)}`;
+  const res=await fetch(url);
+  if(!res.ok)throw new Error('HTTP '+res.status);
+  const csv=await res.text();
+  const wb=XLSX.read(csv,{type:'string'});
+  return XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:true,defval:null});
+}
+async function syncFromSheet(showAlert){
+  if(!window.XLSX){if(showAlert)alert('ยังโหลดตัวอ่าน Excel ไม่เสร็จ (ต้องต่ออินเทอร์เน็ต) — ลองใหม่อีกครั้ง');return false;}
+  const log=[];let nf=[],okCount=0;
+  for(const name of GSHEET_TABS){
+    try{const rows=await fetchSheetTab(name);okCount++;if(isNewFormat(rows))nf.push(...parseNew(rows,name,log));}
+    catch(e){log.push(`${name}: ดึงไม่สำเร็จ (${e.message})`);}
+  }
+  if(!okCount){if(showAlert)alert('ดึงข้อมูลจาก Google Sheet ไม่สำเร็จ — ตรวจสอบอินเทอร์เน็ต หรือสิทธิ์การเข้าถึงชีต (ต้องเป็น "ทุกคนที่มีลิงก์ดูได้")');return false;}
+  if(!nf.length){if(showAlert)alert('เชื่อมต่อ Google Sheet ได้ แต่ไม่พบข้อมูลทะเบียน (ต้องมีคอลัมน์ "กลุ่มเปราะบาง" ในชีต)');return false;}
+  const merged=mergeNew(nf,log);
+  const next=[];GK.forEach(g=>next.push(...merged.filter(p=>p.g===g)));
+  next.forEach(p=>{if(p.g==='dial'&&!p.site)p.site='ไม่ระบุ';if(p.g==='dial'&&!p.days)p.days=[];});
+  const tod=new Date().toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'})+' '+new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+  META={src:`ดึงข้อมูลจาก Google Sheet อัตโนมัติ · ${tod}`,uploaded:true,at:new Date().toISOString()};
+  saveStored({meta:META,data:next});
+  if(showAlert)alert(`ดึงข้อมูลจาก Google Sheet แล้ว ${next.length} รายการ`);
+  return true;
+}
+document.getElementById('sheet-sync').onclick=async()=>{
+  const b=document.getElementById('sheet-sync');const old=b.textContent;b.disabled=true;b.textContent='⏳ กำลังดึงข้อมูล…';
+  const ok=await syncFromSheet(true).catch(err=>{alert('เกิดข้อผิดพลาด: '+err.message);return false;});
+  b.disabled=false;b.textContent=old;
+  if(ok)location.reload();
+};
+if(!DATA.length){
+  syncFromSheet(false).then(ok=>{if(ok)location.reload();}).catch(()=>{});
+}
 // ===================================================
 
 // ============ แก้ไขข้อมูลบนหน้า Dashboard ============
