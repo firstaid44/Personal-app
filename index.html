@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>กลุ่มเปราะบาง PCU สะบ้าย้อย</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -166,6 +164,7 @@ details.more>summary::before{content:'▸ ';color:var(--muted)}details.more[open
       <button class="btn" id="mask" aria-pressed="false" title="ซ่อนชื่อและเบอร์โทร เวลาแชร์หน้าจอ">ซ่อนชื่อ/เบอร์</button>
       <label class="btn" title="เลือกไฟล์ทะเบียน Excel (เลือกได้หลายไฟล์ เช่น ไฟล์หลัก + ไฟล์ ANC)">⬆ อัปเดตข้อมูลผู้ป่วย (Excel)<input type="file" id="reg-file" accept=".xlsx,.xls" multiple hidden></label>
       <button class="btn" id="sheet-sync" title="ดึงข้อมูลล่าสุดจาก Google Sheet ทะเบียนกลุ่มเปราะบาง">🔄 ดึงจาก Google Sheet</button>
+      <a class="btn" href="map.html" style="text-decoration:none;display:inline-flex;align-items:center">🗺️ แผนที่สถานการณ์น้ำ</a>
       <button class="btn" id="export-btn">⬇ ส่งออก Excel</button>
       <button class="btn" id="reg-reset" style="display:none">ล้างข้อมูลที่แก้ไข/อัปโหลด</button>
       <button class="btn" id="theme" title="สลับโหมดสว่าง/มืด">โหมดมืด</button>
@@ -203,53 +202,12 @@ details.more>summary::before{content:'▸ ';color:var(--muted)}details.more[open
   </div>
 
   <div class="grid">
-    <section class="card c12" id="mapcard">
-      <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
-        <h2>แผนที่สถานการณ์น้ำ · ฝน · กลุ่มเปราะบาง</h2>
-        <span class="count" id="map-updated"></span>
+    <section class="card c12" id="mapcard" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+      <div>
+        <h2 style="margin-bottom:2px">แผนที่สถานการณ์น้ำ · ฝน · กลุ่มเปราะบาง</h2>
+        <div class="desc" style="margin:0">ย้ายไปอยู่อีกหน้าแล้ว — แผนที่, ฝนคาดการณ์, ระดับน้ำ, เรดาร์ฝน และพิกัดผู้ป่วย</div>
       </div>
-      <div class="desc">ข้อมูลฝนและระดับน้ำโหลดสดทุกครั้งที่เปิดไฟล์ (ต้องต่ออินเทอร์เน็ต) · เปิด/ปิดชั้นข้อมูลได้ที่มุมขวาบนของแผนที่</div>
-      <div class="mapwrap">
-        <div id="map" role="region" aria-label="แผนที่"></div>
-        <aside class="mapside">
-          <div class="mbox">
-            <div class="mh">ฝนคาดการณ์ 7 วัน · อ.สะบ้าย้อย</div>
-            <div id="fc-chart" class="small muted">กำลังโหลด…</div>
-          </div>
-          <div class="mbox">
-            <div class="mh">ระดับน้ำคลองเทพา</div>
-            <div id="wl-list" class="small muted">กำลังโหลด…</div>
-          </div>
-          <div class="mbox">
-            <div class="mh">เรดาร์ฝน 2 ชั่วโมงล่าสุด</div>
-            <div style="display:flex;align-items:center;gap:8px">
-              <button class="btn small" id="rv-play" disabled>▶ เล่น</button>
-              <input type="range" id="rv-slider" min="0" max="0" value="0" style="flex:1" disabled aria-label="เวลาเรดาร์">
-            </div>
-            <div id="rv-time" class="small muted" style="margin-top:4px">กำลังโหลด…</div>
-          </div>
-          <details class="mbox msettings"><summary class="mh">ตั้งค่าแผนที่ · พิกัด · สถานะแหล่งข้อมูล</summary>
-          <div class="mbox inner">
-            <div class="mh">พิกัดผู้ป่วย</div>
-            <div id="geo-status" class="small"></div>
-            <label class="btn small" style="display:inline-block;margin-top:6px">นำเข้าไฟล์พิกัด (.xlsx / .csv)
-              <input type="file" id="geo-file" accept=".xlsx,.xls,.csv" hidden></label>
-            <button class="btn small" id="geo-dl" style="margin-top:6px;display:none">ดาวน์โหลดพิกัดที่จับคู่แล้ว</button>
-            <div class="small muted" style="margin-top:6px">รองรับไฟล์ export จาก JHCIS (คอลัมน์ moo, house_no, fname, lname, latitude/ygis, longitude/xgis) — ข้อมูลอยู่ในเครื่องนี้เท่านั้น ไม่ถูกส่งออก</div>
-          </div>
-          <div class="mbox inner">
-            <div class="mh">พื้นที่น้ำท่วมจากดาวเทียม (GISTDA)</div>
-            <div class="small muted" style="margin-bottom:6px">ต้องใช้ API key ฟรีจาก <a href="https://api-gateway.gistda.or.th" target="_blank" rel="noopener">api-gateway.gistda.or.th</a></div>
-            <div style="display:flex;gap:6px"><input type="password" id="gk" placeholder="วาง API key" style="flex:1;min-width:0"><button class="btn small" id="gk-save">ใช้</button></div>
-            <div id="gk-status" class="small muted" style="margin-top:4px"></div>
-          </div>
-          <div class="mbox inner">
-            <div class="mh">สถานะแหล่งข้อมูล</div>
-            <ul id="src-status" class="srclist"></ul>
-          </div>
-          </details>
-        </aside>
-      </div>
+      <a class="btn" href="map.html" style="text-decoration:none;background:var(--accent);color:#fff;border-color:var(--accent)">🗺️ เปิดแผนที่สถานการณ์น้ำ</a>
     </section>
     <section class="card c12" id="evaccard">
       <h2>แผนการอพยพ</h2>
@@ -605,162 +563,6 @@ document.getElementById('notes').innerHTML=(META.notes&&META.notes.length?META.n
 document.getElementById('srcname').textContent=META.src;
 
 let updateMap=()=>{};
-if(window.L){(()=>{
-// ================= MAP =================
-const CENTER=[6.625,100.95];
-const SEQ=['#cde2fb','#9ec5f4','#6da7ec','#3987e5','#256abf','#184f95','#0d366b'];           // อ.สะบ้าย้อย (โดยประมาณ)
-const SRC={};                          // source status
-const srcEl=document.getElementById('src-status');
-function setSrc(k,label,ok,msg,link){SRC[k]={label,ok,msg,link};
-  srcEl.innerHTML=Object.values(SRC).map(s=>`<li><span class="badge b-${s.ok===true?'good':s.ok===false?'crit':'info'}"><span class="ic">${s.ok===true?'✓':s.ok===false?'!':'●'}</span>${s.label}</span> <span class="muted">${s.msg||''}</span>${s.link?` <a href="${s.link}" target="_blank" rel="noopener">เปิดเว็บ</a>`:''}</li>`).join('');}
-const map=L.map('map',{zoomControl:true,scrollWheelZoom:false}).setView(CENTER,11);
-map.on('click',()=>map.scrollWheelZoom.enable());
-const base={
-  'แผนที่ถนน':L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,maxNativeZoom:18,attribution:'Map © Esri, HERE, Garmin, © OpenStreetMap contributors'}),
-  'ภาพดาวเทียม':L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,maxNativeZoom:18,attribution:'Imagery © Esri, Maxar'})
-};
-base['แผนที่ถนน'].addTo(map);
-map.createPane('fc').style.zIndex=350;map.createPane('st').style.zIndex=450;
-const lg=L.control({position:'bottomleft'});lg.onAdd=()=>{const d=L.DomUtil.create('div','maplegend');d.innerHTML=GK.map(k=>`<span data-lg="${k}"><i style="background:${col(k)}"></i>${G[k].s}</span>`).join('')+'<span><i style="background:transparent;border:2px solid var(--crit)"></i>มีป้ายเร่งด่วน</span><div class="lgrow">ฝน 3 วัน (มม.) '+['<5','5–15','15–35','35–60','60–90','90–150','>150'].map((l,i)=>`<b style="background:${SEQ[i]}" title="${l}"></b>`).join('')+' <span class="muted">น้อย→มาก</span></div>';L.DomEvent.disableClickPropagation(d);return d;};lg.addTo(map);
-const lyr={patients:L.layerGroup().addTo(map),forecast:L.layerGroup().addTo(map),stations:L.layerGroup().addTo(map),radar:L.layerGroup().addTo(map)};
-const ctl=L.control.layers(base,{'กลุ่มเปราะบาง (พิกัดบ้าน)':lyr.patients,'สถานีระดับน้ำ (ThaiWater)':lyr.stations,'ฝนคาดการณ์ 3 วัน':lyr.forecast,'เรดาร์ฝน':lyr.radar},{collapsed:innerWidth<700}).addTo(map);
-
-
-// ---------- patient coordinates ----------
-const normH=h=>String(h??'').replace(/\s+/g,'').replace(/^0+(?=\d)/,'');
-const normName=s=>String(s??'').replace(/^(นางสาว|น\.ส\.?|นาง|นาย|พระครู|ด\.ช\.|ด\.ญ\.)\s*/,'').replace(/\s+/g,'');
-function validLL(lat,lng){lat=+lat;lng=+lng;if(!isFinite(lat)||!isFinite(lng)||!lat||!lng)return null;
-  if(lat>90&&lng<20)[lat,lng]=[lng,lat];                       // สลับ x/y
-  if(lat<5||lat>8||lng<99.5||lng>102)return null;              // นอกพื้นที่ภาคใต้ตอนล่าง
-  return [lat,lng];}
-function geoStatus(){const ppl=new Map();DATA.forEach(p=>ppl.set(p.key,(ppl.get(p.key)||false)||!!p.ll));
-  const n=[...ppl.values()].filter(Boolean).length;
-  document.getElementById('geo-status').innerHTML=n?`<b>${n}</b> จาก ${ppl.size} คน มีพิกัด${n<ppl.size?` · ยังขาด ${ppl.size-n} คน`:''}`:'<span class="muted">ยังไม่มีพิกัดผู้ป่วย — นำเข้าไฟล์จาก JHCIS หรือแบบฟอร์มที่ อสม. กรอก</span>';
-  document.getElementById('geo-dl').style.display=n?'inline-block':'none';}
-DATA.forEach(p=>{if(p.lat&&p.lng){p.ll=validLL(p.lat,p.lng);p.llSrc=p.llsrc;}else p.flags.push(['info','●','ยังไม่มีพิกัดบ้าน']);});
-{const pts=DATA.filter(p=>p.ll).map(p=>p.ll);if(pts.length)map.fitBounds(pts,{padding:[20,20],maxZoom:14});}
-function pick(row,names){const ks=Object.keys(row);for(const n of names){const k=ks.find(k=>k.trim().toLowerCase()===n);if(k&&row[k]!==''&&row[k]!=null)return row[k];}return null;}
-async function importGeo(file){
-  const buf=await file.arrayBuffer();const wb=XLSX.read(buf,{type:'array'});const rows=[];
-  wb.SheetNames.forEach(n=>rows.push(...XLSX.utils.sheet_to_json(wb.Sheets[n],{defval:''})));
-  const byHouse=new Map(),byName=new Map();let bad=0;
-  rows.forEach(r=>{
-    const ll=validLL(pick(r,['latitude','lat','ygis','ละติจูด']),pick(r,['longitude','lng','lon','long','xgis','ลองจิจูด']));
-    if(!ll){bad++;return;}
-    const moo=parseInt(pick(r,['moo','หมู่','หมู่ที่','villno']));const h=normH(pick(r,['house_no','hno','บ้านเลขที่','house']));
-    if(moo&&h)byHouse.set(moo+'|'+h,ll);
-    const nm=normName((pick(r,['fname','ชื่อ'])||'')+(pick(r,['lname','นามสกุล','สกุล'])||''))||normName(pick(r,['name','ชื่อ-สกุล','ชื่อ - สกุล']));
-    if(nm)byName.set(nm,ll);
-  });
-  byHouse.forEach((v,k)=>HOUSE_LL[k]=v);try{localStorage.setItem('pcu_house_ll',JSON.stringify(HOUSE_LL));}catch(e){}
-  let hit=0;DATA.forEach(p=>{const ll=byName.get(p.key)||(typeof p.moo==='number'&&byHouse.get(p.moo+'|'+normH(p.house)));if(ll){p.ll=ll;p.llSrc=byName.get(p.key)?'ชื่อ':'บ้านเลขที่';hit++;}});
-  if(DATA.length&&hit){META={...META,uploaded:true};saveStored({meta:META,data:DATA.map(rawOf)});document.getElementById('reg-reset').style.display='inline-block';}
-  geoStatus();render();
-  const pts=DATA.filter(p=>p.ll).map(p=>p.ll);if(pts.length)map.fitBounds(pts,{padding:[30,30],maxZoom:14});
-  alert(`อ่านไฟล์ ${rows.length} แถว (พิกัดใช้ไม่ได้ ${bad} แถว)\nจับคู่กับทะเบียนได้ ${hit} จาก ${DATA.length} รายการ`);
-}
-document.getElementById('geo-file').onchange=e=>{const f=e.target.files[0];if(f)importGeo(f).catch(err=>alert('อ่านไฟล์ไม่ได้: '+err.message));e.target.value='';};
-document.getElementById('geo-dl').onclick=()=>{
-  const rows=[['group','name','moo','house_no','latitude','longitude','matched_by']].concat(DATA.filter(p=>p.ll).map(p=>[G[p.g].s,p.name,p.moo??'',p.house,p.ll[0],p.ll[1],p.llSrc||'']));
-  const csv='﻿'+rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
-  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='พิกัดกลุ่มเปราะบาง.csv';a.click();};
-updateMap=function(v){
-  lyr.patients.clearLayers();
-  // จัดกลุ่มตามบ้าน (พิกัดเดียวกัน) เพื่อไม่ให้หมุดซ้อน
-  const homes=new Map();v.filter(p=>p.ll).forEach(p=>{const k=p.ll.join(',');(homes.get(k)||homes.set(k,[]).get(k)).push(p);});
-  homes.forEach(ps=>{const p=ps[0];const urgent=ps.some(x=>x.flags.some(f=>f[0]==='crit'));
-    const m=L.circleMarker(p.ll,{radius:ps.length>1?9:7,color:urgent?'var(--crit)':'var(--card)',weight:urgent?3:2,fillColor:col(p.g),fillOpacity:1});
-    m.bindPopup(`<b>บ้านเลขที่ ${esc(p.house)} ${p.mooL}</b><br>`+ps.map(x=>`<span class="gtag"><i style="background:${col(x.g)}"></i>${G[x.g].s}</span> ${esc(nm(x))}${x.age?' · '+x.age+' ปี':''}<br>${x.evac?`<span class="small muted">อพยพ: ${esc(x.evac)} · ${esc(x.transport||'')} · ${x.consentC||'ยังไม่ระบุการยินยอม'}</span><br>`:''}${x.flags.filter(f=>f[0]!=='info').map(f=>`<span class="badge b-${f[0]}"><span class="ic">${f[1]}</span>${f[2]}</span>`).join('')}`).join('<hr>')+
-      `<br><span class="muted small">พิกัดจาก JHCIS (จับคู่ด้วย${p.llSrc||'ไฟล์นำเข้า'})</span><br><a href="https://www.google.com/maps/dir/?api=1&destination=${p.ll[0]},${p.ll[1]}" target="_blank" rel="noopener">นำทาง (Google Maps)</a>`,{maxWidth:300});
-    m.addTo(lyr.patients);});
-}
-geoStatus();
-
-// ---------- rain forecast (Open-Meteo) ----------
-const fcPts=[];for(let la=6.53;la<=6.74;la+=0.035)for(let lo=100.86;lo<=101.04;lo+=0.035)fcPts.push([+la.toFixed(3),+lo.toFixed(3)]);
-fcPts.push(CENTER);
-const rainCls=mm=>mm>90?['หนักมาก','crit']:mm>35?['หนัก','ser']:mm>10?['ปานกลาง','warn']:mm>=0.1?['เล็กน้อย','info']:['ไม่มีฝน','good'];
-const seq=mm=>SEQ[Math.min(SEQ.length-1,Math.floor(mm<5?0:mm<15?1:mm<35?2:mm<60?3:mm<90?4:mm<150?5:6))];
-async function loadForecast(){
-  const url=`https://api.open-meteo.com/v1/forecast?latitude=${fcPts.map(p=>p[0]).join(',')}&longitude=${fcPts.map(p=>p[1]).join(',')}&daily=precipitation_sum,precipitation_probability_max&timezone=Asia%2FBangkok&forecast_days=7`;
-  try{const r=await fetch(url);if(!r.ok)throw new Error('HTTP '+r.status);let js=await r.json();if(!Array.isArray(js))js=[js];
-    js.slice(0,-1).forEach((d,i)=>{const s3=d.daily.precipitation_sum.slice(0,3).reduce((a,b)=>a+(b||0),0);
-      L.rectangle([[fcPts[i][0]-.0175,fcPts[i][1]-.0175],[fcPts[i][0]+.0175,fcPts[i][1]+.0175]],{pane:'fc',stroke:false,fillColor:seq(s3),fillOpacity:.3})
-       .bindTooltip(`ฝนคาดการณ์ 3 วัน: <b>${s3.toFixed(1)} มม.</b><br>วันนี้ ${(d.daily.precipitation_sum[0]||0).toFixed(1)} มม. · โอกาส ${d.daily.precipitation_probability_max[0]??'–'}%`).addTo(lyr.forecast);});
-    drawFc(js[js.length-1].daily);setSrc('om','ฝนคาดการณ์',true,'Open-Meteo (แบบจำลองพยากรณ์)');
-  }catch(e){document.getElementById('fc-chart').innerHTML='โหลดไม่ได้ — ดูพยากรณ์ที่ <a href="https://www.tmd.go.th" target="_blank" rel="noopener">กรมอุตุนิยมวิทยา</a>';setSrc('om','ฝนคาดการณ์',false,e.message,'https://www.tmd.go.th');}
-}
-function drawFc(d){
-  const W=300,H=150,B=118,T=18,n=d.time.length,bw=W/n;const max=Math.max(40,...d.precipitation_sum.map(x=>x||0));let g='';
-  [35,90].filter(t=>t<=max).forEach(t=>{const y=B-t/max*(B-T);g+=`<line x1="0" x2="${W}" y1="${y}" y2="${y}" stroke="var(--grid)" stroke-dasharray="3 3"/><text class="axis-t" x="${W}" y="${y-3}" text-anchor="end">${t===35?'ฝนหนัก 35':'หนักมาก 90'}</text>`;});
-  d.time.forEach((t,i)=>{const mm=d.precipitation_sum[i]||0,h=Math.max(mm/max*(B-T),mm>0?2:0),x=i*bw+bw*.2,w=bw*.6,c=rainCls(mm);
-    g+=`<g data-tip="<b>${fmt(d3(t),{weekday:'long',day:'numeric',month:'short'})}</b><br>ฝน ${mm.toFixed(1)} มม. (${c[0]})<br>โอกาสฝน ${d.precipitation_probability_max[i]??'–'}%"><rect x="${i*bw}" y="0" width="${bw}" height="${H}" fill="transparent"/>
-      <rect x="${x}" y="${B-h}" width="${w}" height="${h}" rx="3" fill="var(--s1)"/>${mm>=1?`<text x="${x+w/2}" y="${B-h-4}" text-anchor="middle" font-size="11" style="fill:var(--ink)">${Math.round(mm)}</text>`:''}
-      <text class="axis-t" x="${x+w/2}" y="${B+14}" text-anchor="middle">${i===0?'วันนี้':fmt(d3(t),{weekday:'short'})}</text>
-      <text class="axis-t" x="${x+w/2}" y="${B+27}" text-anchor="middle">${d.precipitation_probability_max[i]??''}%</text></g>`;});
-  const tot3=d.precipitation_sum.slice(0,3).reduce((a,b)=>a+(b||0),0),peak=Math.max(...d.precipitation_sum.map(x=>x||0)),pc=rainCls(peak);
-  document.getElementById('fc-chart').innerHTML=`<div style="margin-bottom:4px;color:var(--ink)">รวม 3 วัน <b>${tot3.toFixed(0)} มม.</b> · สูงสุด/วัน <span class="badge b-${pc[1]}"><span class="ic">${pc[1]==='crit'?'!':pc[1]==='ser'?'▲':'●'}</span>${pc[0]} ${peak.toFixed(0)} มม.</span></div>`+svgEl(W,H,g)+'<div class="muted">แถวล่าง = โอกาสเกิดฝน · เกณฑ์ปริมาณฝนตามกรมอุตุนิยมวิทยา</div>';
-  bindTips(document.getElementById('fc-chart'));
-}
-const d3=s=>{const [y,m,dd]=s.split('-').map(Number);return new Date(y,m-1,dd);};
-
-// ---------- water level (ThaiWater / คลังข้อมูลน้ำแห่งชาติ) ----------
-const KEY_ST=['ONE035','ONE036'];
-const wlCls=p=>p==null?['ไม่มีข้อมูล','info']:p>100?['ล้นตลิ่ง','crit']:p>70?['น้ำมาก','ser']:p>30?['ปกติ','good']:p>10?['น้ำน้อย','warn']:['น้อยวิกฤต','warn'];
-async function loadWL(){
-  try{const r=await fetch('https://api-v3.thaiwater.net/api/v1/thaiwater30/public/waterlevel_load');if(r.status===429)throw new Error('ThaiWater ไม่เปิดให้ระบบภายนอกดึงข้อมูล');if(!r.ok)throw new Error('HTTP '+r.status);
-    const js=await r.json();const all=(js.waterlevel_data&&js.waterlevel_data.data)||js.data||[];
-    const near=all.filter(x=>{const s=x.station||{},g=x.geocode||{};return KEY_ST.includes(s.tele_station_oldcode)||String(g.province_code)==='90'||(g.province_name&&/สงขลา/.test(g.province_name.th||''));});
-    if(!near.length)throw new Error('ไม่พบสถานีในสงขลา');
-    near.forEach(x=>{const s=x.station,ll=[+s.tele_station_lat,+s.tele_station_long];if(!isFinite(ll[0]))return;
-      const pct=x.storage_percent!=null?+x.storage_percent:null,c=wlCls(pct),key=KEY_ST.includes(s.tele_station_oldcode);
-      L.circleMarker(ll,{pane:'st',radius:key?10:6,color:'var(--card)',weight:2,fillColor:`var(--${c[1]==='crit'?'crit':c[1]==='ser'?'serious':c[1]==='good'?'good':c[1]==='warn'?'warn':'muted'})`,fillOpacity:1})
-       .bindPopup(`<b>${esc(s.tele_station_name?.th||s.tele_station_oldcode)}</b> (${s.tele_station_oldcode||''})<br>${esc(x.river_name||'')}<br>ระดับน้ำ ${x.waterlevel_msl??'–'} ม.รทก.${s.min_bank!=null?` · ตลิ่ง ${s.min_bank}`:''}<br>${pct!=null?`ความจุลำน้ำ ${pct.toFixed(0)}% — `:''}<b>${c[0]}</b><br><span class="muted">${x.waterlevel_datetime||''} · ${esc(x.agency?.agency_shortname?.th||'')}</span>`).addTo(lyr.stations);});
-    const keys=near.filter(x=>KEY_ST.includes(x.station.tele_station_oldcode));
-    document.getElementById('wl-list').innerHTML=(keys.length?keys:near.slice(0,3)).map(x=>{const pct=x.storage_percent!=null?+x.storage_percent:null,c=wlCls(pct),prev=x.waterlevel_msl_previous,tr=prev!=null&&x.waterlevel_msl!=null?(x.waterlevel_msl-prev):null;
-      return `<div class="list"><div class="row"><span><b style="color:var(--ink)">${esc(x.station.tele_station_name?.th||'')}</b><br><span class="muted">${esc(x.geocode?.amphoe_name?.th?'อ.'+x.geocode.amphoe_name.th:'')} · ${x.waterlevel_datetime||''}</span></span>
-      <span style="text-align:right">${x.waterlevel_msl??'–'} ม.<br><span class="badge b-${c[1]==='warn'?'warn':c[1]}"><span class="ic">${c[1]==='crit'?'!':c[1]==='ser'?'▲':'●'}</span>${c[0]}${pct!=null?' '+pct.toFixed(0)+'%':''}</span>${tr!=null?`<br><span class="muted">${tr>0?'▲ ขึ้น':tr<0?'▼ ลง':'คงที่'} ${Math.abs(tr).toFixed(2)} ม.</span>`:''}</span></div></div>`;}).join('')+`<div class="muted" style="margin-top:6px">${keys.length?'':'ไม่พบสถานี ONE035/ONE036 ในข้อมูลล่าสุด — แสดงสถานีอื่นในสงขลา · '}% = ระดับน้ำเทียบความสูงตลิ่ง</div>`;
-    setSrc('tw','ระดับน้ำ',true,`ThaiWater ${near.length} สถานีในสงขลา`);
-  }catch(e){document.getElementById('wl-list').innerHTML=`${esc(e.message)} — กดดูระดับน้ำสถานี ONE035 สะพานข้ามคลองเทพา (สะบ้าย้อย) และ ONE036 (เทพา) ที่ <a href="https://www.thaiwater.net" target="_blank" rel="noopener">ThaiWater</a>`;
-    setSrc('tw','ระดับน้ำ',false,'ดึงอัตโนมัติไม่ได้ ('+e.message+')','https://www.thaiwater.net');}
-}
-
-// ---------- radar (RainViewer) ----------
-let rvFrames=[],rvLayers=[],rvIdx=0,rvTimer=null;
-async function loadRadar(){
-  try{const r=await fetch('https://api.rainviewer.com/public/weather-maps.json');if(!r.ok)throw new Error('HTTP '+r.status);const js=await r.json();
-    rvFrames=js.radar.past;if(!rvFrames.length)throw new Error('ไม่มีภาพเรดาร์');
-    rvLayers=rvFrames.map(f=>L.tileLayer(`${js.host}${f.path}/256/{z}/{x}/{y}/2/1_0.png`,{maxNativeZoom:7,maxZoom:19,opacity:0,attribution:'Radar © RainViewer'}));
-    rvLayers.forEach(l=>l.addTo(lyr.radar));
-    const sl=document.getElementById('rv-slider');sl.max=rvFrames.length-1;sl.disabled=false;document.getElementById('rv-play').disabled=false;
-    showFrame(rvFrames.length-1);sl.oninput=()=>showFrame(+sl.value);
-    setSrc('rv','เรดาร์ฝน',true,'RainViewer (ความละเอียดหยาบ)');
-  }catch(e){document.getElementById('rv-time').innerHTML='โหลดไม่ได้ — ดูเรดาร์ที่ <a href="https://www.tmd.go.th" target="_blank" rel="noopener">กรมอุตุนิยมวิทยา</a>';setSrc('rv','เรดาร์ฝน',false,e.message,'https://www.tmd.go.th');}
-}
-function showFrame(i){rvLayers.forEach((l,j)=>l.setOpacity(j===i?.65:0));rvIdx=i;document.getElementById('rv-slider').value=i;
-  const t=new Date(rvFrames[i].time*1000);document.getElementById('rv-time').textContent=`ภาพเวลา ${t.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})} น.${i===rvFrames.length-1?' (ล่าสุด)':''}`;}
-document.getElementById('rv-play').onclick=e=>{if(rvTimer){clearInterval(rvTimer);rvTimer=null;e.target.textContent='▶ เล่น';showFrame(rvFrames.length-1);return;}
-  e.target.textContent='■ หยุด';rvTimer=setInterval(()=>showFrame((rvIdx+1)%rvFrames.length),700);};
-
-// ---------- GISTDA flood (API key) ----------
-const GLAYERS={'1day':'น้ำท่วม 1 วันล่าสุด (GISTDA)','3days':'น้ำท่วม 3 วัน (GISTDA)','7days':'น้ำท่วม 7 วัน (GISTDA)'};let gl=[];
-function getKey(){try{return localStorage.getItem('gistda_key')||'';}catch(e){return '';}}
-function useKey(k){gl.forEach(l=>{ctl.removeLayer(l);map.removeLayer(l);});gl=[];
-  if(!k){document.getElementById('gk-status').textContent='ยังไม่ได้ใส่ key — ดูพื้นที่น้ำท่วมได้ที่ flood.gistda.go.th';setSrc('gd','น้ำท่วมดาวเทียม',null,'รอ API key','https://flood.gistda.go.th');return;}
-  const mk=(path,name,on)=>{const l=L.tileLayer(`https://api-gateway.gistda.or.th/api/2.0/resources/maps/${path}/tms/{z}/{x}/{y}?api_key=${encodeURIComponent(k)}`,{opacity:.75,maxZoom:19,attribution:'Flood © GISTDA'});
-    let err=0;l.on('tileerror',()=>{if(++err===3){document.getElementById('gk-status').textContent='โหลดชั้นข้อมูลไม่ได้ — ตรวจสอบ API key';setSrc('gd','น้ำท่วมดาวเทียม',false,'key ไม่ถูกต้องหรือหมดอายุ','https://flood.gistda.go.th');}});
-    ctl.addOverlay(l,name);gl.push(l);if(on)l.addTo(map);};
-  Object.entries(GLAYERS).forEach(([p,n],i)=>mk('flood/'+p,n,i===1));mk('flood-freq','พื้นที่น้ำท่วมซ้ำซาก (GISTDA)',false);
-  document.getElementById('gk-status').textContent='เพิ่มชั้นข้อมูลน้ำท่วมแล้ว (เปิด/ปิดที่มุมขวาบนของแผนที่)';setSrc('gd','น้ำท่วมดาวเทียม',true,'GISTDA');}
-document.getElementById('gk-save').onclick=()=>{const k=document.getElementById('gk').value.trim();try{k?localStorage.setItem('gistda_key',k):localStorage.removeItem('gistda_key');}catch(e){}useKey(k);};
-document.getElementById('gk').value=getKey();useKey(getKey());
-
-setSrc('om','ฝนคาดการณ์',null,'กำลังโหลด');setSrc('tw','ระดับน้ำ',null,'กำลังโหลด');setSrc('rv','เรดาร์ฝน',null,'กำลังโหลด');
-loadForecast();loadWL();loadRadar();
-document.getElementById('map-updated').textContent='โหลดข้อมูลสดเมื่อ '+new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})+' น.';
-// =========================================
-
-})();}else{document.getElementById('map').innerHTML='<div class="empty">โหลดแผนที่ไม่ได้ — ต้องต่ออินเทอร์เน็ต</div>';}
 
 // ============ อัปเดตทะเบียนจากไฟล์ Excel ============
 const REG={
