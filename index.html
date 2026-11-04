@@ -718,7 +718,7 @@ async function fetchSheetTab(name){
   const res=await fetch(url);
   if(!res.ok)throw new Error('HTTP '+res.status);
   const csv=await res.text();
-  const wb=XLSX.read(csv,{type:'string'});
+  const wb=XLSX.read(csv,{type:'string',raw:true});
   return XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:true,defval:null});
 }
 async function syncFromSheet(showAlert){
