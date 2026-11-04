@@ -214,7 +214,8 @@ details.more>summary::before{content:'▸ ';color:var(--muted)}details.more[open
             <div class="small muted" style="margin-top:6px">รองรับไฟล์ export จาก JHCIS (คอลัมน์ moo, house_no, fname, lname, latitude/ygis, longitude/xgis) — ข้อมูลอยู่ในเครื่องนี้เท่านั้น ไม่ถูกส่งออก</div>
             <details id="geo-missing" style="margin-top:8px;display:none">
               <summary class="small" style="cursor:pointer;color:var(--accent)">รายชื่อที่ยังไม่มีพิกัด <span id="geo-missing-count"></span></summary>
-              <div id="geo-missing-list" class="small" style="margin-top:6px;max-height:240px;overflow:auto"></div>
+              <button type="button" class="btn small" id="geo-missing-dl" style="margin:6px 0">⬇ ส่งออก Excel</button>
+              <div id="geo-missing-list" class="small" style="max-height:240px;overflow:auto"></div>
             </details>
           </div>
           <div class="mbox inner">
@@ -364,6 +365,7 @@ function validLL(lat,lng){lat=+lat;lng=+lng;if(!isFinite(lat)||!isFinite(lng)||!
   if(lat>90&&lng<20)[lat,lng]=[lng,lat];                       // สลับ x/y
   if(lat<5||lat>8||lng<99.5||lng>102)return null;              // นอกพื้นที่ภาคใต้ตอนล่าง
   return [lat,lng];}
+let MISSING=[];
 function geoStatus(){
   const byKey=new Map();
   DATA.forEach(p=>{const q=byKey.get(p.key);if(!q)byKey.set(p.key,{hasLL:!!p.ll,rep:p});
@@ -374,6 +376,7 @@ function geoStatus(){
   document.getElementById('geo-dl').style.display=n?'inline-block':'none';
   const missing=people.filter(x=>!x.hasLL).map(x=>x.rep)
     .sort((a,b)=>(typeof a.moo==='number'?a.moo:999)-(typeof b.moo==='number'?b.moo:999)||String(a.house||'').localeCompare(String(b.house||''),'th'));
+  MISSING=missing;
   const mEl=document.getElementById('geo-missing');
   if(missing.length){
     mEl.style.display='';
@@ -417,6 +420,17 @@ document.getElementById('geo-dl').onclick=()=>{
   const rows=[['group','name','moo','house_no','latitude','longitude','matched_by']].concat(DATA.filter(p=>p.ll).map(p=>[G[p.g].s,p.name,p.moo??'',p.house,p.ll[0],p.ll[1],p.llSrc||'']));
   const csv='﻿'+rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='พิกัดกลุ่มเปราะบาง.csv';a.click();};
+document.getElementById('geo-missing-dl').onclick=()=>{
+  const H=['group','name','moo','house_no','village','address_hint'];
+  const rows=MISSING.map(p=>{
+    const addr=[p.house?`บ้านเลขที่ ${p.house}`:'',p.mooL,p.village].filter(Boolean).join(' · ');
+    return [G[p.g].s,p.name,p.moo??'',p.house||'',p.village||'',addr];
+  });
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([H,...rows]),'ยังไม่มีพิกัด');
+  const now=new Date();
+  XLSX.writeFile(wb,`ผู้ป่วยไม่มีพิกัด_PCU_${now.getFullYear()+543}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}.xlsx`);
+};
 updateMap=function(v){
   lyr.patients.clearLayers();
   // จัดกลุ่มตามบ้าน (พิกัดเดียวกัน) เพื่อไม่ให้หมุดซ้อน
