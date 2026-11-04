@@ -473,6 +473,7 @@ mapChipsEl.querySelectorAll('.chip[data-g]').forEach(b=>b.onclick=()=>{
   refreshMapPins();
 });
 document.getElementById('map-search').oninput=e=>{mapSt.q=e.target.value;refreshMapPins();};
+try{const qp=new URLSearchParams(location.search).get('q');if(qp){mapSt.q=qp;document.getElementById('map-search').value=qp;}}catch(e){}
 refreshMapPins();
 
 geoStatus();
