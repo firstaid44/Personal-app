@@ -374,7 +374,7 @@ async function importGeo(file){
   rows.forEach(r=>{
     const ll=validLL(pick(r,['latitude','lat','ygis','ละติจูด']),pick(r,['longitude','lng','lon','long','xgis','ลองจิจูด']));
     if(!ll){bad++;return;}
-    const moo=parseInt(pick(r,['moo','หมู่','หมู่ที่','villno']));const h=normH(pick(r,['house_no','hno','บ้านเลขที่','house']));
+    const moo=parseInt(pick(r,['moo','หมู่','หมู่ที่','villno','village']));const h=normH(pick(r,['house_no','hno','บ้านเลขที่','house']));
     if(moo&&h)byHouse.set(moo+'|'+h,ll);
     const nm=normName((pick(r,['fname','ชื่อ'])||'')+(pick(r,['lname','นามสกุล','สกุล'])||''))||normName(pick(r,['name','ชื่อ-สกุล','ชื่อ - สกุล']));
     if(nm)byName.set(nm,ll);
