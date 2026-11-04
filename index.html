@@ -631,7 +631,7 @@ function parseNew(rows,sheet,log){
   const I={area:c('ประเภทพื้นที่'),evac:h.findIndex(x=>/การอพย/.test(x)),trans:h.findIndex(x=>/เคลื่อนย้าย/.test(x)),consent:h.findIndex(x=>/ยินยอม/.test(x)),grp:c('กลุ่มเปราะบาง'),
     name:h.findIndex(x=>/ชื่อ/.test(x)),age:c('อายุ'),house:h.findIndex(x=>/บ้านเลขที/.test(x)),moo:c('หมู่'),village:c('บ้าน'),tambon:c('ตำบล'),phone:h.findIndex(x=>/^เบอร์โทร$/.test(x.replace(/\s/g,''))),
     health:c('ภาวะสุขภาพ'),edc:c('กำหนดคลอด'),adl:c('ADL'),abil:h.findIndex(x=>/ความสามารถ/.test(x)),vhv:h.findIndex(x=>/พื้นที่อสม|^อสม/.test(x.replace(/\s/g,''))),vhvphone:h.findIndex(x=>/เบอร์โทร.*อสม/.test(x.replace(/\s/g,''))),
-    note:c('หมายเหตุ'),lat:c('ละติจูด'),lng:c('ลองจิจูด'),hn:c('HN'),deliv:c('วันที่คลอด'),days:c('วันฟอก'),site:c('สถานที่ฟอกไต')};
+    note:c('หมายเหตุ'),lat:c('ละติจูด'),lng:c('ลองจิจูด'),hn:c('HN'),cid:h.findIndex(x=>/เลขบัตร|เลขประจำตัวประชาชน|บัตรประชาชน/.test(x)),deliv:c('วันที่คลอด'),days:c('วันฟอก'),site:c('สถานที่ฟอกไต')};
   const at=(r,k)=>I[k]>=0?r[I[k]]:null,out=[];
   rows.slice(1).forEach(r=>{if(!r)return;let name=sv(at(r,'name'));if(!name)return;
     const gt=sv(at(r,'grp')),gm=GROUP_TH.find(([re])=>re.test(gt));if(!gm){log.push(`${sheet}: ${name} กลุ่ม “${gt||'ว่าง'}” ไม่รู้จัก — ข้าม`);return;}
@@ -639,7 +639,7 @@ function parseNew(rows,sheet,log){
     if(/\(.*คลอดแล้ว.*\)/.test(name)){delivered=true;name=name.replace(/\s*\(.*?\)\s*/g,'').trim();}
     const health=sv(at(r,'health'));
     const p={g,name,age:at(r,'age'),house:houseOf(at(r,'house')),moo:mooOf(at(r,'moo')),village:sv(at(r,'village')),phone:phoneFix(sv(at(r,'phone'))),
-      area:sv(at(r,'area')),evac:sv(at(r,'evac')),transport:sv(at(r,'trans')),consent:sv(at(r,'consent')),vhv:sv(at(r,'vhv')),vhvphone:sv(at(r,'vhvphone')),tambon:sv(at(r,'tambon'))};
+      area:sv(at(r,'area')),evac:sv(at(r,'evac')),transport:sv(at(r,'trans')),consent:sv(at(r,'consent')),vhv:sv(at(r,'vhv')),vhvphone:sv(at(r,'vhvphone')),tambon:sv(at(r,'tambon')),cid:sv(at(r,'cid')),hn:sv(at(r,'hn'))};
     if(typeof p.age!=='number'&&isFinite(parseFloat(p.age)))p.age=parseFloat(p.age);
     if(g==='preg'){const e=fixYear(anyDate(at(r,'edc')));if(e)p.edc=iso(e);const m=health.match(/G\s*\d+\s*P\s*\d+(\s*A\s*\d+)?/i);p.info=m?m[0].replace(/\s/g,''):'';p.risk=(m?health.replace(m[0],''):health).trim();if(delivered)p.delivered=true;}
     else if(g==='post'){const dd=fixYear(anyDate(at(r,'deliv')));if(dd){p.deliv=iso(dd);p.pp45=iso(new Date(dd.getTime()+45*DAY));}p.hn=sv(at(r,'hn'));p.info=health;}

@@ -183,6 +183,7 @@ details.more>summary::before{content:'▸ ';color:var(--muted)}details.more[open
       <div class="desc">ข้อมูลฝนและระดับน้ำโหลดสดทุกครั้งที่เปิดไฟล์ (ต้องต่ออินเทอร์เน็ต) · เปิด/ปิดชั้นข้อมูลได้ที่มุมขวาบนของแผนที่</div>
       <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:10px">
         <div id="map-chips" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+        <input type="search" id="map-search" placeholder="ค้นหา ชื่อ สกุล เลขบัตร หรือ HN" style="flex:1;min-width:160px;max-width:260px;padding:6px 10px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--ink);font:inherit">
         <span class="small muted" id="map-pin-count"></span>
       </div>
       <div class="mapwrap">
@@ -443,7 +444,8 @@ updateMap=function(v){
 }
 
 // ---------- ตัวกรองกลุ่มบนแผนที่ (เลือกได้หลายกลุ่ม) ----------
-const mapSt={groups:new Set(GK)};
+const mapSt={groups:new Set(GK),q:''};
+const onlyDigits=s=>String(s||'').replace(/\D/g,'');
 const mapChipsEl=document.getElementById('map-chips');
 mapChipsEl.innerHTML='<button class="chip chip-all" id="map-chip-all" aria-pressed="true">ทุกกลุ่ม</button>'+
   GK.map(k=>`<button class="chip" data-g="${k}" aria-pressed="true" title="คลิก: ดูเฉพาะกลุ่มนี้ · คลิกกลุ่มอื่นเพื่อเพิ่ม · คลิกซ้ำเพื่อเอาออก"><i class="dot" style="background:${col(k)}"></i>${G[k].s}</button>`).join('');
@@ -453,11 +455,14 @@ function syncMapChips(){
   mapChipsEl.querySelectorAll('.chip[data-g]').forEach(b=>b.setAttribute('aria-pressed',!all&&mapSt.groups.has(b.dataset.g)));
 }
 function refreshMapPins(){
-  const v=DATA.filter(p=>mapSt.groups.has(p.g));
+  let v=DATA.filter(p=>mapSt.groups.has(p.g));
+  const q=mapSt.q.trim().toLowerCase(),qd=onlyDigits(mapSt.q);
+  if(q)v=v.filter(p=>(p.name&&p.name.toLowerCase().includes(q))||(qd&&((p.hn&&onlyDigits(p.hn).includes(qd))||(p.cid&&onlyDigits(p.cid).includes(qd)))));
   updateMap(v);
   syncMapChips();
   const n=new Set(v.filter(p=>p.ll).map(p=>p.key)).size,tot=new Set(v.map(p=>p.key)).size;
-  document.getElementById('map-pin-count').textContent=tot?`${n} จาก ${tot} คน มีพิกัดแสดงบนแผนที่`:'ไม่มีผู้ป่วยในกลุ่มที่เลือก';
+  document.getElementById('map-pin-count').textContent=q&&!tot?'ไม่พบผู้ป่วยที่ค้นหา':tot?`${n} จาก ${tot} คน มีพิกัดแสดงบนแผนที่`:'ไม่มีผู้ป่วยในกลุ่มที่เลือก';
+  if(q&&n){const pts=v.filter(p=>p.ll).map(p=>p.ll);map.fitBounds(pts,{padding:[40,40],maxZoom:16});}
 }
 document.getElementById('map-chip-all').onclick=()=>{mapSt.groups=new Set(GK);refreshMapPins();};
 mapChipsEl.querySelectorAll('.chip[data-g]').forEach(b=>b.onclick=()=>{
@@ -467,6 +472,7 @@ mapChipsEl.querySelectorAll('.chip[data-g]').forEach(b=>b.onclick=()=>{
   else mapSt.groups.add(k);
   refreshMapPins();
 });
+document.getElementById('map-search').oninput=e=>{mapSt.q=e.target.value;refreshMapPins();};
 refreshMapPins();
 
 geoStatus();
