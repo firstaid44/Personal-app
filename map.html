@@ -212,6 +212,10 @@ details.more>summary::before{content:'▸ ';color:var(--muted)}details.more[open
               <input type="file" id="geo-file" accept=".xlsx,.xls,.csv" hidden></label>
             <button class="btn small" id="geo-dl" style="margin-top:6px;display:none">ดาวน์โหลดพิกัดที่จับคู่แล้ว</button>
             <div class="small muted" style="margin-top:6px">รองรับไฟล์ export จาก JHCIS (คอลัมน์ moo, house_no, fname, lname, latitude/ygis, longitude/xgis) — ข้อมูลอยู่ในเครื่องนี้เท่านั้น ไม่ถูกส่งออก</div>
+            <details id="geo-missing" style="margin-top:8px;display:none">
+              <summary class="small" style="cursor:pointer;color:var(--accent)">รายชื่อที่ยังไม่มีพิกัด <span id="geo-missing-count"></span></summary>
+              <div id="geo-missing-list" class="small" style="margin-top:6px;max-height:240px;overflow:auto"></div>
+            </details>
           </div>
           <div class="mbox inner">
             <div class="mh">พื้นที่น้ำท่วมจากดาวเทียม (GISTDA)</div>
@@ -360,10 +364,32 @@ function validLL(lat,lng){lat=+lat;lng=+lng;if(!isFinite(lat)||!isFinite(lng)||!
   if(lat>90&&lng<20)[lat,lng]=[lng,lat];                       // สลับ x/y
   if(lat<5||lat>8||lng<99.5||lng>102)return null;              // นอกพื้นที่ภาคใต้ตอนล่าง
   return [lat,lng];}
-function geoStatus(){const ppl=new Map();DATA.forEach(p=>ppl.set(p.key,(ppl.get(p.key)||false)||!!p.ll));
-  const n=[...ppl.values()].filter(Boolean).length;
-  document.getElementById('geo-status').innerHTML=n?`<b>${n}</b> จาก ${ppl.size} คน มีพิกัด${n<ppl.size?` · ยังขาด ${ppl.size-n} คน`:''}`:'<span class="muted">ยังไม่มีพิกัดผู้ป่วย — นำเข้าไฟล์จาก JHCIS หรือแบบฟอร์มที่ อสม. กรอก</span>';
-  document.getElementById('geo-dl').style.display=n?'inline-block':'none';}
+function geoStatus(){
+  const byKey=new Map();
+  DATA.forEach(p=>{const q=byKey.get(p.key);if(!q)byKey.set(p.key,{hasLL:!!p.ll,rep:p});
+    else{if(p.ll)q.hasLL=true;if(p.ll&&!q.rep.ll)q.rep=p;}});
+  const people=[...byKey.values()];
+  const n=people.filter(x=>x.hasLL).length,tot=people.length;
+  document.getElementById('geo-status').innerHTML=n?`<b>${n}</b> จาก ${tot} คน มีพิกัด${n<tot?` · ยังขาด ${tot-n} คน`:''}`:'<span class="muted">ยังไม่มีพิกัดผู้ป่วย — นำเข้าไฟล์จาก JHCIS หรือแบบฟอร์มที่ อสม. กรอก</span>';
+  document.getElementById('geo-dl').style.display=n?'inline-block':'none';
+  const missing=people.filter(x=>!x.hasLL).map(x=>x.rep)
+    .sort((a,b)=>(typeof a.moo==='number'?a.moo:999)-(typeof b.moo==='number'?b.moo:999)||String(a.house||'').localeCompare(String(b.house||''),'th'));
+  const mEl=document.getElementById('geo-missing');
+  if(missing.length){
+    mEl.style.display='';
+    document.getElementById('geo-missing-count').textContent=`(${missing.length})`;
+    document.getElementById('geo-missing-list').innerHTML=missing.map(p=>{
+      const addr=[p.house?`บ้านเลขที่ ${esc(p.house)}`:'',p.mooL,p.village].filter(Boolean).join(' · ');
+      const q=encodeURIComponent([p.house,p.village,p.mooL,'ตำบลสะบ้าย้อย อำเภอสะบ้าย้อย สงขลา'].filter(Boolean).join(' '));
+      return `<div style="padding:5px 0;border-bottom:1px dashed var(--border);display:flex;flex-wrap:wrap;align-items:center;gap:6px">
+        <span class="gtag"><i style="background:${col(p.g)}"></i>${G[p.g].s}</span>
+        <b>${esc(p.name)}</b>
+        <span class="muted">${esc(addr)||'ไม่มีข้อมูลบ้านเลขที่/หมู่'}</span>
+        <a href="https://www.google.com/maps/search/?api=1&query=${q}" target="_blank" rel="noopener">ค้นหาในแผนที่</a>
+      </div>`;
+    }).join('');
+  }else{mEl.style.display='none';}
+}
 DATA.forEach(p=>{if(p.lat&&p.lng){p.ll=validLL(p.lat,p.lng);p.llSrc=p.llsrc;}else p.flags.push(['info','●','ยังไม่มีพิกัดบ้าน']);});
 {const pts=DATA.filter(p=>p.ll).map(p=>p.ll);if(pts.length)map.fitBounds(pts,{padding:[20,20],maxZoom:14});}
 function pick(row,names){const ks=Object.keys(row);for(const n of names){const k=ks.find(k=>k.trim().toLowerCase()===n);if(k&&row[k]!==''&&row[k]!=null)return row[k];}return null;}
