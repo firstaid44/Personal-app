@@ -141,6 +141,16 @@ details.more>summary::before{content:'▸ ';color:var(--muted)}details.more[open
 .dbar .dn{white-space:nowrap;font-variant-numeric:tabular-nums}
 .dimsel{display:flex;flex-wrap:wrap;gap:6px 12px;width:100%;align-items:center}.dimgrp{display:inline-flex;align-items:center;gap:6px}
 .dimsel select.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}.evtbl tr.tot th,.evtbl tr.tot td{border-top:2px solid var(--axis);font-weight:700}
+.dimmulti{position:relative}
+.dimmulti summary{list-style:none;cursor:pointer;font:inherit;border:1px solid var(--border);background:var(--card);color:var(--ink);border-radius:8px;padding:6px 10px;font-size:13px;user-select:none;white-space:nowrap}
+.dimmulti summary::-webkit-details-marker{display:none}
+.dimmulti summary::after{content:' ▾';color:var(--ink2);font-size:11px}
+.dimmulti[open] summary,.dimmulti.has-sel summary{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.dimpop{position:absolute;top:calc(100% + 4px);left:0;z-index:30;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:8px;min-width:210px;max-height:280px;overflow:auto;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+.dimpop label{display:flex;align-items:center;gap:7px;padding:4px 6px;font-size:13px;cursor:pointer;white-space:nowrap;border-radius:6px}
+.dimpop label:hover{background:var(--wash)}
+.dimpop input[type=checkbox]{flex:none}
+.dimpop-actions{display:flex;gap:8px;padding:2px 2px 6px;border-bottom:1px solid var(--border);margin-bottom:4px}
 .ebtn{font:inherit;border:1px solid var(--border);background:transparent;color:var(--ink2);border-radius:6px;padding:2px 8px;cursor:pointer}.ebtn:hover{background:var(--wash);color:var(--ink)}
 @media(max-width:600px){.fgrid{grid-template-columns:1fr}}
 @media print{.ebtn,.tbar{display:none}}
@@ -178,6 +188,12 @@ details.more>summary::before{content:'▸ ';color:var(--muted)}details.more[open
     <span class="sep"></span>
     <label class="small muted" for="moo">หมู่ที่</label>
     <select id="moo"></select>
+    <details class="dimgrp dimmulti" id="village-filter">
+      <summary class="small" id="village-sum">บ้าน</summary>
+      <div class="dimpop" id="village-pop">
+        <div class="dimpop-actions"><button type="button" class="ebtn small" id="village-clear">ล้างตัวเลือกนี้</button></div>
+      </div>
+    </details>
     <input type="search" id="q" placeholder="ค้นหาชื่อ, โรค, บ้านเลขที่…">
     <button class="btn small" id="reset">ล้างตัวกรอง</button>
     <div id="dimsel" class="dimsel"></div>
@@ -371,9 +387,9 @@ const DIMS=[
   {k:'evac',l:'การอพยพ (ไปที่)',f:'evacC',order:['ศูนย์พักพิงทางการแพทย์','พื้นที่ปลอดภัย/ศูนย์พักพิง','รพ.สะบ้าย้อย','ไม่มีแผนอพยพ'],tone:{}},
   {k:'trans',l:'ประเภทการเคลื่อนย้าย',f:'transC',order:['รถนอน','รถนั่ง','ไม่ระบุการเคลื่อนย้าย'],tone:{}},
   {k:'cons',l:'สถานะยินยอมอพยพ',f:'consC',order:['ยินยอม','ไม่ยินยอม','ยังไม่ระบุการยินยอม'],tone:{'ยินยอม':'good','ไม่ยินยอม':'serious'}}];
-const st={groups:new Set(GK),moo:'all',dim:{area:'all',evac:'all',trans:'all',cons:'all'},q:'',mask:false,sort:{k:'flags',dir:-1}};
-function passDims(p,except){return DIMS.every(D=>D.k===except||st.dim[D.k]==='all'||p[D.f]===st.dim[D.k]);}
-const visible = () => DATA.filter(p=>st.groups.has(p.g) && (st.moo==='all'||p.mooL===st.moo) && passDims(p) && (!st.q || [p.name,p.dx,p.risk,p.info,p.house,p.village,p.site,p.equip,p.mooL,p.note,p.evac,p.area].join(' ').toLowerCase().includes(st.q.toLowerCase())));
+const st={groups:new Set(GK),moo:'all',village:new Set(),dim:{area:new Set(),evac:new Set(),trans:new Set(),cons:new Set()},q:'',mask:false,sort:{k:'flags',dir:-1}};
+function passDims(p,except){return DIMS.every(D=>D.k===except||st.dim[D.k].size===0||st.dim[D.k].has(p[D.f]));}
+const visible = () => DATA.filter(p=>st.groups.has(p.g) && (st.moo==='all'||p.mooL===st.moo) && (st.village.size===0||st.village.has(p.village)) && passDims(p) && (!st.q || [p.name,p.dx,p.risk,p.info,p.house,p.village,p.site,p.equip,p.mooL,p.note,p.evac,p.area].join(' ').toLowerCase().includes(st.q.toLowerCase())));
 const nm = p => st.mask ? p.name.replace(/^(นางสาว|น\.ส\.?|นาง|นาย|พระครู)?\s*(\S)\S*\s*(\S)?.*$/,(m,a,b,c)=>`${a||''}${b}*** ${c?c+'***':''}`) : p.name;
 const ph = s => !s ? '' : st.mask ? s.replace(/\d(?=[\d-]{4})/g,'x') : s;
 
@@ -395,7 +411,7 @@ const MOOS=[...new Set(DATA.map(p=>p.mooL))].sort((a,b)=>mooOrder(a)-mooOrder(b)
 const sel=document.getElementById('moo');sel.innerHTML='<option value="all">ทุกหมู่</option>'+MOOS.map(m=>`<option>${m}</option>`).join('');
 sel.onchange=()=>{st.moo=sel.value;render();};
 document.getElementById('q').oninput=e=>{st.q=e.target.value.trim();render();};
-document.getElementById('reset').onclick=()=>{st.groups=new Set(GK);st.moo='all';DIMS.forEach(D=>st.dim[D.k]='all');st.q='';document.getElementById('q').value='';render();};
+document.getElementById('reset').onclick=()=>{st.groups=new Set(GK);st.moo='all';st.village=new Set();DIMS.forEach(D=>st.dim[D.k]=new Set());st.q='';document.getElementById('q').value='';render();};
 const mb=document.getElementById('mask');mb.onclick=()=>{st.mask=!st.mask;mb.setAttribute('aria-pressed',st.mask);render();};
 const tb=document.getElementById('theme');
 function setThemeLabel(){const dark=document.documentElement.dataset.theme?document.documentElement.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches;tb.textContent=dark?'โหมดสว่าง':'โหมดมืด';}
@@ -846,21 +862,45 @@ function chEvac(v){
   if(document.getElementById('ev-dest'))document.getElementById('ev-dest').innerHTML=Object.keys(dest).length?'<div class="small muted">จุดหมายการอพยพ</div>'+Object.entries(dest).sort((a,b)=>b[1].length-a[1].length).map(([k,ps])=>`<div class="row"><span>${esc(k)}</span><span><b>${ps.length}</b> คน <span class="muted small">(รถนอน ${ps.filter(p=>/นอน/.test(p.transport)).length})</span></span></div>`).join(''):'<div class="empty">ยังไม่มีข้อมูลแผนอพยพในทะเบียนชุดนี้ — อัปโหลดไฟล์ทะเบียนรูปแบบใหม่ที่มีคอลัมน์ “การอพยพ”</div>';
 }
 
-// ---------- ตัวกรอง/กราฟตามเงื่อนไขแผนอพยพ ----------
+// ---------- ตัวกรอง/กราฟตามเงื่อนไขแผนอพยพ (เลือกได้หลายข้อต่อ 1 ตัวกรอง) ----------
 const dimVals=D=>{const s=new Set(DATA.map(p=>p[D.f]));return D.order.filter(x=>s.has(x)).concat([...s].filter(x=>!D.order.includes(x)).sort());};
-document.getElementById('dimsel').innerHTML=DIMS.map(D=>`<span class="dimgrp"><label class="small muted" for="dim-${D.k}">${D.l}</label><select id="dim-${D.k}" data-k="${D.k}"><option value="all">ทั้งหมด</option>${dimVals(D).map(x=>`<option>${esc(x)}</option>`).join('')}</select></span>`).join('');
-document.querySelectorAll('#dimsel select').forEach(s=>s.onchange=()=>{st.dim[s.dataset.k]=s.value;render();});
+document.getElementById('dimsel').innerHTML=DIMS.map(D=>`<details class="dimgrp dimmulti" data-k="${D.k}">
+  <summary class="small" id="dimsum-${D.k}">${D.l}</summary>
+  <div class="dimpop" id="dimpop-${D.k}">
+    <div class="dimpop-actions"><button type="button" class="ebtn small" data-dimclear="${D.k}">ล้างตัวเลือกนี้</button></div>
+    ${dimVals(D).map(x=>`<label><input type="checkbox" data-k="${D.k}" value="${esc(x)}">${esc(x)}</label>`).join('')}
+  </div>
+</details>`).join('');
+document.querySelectorAll('#dimsel input[type=checkbox]').forEach(cb=>cb.onchange=()=>{
+  const k=cb.dataset.k;cb.checked?st.dim[k].add(cb.value):st.dim[k].delete(cb.value);render();});
+document.querySelectorAll('#dimsel [data-dimclear]').forEach(b=>b.onclick=()=>{st.dim[b.dataset.dimclear]=new Set();render();});
+document.addEventListener('click',e=>{document.querySelectorAll('details.dimmulti[open]').forEach(d=>{if(!d.contains(e.target))d.removeAttribute('open');});});
+// ---------- ตัวกรอง "บ้าน" (เลือกได้หลายข้อ) ----------
+const villageVals=()=>[...new Set(DATA.map(p=>p.village).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'th'));
+document.getElementById('village-pop').insertAdjacentHTML('beforeend',villageVals().map(x=>`<label><input type="checkbox" value="${esc(x)}">${esc(x)}</label>`).join('')||'<div class="empty">—</div>');
+document.querySelectorAll('#village-pop input[type=checkbox]').forEach(cb=>cb.onchange=()=>{cb.checked?st.village.add(cb.value):st.village.delete(cb.value);render();});
+document.getElementById('village-clear').onclick=()=>{st.village=new Set();render();};
+function chVillage(){
+  document.querySelectorAll('#village-pop input[type=checkbox]').forEach(cb=>cb.checked=st.village.has(cb.value));
+  document.getElementById('village-sum').textContent=st.village.size?`บ้าน (${st.village.size})`:'บ้าน';
+  document.getElementById('village-filter').classList.toggle('has-sel',st.village.size>0);
+}
 function chDims(){
-  document.querySelectorAll('#dimsel select').forEach(s=>{s.value=st.dim[s.dataset.k];s.classList.toggle('on',s.value!=='all');});
+  DIMS.forEach(D=>{
+    const sel=st.dim[D.k];
+    document.querySelectorAll(`#dimpop-${D.k} input[type=checkbox]`).forEach(cb=>cb.checked=sel.has(cb.value));
+    document.getElementById(`dimsum-${D.k}`).textContent=sel.size?`${D.l} (${sel.size})`:D.l;
+    document.querySelector(`#dimsel details[data-k="${D.k}"]`).classList.toggle('has-sel',sel.size>0);
+  });
   document.getElementById('ev-dims').innerHTML=DIMS.map(D=>{
-    const keep=st.dim[D.k];st.dim[D.k]='all';const vs=visible();st.dim[D.k]=keep;
+    const keep=st.dim[D.k];st.dim[D.k]=new Set();const vs=visible();st.dim[D.k]=keep;
     const ppl=new Map();vs.forEach(p=>{const q=ppl.get(p.key);if(!q||(!q.evac&&p.evac))ppl.set(p.key,p);});
     const c={};ppl.forEach(p=>c[p[D.f]]=(c[p[D.f]]||0)+1);const tot=ppl.size||1,max=Math.max(1,...Object.values(c));
-    const vals=dimVals(D).filter(x=>c[x]||keep===x);
-    return `<div class="evdim"><div class="mh">${D.l}${keep!=='all'?` <button class="ebtn small" data-clear="${D.k}">ยกเลิก</button>`:''}</div>${vals.map(x=>{const n=c[x]||0,on=keep===x,tone=D.tone[x];
-      return `<button class="dbar${on?' on':''}${keep!=='all'&&!on?' off':''}" data-k="${D.k}" data-v="${esc(x)}" title="คลิกเพื่อกรอง"><span class="dl">${tone?`<i style="background:var(--${tone})"></i>`:''}${esc(x)}</span><span class="dt"><span class="db" style="width:${n/max*100}%;background:${tone?`var(--${tone})`:'var(--s1)'}"></span></span><span class="dn"><b>${n}</b> <span class="muted">${Math.round(n/tot*100)}%</span></span></button>`;}).join('')||'<div class="empty">—</div>'}</div>`;}).join('');
-  document.querySelectorAll('#ev-dims .dbar').forEach(b=>b.onclick=()=>{const k=b.dataset.k,v=b.dataset.v;st.dim[k]=st.dim[k]===v?'all':v;render();});
-  document.querySelectorAll('#ev-dims [data-clear]').forEach(b=>b.onclick=()=>{st.dim[b.dataset.clear]='all';render();});
+    const vals=dimVals(D).filter(x=>c[x]||keep.has(x));
+    return `<div class="evdim"><div class="mh">${D.l}${keep.size?` <button class="ebtn small" data-clear="${D.k}">ยกเลิก</button>`:''}</div>${vals.map(x=>{const n=c[x]||0,on=keep.has(x),tone=D.tone[x];
+      return `<button class="dbar${on?' on':''}${keep.size&&!on?' off':''}" data-k="${D.k}" data-v="${esc(x)}" title="คลิกเพื่อกรอง (เลือกได้หลายข้อ)"><span class="dl">${tone?`<i style="background:var(--${tone})"></i>`:''}${esc(x)}</span><span class="dt"><span class="db" style="width:${n/max*100}%;background:${tone?`var(--${tone})`:'var(--s1)'}"></span></span><span class="dn"><b>${n}</b> <span class="muted">${Math.round(n/tot*100)}%</span></span></button>`;}).join('')||'<div class="empty">—</div>'}</div>`;}).join('');
+  document.querySelectorAll('#ev-dims .dbar').forEach(b=>b.onclick=()=>{const k=b.dataset.k,v=b.dataset.v;st.dim[k].has(v)?st.dim[k].delete(v):st.dim[k].add(v);render();});
+  document.querySelectorAll('#ev-dims [data-clear]').forEach(b=>b.onclick=()=>{st.dim[b.dataset.clear]=new Set();render();});
 }
 // ---------- ต้องดำเนินการก่อน ----------
 function chAction(v){
@@ -910,7 +950,7 @@ function applyContext(v){
 }
 
 function render(){
-  const v=visible();kpis(v);const m0=st.moo;st.moo='all';const vAll=visible();st.moo=m0;chMoo(vAll);chEvac(vAll);chDims();chAction(v);applyContext(v);chWeek(v);chPreg(v);chPost(v);chDx(v);chAge(v);table(v);updateMap(v);
+  const v=visible();kpis(v);const m0=st.moo;st.moo='all';const vAll=visible();st.moo=m0;chMoo(vAll);chEvac(vAll);chDims();chVillage();chAction(v);applyContext(v);chWeek(v);chPreg(v);chPost(v);chDx(v);chAge(v);table(v);updateMap(v);
 }
 render();
 </script>
