@@ -400,6 +400,13 @@ const visible = () => DATA.filter(p=>st.groups.has(p.g) && (st.moo==='all'||p.mo
 const nm = p => st.mask ? p.name.replace(/^(นางสาว|น\.ส\.?|นาง|นาย|พระครู)?\s*(\S)\S*\s*(\S)?.*$/,(m,a,b,c)=>`${a||''}${b}*** ${c?c+'***':''}`) : p.name;
 const ph = s => !s ? '' : st.mask ? s.replace(/\d(?=[\d-]{4})/g,'x') : s;
 const telHref = s => String(s||'').replace(/[^0-9+]/g,'');
+function nameCallHTML(p){
+  if(st.mask)return esc(nm(p));
+  const nums=[p.phone?['ผู้ป่วย',p.phone]:null,p.vhvphone?[`อสม.${p.vhv?' '+esc(p.vhv):''}`,p.vhvphone]:null].filter(Boolean);
+  const opts=nums.map(([t,n])=>`<a href="tel:${telHref(n)}" class="callopt">📞 โทร ${t} ${esc(ph(n))}</a>`);
+  opts.push(`<a href="map.html?q=${encodeURIComponent(p.name)}" class="callopt">📍 ดูพิกัดบ้านในแผนที่</a>`);
+  return `<details class="dimmulti namecall"><summary>${esc(nm(p))}</summary><div class="dimpop callpop">${opts.join('')}</div></details>`;
+}
 
 // ---------- tooltip ----------
 const tip=document.getElementById('tip');
@@ -555,13 +562,7 @@ function chAge(v){
 // ---------- table ----------
 const COLS=[
   {k:'g',l:'กลุ่ม',v:p=>GK.indexOf(p.g),r:p=>`<span class="gtag"><i style="background:${col(p.g)}"></i>${G[p.g].s}</span>`},
-  {k:'name',l:'ชื่อ-สกุล',v:p=>p.name,r:p=>{
-    if(st.mask)return esc(nm(p));
-    const nums=[p.phone?['ผู้ป่วย',p.phone]:null,p.vhvphone?[`อสม.${p.vhv?' '+esc(p.vhv):''}`,p.vhvphone]:null].filter(Boolean);
-    const opts=nums.map(([t,n])=>`<a href="tel:${telHref(n)}" class="callopt">📞 โทร ${t} ${esc(ph(n))}</a>`);
-    opts.push(`<a href="map.html?q=${encodeURIComponent(p.name)}" class="callopt">📍 ดูพิกัดบ้านในแผนที่</a>`);
-    return `<details class="dimmulti namecall"><summary>${esc(nm(p))}</summary><div class="dimpop callpop">${opts.join('')}</div></details>`;
-  }},
+  {k:'name',l:'ชื่อ-สกุล',v:p=>p.name,r:p=>nameCallHTML(p)},
   {k:'age',l:'อายุ',v:p=>p.age??-1,r:p=>p.age??'<span class="muted">—</span>',c:'num'},
   {k:'addr',l:'ที่อยู่',v:p=>mooOrder(p.mooL)*1000+(parseInt(p.house)||0),r:p=>`${esc(p.house)||'<span class="muted">—</span>'} · ${p.mooL}${p.village?` <span class="muted small">(${esc(p.village)})</span>`:''}`},
   {k:'info',l:'ข้อมูลสำคัญ',v:p=>detail(p),r:p=>detail(p)},
@@ -936,9 +937,9 @@ function chAction(v){
   const AV=A.filter(a=>!a.gs||a.gs.some(g=>st.groups.has(g))).filter(a=>a.gs||a.ps.length);
   document.getElementById('actcard').style.display=AV.length?'':'none';
   document.getElementById('act').innerHTML=AV.map(a=>{const ps=uniq(a.ps);return `<div class="actbox"><div class="acth"><span class="badge b-${a.tone}"><span class="ic">${a.ic}</span>${a.t}</span><b class="actn">${ps.length}</b></div>
-    ${ps.length?`<ul class="actl">${ps.slice(0,5).map(p=>`<li${st.mask?'':` data-edit="${p.id}" title="คลิกเพื่อแก้ไข/บันทึกการติดตาม"`}><span class="an">${esc(nm(p))}</span><span class="ad">${p.mooL} · ${a.d(p)} ${risk(p)&&!a.t.includes('พื้นที่เสี่ยง')?areaTag(p):''}</span></li>`).join('')}${ps.length>5?`<li class="more" data-more="${a.t}">และอีก ${ps.length-5} คน — ดูทั้งหมด</li>`:''}</ul>`:'<div class="small muted">ไม่มี ✓</div>'}</div>`;}).join('');
-  document.querySelectorAll('#act [data-edit]').forEach(li=>li.onclick=()=>openEdit(DATA[+li.dataset.edit]));
-  document.querySelectorAll('#act [data-more]').forEach(li=>li.onclick=()=>{const a=A.find(x=>x.t===li.dataset.more);const ul=li.parentElement;ul.innerHTML=uniq(a.ps).map(p=>`<li${st.mask?'':` data-edit="${p.id}"`}><span class="an">${esc(nm(p))}</span><span class="ad">${p.mooL} · ${a.d(p)}</span></li>`).join('');ul.querySelectorAll('[data-edit]').forEach(x=>x.onclick=()=>openEdit(DATA[+x.dataset.edit]));});
+    ${ps.length?`<ul class="actl">${ps.slice(0,5).map(p=>`<li${st.mask?'':` data-edit="${p.id}" title="คลิกเพื่อแก้ไข/บันทึกการติดตาม"`}><span class="an">${nameCallHTML(p)}</span><span class="ad">${p.mooL} · ${a.d(p)} ${risk(p)&&!a.t.includes('พื้นที่เสี่ยง')?areaTag(p):''}</span></li>`).join('')}${ps.length>5?`<li class="more" data-more="${a.t}">และอีก ${ps.length-5} คน — ดูทั้งหมด</li>`:''}</ul>`:'<div class="small muted">ไม่มี ✓</div>'}</div>`;}).join('');
+  document.querySelectorAll('#act [data-edit]').forEach(li=>li.onclick=e=>{if(e.target.closest('.namecall'))return;openEdit(DATA[+li.dataset.edit]);});
+  document.querySelectorAll('#act [data-more]').forEach(li=>li.onclick=()=>{const a=A.find(x=>x.t===li.dataset.more);const ul=li.parentElement;ul.innerHTML=uniq(a.ps).map(p=>`<li${st.mask?'':` data-edit="${p.id}"`}><span class="an">${nameCallHTML(p)}</span><span class="ad">${p.mooL} · ${a.d(p)}</span></li>`).join('');ul.querySelectorAll('[data-edit]').forEach(x=>x.onclick=e=>{if(e.target.closest('.namecall'))return;openEdit(DATA[+x.dataset.edit]);});});
 }
 
 document.getElementById('kpis').addEventListener('click',e=>{const k=e.target.closest('.kpi');if(!k)return;const g=k.dataset.g;
