@@ -151,6 +151,9 @@ details.more>summary::before{content:'▸ ';color:var(--muted)}details.more[open
 .dimpop label:hover{background:var(--wash)}
 .dimpop input[type=checkbox]{flex:none}
 .dimpop-actions{display:flex;gap:8px;padding:2px 2px 6px;border-bottom:1px solid var(--border);margin-bottom:4px}
+.dimpop .mi{display:flex;align-items:center;gap:7px;padding:7px 8px;font-size:13px;border-radius:6px;color:var(--ink);text-decoration:none;white-space:nowrap;border:0;background:transparent;font:inherit;cursor:pointer;width:100%;box-sizing:border-box;text-align:left}
+.dimpop .mi:hover{background:var(--wash)}
+#hdr-menu-pop{right:0;left:auto;min-width:230px}
 .ebtn{font:inherit;border:1px solid var(--border);background:transparent;color:var(--ink2);border-radius:6px;padding:2px 8px;cursor:pointer}.ebtn:hover{background:var(--wash);color:var(--ink)}
 .namecall summary{border:0;background:transparent;padding:0;font-size:inherit;box-shadow:none;color:inherit;text-decoration:underline dotted;text-decoration-color:var(--muted)}
 .namecall summary::after{content:' 📞';font-size:11px;opacity:.6}
@@ -178,14 +181,19 @@ details.more>summary::before{content:'▸ ';color:var(--muted)}details.more[open
     </div>
     <div class="hdr-r">
       <button class="btn" id="mask" aria-pressed="false" title="ซ่อนชื่อและเบอร์โทร เวลาแชร์หน้าจอ">ซ่อนชื่อ/เบอร์</button>
-      <label class="btn" title="เลือกไฟล์ทะเบียน Excel (เลือกได้หลายไฟล์ เช่น ไฟล์หลัก + ไฟล์ ANC)">⬆ อัปเดตข้อมูลผู้ป่วย (Excel)<input type="file" id="reg-file" accept=".xlsx,.xls" multiple hidden></label>
       <button class="btn" id="sheet-sync" title="ดึงข้อมูลล่าสุดจาก Google Sheet ทะเบียนกลุ่มเปราะบาง">🔄 ดึงจาก Google Sheet</button>
-      <a class="btn" href="https://docs.google.com/spreadsheets/d/16XkqV2NSTsNo6l7aVQDpoZ7RVrUc_DBiINJmoamiTIc/edit" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center" title="เปิดไฟล์ Google Sheet ต้นทางเพื่อแก้ไขข้อมูล">📝 เปิด Google Sheet ต้นทาง</a>
       <a class="btn" href="map.html" style="text-decoration:none;display:inline-flex;align-items:center">🗺️ แผนที่สถานการณ์น้ำ</a>
-      <button class="btn" id="export-btn">⬇ ส่งออก Excel</button>
-      <button class="btn" id="reg-reset" style="display:none">ล้างข้อมูลที่แก้ไข/อัปโหลด</button>
-      <button class="btn" id="theme" title="สลับโหมดสว่าง/มืด">โหมดมืด</button>
-      <button class="btn" onclick="window.print()">พิมพ์</button>
+      <details class="dimmulti" id="hdr-menu">
+        <summary title="เมนูเพิ่มเติม">⋮ เพิ่มเติม</summary>
+        <div class="dimpop" id="hdr-menu-pop">
+          <label class="mi" title="เลือกไฟล์ทะเบียน Excel (เลือกได้หลายไฟล์ เช่น ไฟล์หลัก + ไฟล์ ANC)">⬆ อัปเดตข้อมูลผู้ป่วย (Excel)<input type="file" id="reg-file" accept=".xlsx,.xls" multiple hidden></label>
+          <a class="mi" href="https://docs.google.com/spreadsheets/d/16XkqV2NSTsNo6l7aVQDpoZ7RVrUc_DBiINJmoamiTIc/edit" target="_blank" rel="noopener" title="เปิดไฟล์ Google Sheet ต้นทางเพื่อแก้ไขข้อมูล">📝 เปิด Google Sheet ต้นทาง</a>
+          <button type="button" class="mi" id="export-btn">⬇ ส่งออก Excel</button>
+          <button type="button" class="mi" id="reg-reset" style="display:none">ล้างข้อมูลที่แก้ไข/อัปโหลด</button>
+          <button type="button" class="mi" id="theme" title="สลับโหมดสว่าง/มืด">โหมดมืด</button>
+          <button type="button" class="mi" onclick="window.print()">พิมพ์</button>
+        </div>
+      </details>
     </div>
   </header>
 
