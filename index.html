@@ -389,7 +389,8 @@ const DIMS=[
   {k:'cons',l:'สถานะยินยอมอพยพ',f:'consC',order:['ยินยอม','ไม่ยินยอม','ยังไม่ระบุการยินยอม'],tone:{'ยินยอม':'good','ไม่ยินยอม':'serious'}}];
 const st={groups:new Set(GK),moo:'all',village:new Set(),dim:{area:new Set(),evac:new Set(),trans:new Set(),cons:new Set()},q:'',mask:false,sort:{k:'flags',dir:-1}};
 function passDims(p,except){return DIMS.every(D=>D.k===except||st.dim[D.k].size===0||st.dim[D.k].has(p[D.f]));}
-const visible = () => DATA.filter(p=>st.groups.has(p.g) && (st.moo==='all'||p.mooL===st.moo) && (st.village.size===0||st.village.has(p.village)) && passDims(p) && (!st.q || [p.name,p.dx,p.risk,p.info,p.house,p.village,p.site,p.equip,p.mooL,p.note,p.evac,p.area].join(' ').toLowerCase().includes(st.q.toLowerCase())));
+const VILLAGE_NONE='__none__';
+const visible = () => DATA.filter(p=>st.groups.has(p.g) && (st.moo==='all'||p.mooL===st.moo) && (st.village.size===0||st.village.has(p.village||VILLAGE_NONE)) && passDims(p) && (!st.q || [p.name,p.dx,p.risk,p.info,p.house,p.village,p.site,p.equip,p.mooL,p.note,p.evac,p.area].join(' ').toLowerCase().includes(st.q.toLowerCase())));
 const nm = p => st.mask ? p.name.replace(/^(นางสาว|น\.ส\.?|นาง|นาย|พระครู)?\s*(\S)\S*\s*(\S)?.*$/,(m,a,b,c)=>`${a||''}${b}*** ${c?c+'***':''}`) : p.name;
 const ph = s => !s ? '' : st.mask ? s.replace(/\d(?=[\d-]{4})/g,'x') : s;
 
@@ -876,8 +877,10 @@ document.querySelectorAll('#dimsel input[type=checkbox]').forEach(cb=>cb.onchang
 document.querySelectorAll('#dimsel [data-dimclear]').forEach(b=>b.onclick=()=>{st.dim[b.dataset.dimclear]=new Set();render();});
 document.addEventListener('click',e=>{document.querySelectorAll('details.dimmulti[open]').forEach(d=>{if(!d.contains(e.target))d.removeAttribute('open');});});
 // ---------- ตัวกรอง "บ้าน" (เลือกได้หลายข้อ) ----------
-const villageVals=()=>[...new Set(DATA.map(p=>p.village).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'th'));
-document.getElementById('village-pop').insertAdjacentHTML('beforeend',villageVals().map(x=>`<label><input type="checkbox" value="${esc(x)}">${esc(x)}</label>`).join('')||'<div class="empty">—</div>');
+const villageVals=()=>{const vs=[...new Set(DATA.map(p=>p.village).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'th'));
+  if(DATA.some(p=>!p.village))vs.push(VILLAGE_NONE);return vs;};
+const villageLabel=x=>x===VILLAGE_NONE?'ไม่ระบุบ้าน':x;
+document.getElementById('village-pop').insertAdjacentHTML('beforeend',villageVals().map(x=>`<label><input type="checkbox" value="${esc(x)}">${esc(villageLabel(x))}</label>`).join('')||'<div class="empty">—</div>');
 document.querySelectorAll('#village-pop input[type=checkbox]').forEach(cb=>cb.onchange=()=>{cb.checked?st.village.add(cb.value):st.village.delete(cb.value);render();});
 document.getElementById('village-clear').onclick=()=>{st.village=new Set();render();};
 function chVillage(){
