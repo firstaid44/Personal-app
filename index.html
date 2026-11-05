@@ -789,6 +789,11 @@ async function syncFromSheet(showAlert){
   const merged=mergeNew(nf,log);
   const next=[];GK.forEach(g=>next.push(...merged.filter(p=>p.g===g)));
   next.forEach(p=>{if(p.g==='dial'&&!p.site)p.site='ไม่ระบุ';if(p.g==='dial'&&!p.days)p.days=[];});
+  // พิกัดบ้านที่เคยนำเข้าจากไฟล์ JHCIS ไว้ก่อนหน้า ไม่มีในชีต Google — เติมกลับให้จากข้อมูลเดิม/HOUSE_LL
+  // เพื่อไม่ให้หายไปทุกครั้งที่กด "ดึงจาก Google Sheet" (จะหายก็ต่อเมื่อนำเข้าไฟล์พิกัดใหม่เท่านั้น)
+  const nameLL=new Map();DATA.forEach(p=>{if(p.ll)nameLL.set(p.key,p.ll);else if(p.lat)nameLL.set(p.key,[p.lat,p.lng]);});
+  next.forEach(p=>{if(p.lat)return;const a=nameLL.get(p.key),b=typeof p.moo==='number'&&HOUSE_LL[p.moo+'|'+String(p.house).replace(/\s+/g,'').replace(/^0+(?=\d)/,'')];const ll=a||b;
+    if(ll){p.lat=ll[0];p.lng=ll[1];p.llsrc=a?'ชื่อ (ข้อมูลเดิม)':'บ้านเลขที่';}});
   const tod=new Date().toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'})+' '+new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
   META={src:`ดึงข้อมูลจาก Google Sheet อัตโนมัติ · ${tod}`,uploaded:true,at:new Date().toISOString()};
   saveStored({meta:META,data:next});
