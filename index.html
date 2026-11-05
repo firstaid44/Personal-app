@@ -245,6 +245,9 @@ details.more>summary::before{content:'▸ ';color:var(--muted)}details.more[open
       <div class="desc">นับเป็นคน · คลิกแท่งหรือแถวหมู่เพื่อกรองทั้งหน้า (เลือกได้หลายเงื่อนไข · คลิกซ้ำเพื่อยกเลิก)</div>
       <div class="evdims" id="ev-dims"></div>
       <div class="tw"><table id="ev-tbl" class="evtbl"></table></div>
+      <div class="mh" style="margin-top:14px">จำนวนแต่ละกลุ่มเปราะบาง จำแนกตามประเภทพื้นที่ / การอพยพ / การเคลื่อนย้าย / การยินยอม</div>
+      <div class="legend" id="lg-dimgrp"></div>
+      <div class="evdims" id="dim-charts"></div>
     </section>
 
 
@@ -885,6 +888,30 @@ function chEvac(v){
   if(document.getElementById('ev-dest'))document.getElementById('ev-dest').innerHTML=Object.keys(dest).length?'<div class="small muted">จุดหมายการอพยพ</div>'+Object.entries(dest).sort((a,b)=>b[1].length-a[1].length).map(([k,ps])=>`<div class="row"><span>${esc(k)}</span><span><b>${ps.length}</b> คน <span class="muted small">(รถนอน ${ps.filter(p=>/นอน/.test(p.transport)).length})</span></span></div>`).join(''):'<div class="empty">ยังไม่มีข้อมูลแผนอพยพในทะเบียนชุดนี้ — อัปโหลดไฟล์ทะเบียนรูปแบบใหม่ที่มีคอลัมน์ “การอพยพ”</div>';
 }
 
+// ---------- จำนวนแต่ละกลุ่มเปราะบาง จำแนกตามมิติแผนอพยพ ----------
+function chDimGroups(v){
+  const el=document.getElementById('dim-charts');if(!el)return;
+  const keys=GK.filter(k=>st.groups.has(k));legend('lg-dimgrp',keys);
+  const ppl=new Map();v.forEach(p=>{const q=ppl.get(p.key);if(!q)ppl.set(p.key,p);else if(!q.evac&&p.evac)ppl.set(p.key,p);});
+  const P=[...ppl.values()];
+  el.innerHTML=DIMS.map(D=>{
+    const rows=dimVals(D).map(x=>({x,c:Object.fromEntries(keys.map(k=>[k,P.filter(p=>p[D.f]===x&&p.g===k).length]))})).map(r=>({...r,t:keys.reduce((a,k)=>a+r.c[k],0)})).filter(r=>r.t);
+    if(!rows.length)return `<div class="evdim"><div class="mh">${D.l}</div><div class="empty">—</div></div>`;
+    const max=Math.max(1,...rows.map(r=>r.t)),W=320,L=108,R=28,rh=24,H=rows.length*rh+20;
+    const x=n=>n/max*(W-L-R);let g='';
+    const step=max>10?5:max>5?2:1;
+    for(let t=0;t<=max;t+=step){g+=`<line x1="${L+x(t)}" x2="${L+x(t)}" y1="0" y2="${H-16}" stroke="var(--grid)"/><text class="axis-t" x="${L+x(t)}" y="${H-3}" text-anchor="middle">${t}</text>`;}
+    rows.forEach((r,i)=>{const y=i*rh+2;let cx=L;
+      g+=`<g data-tip="<b>${esc(r.x)}</b> · ${r.t} ราย<br>${keys.filter(k=>r.c[k]).map(k=>`${G[k].s}: ${r.c[k]}`).join('<br>')||'—'}">
+        <rect x="0" y="${y-3}" width="${W}" height="${rh}" fill="transparent"/>
+        <text x="${L-8}" y="${y+12}" text-anchor="end" font-size="11">${esc(r.x)}</text>`;
+      keys.forEach(k=>{const w=x(r.c[k]);if(w>0){g+=`<rect x="${cx}" y="${y}" width="${Math.max(w-1,1)}" height="16" rx="2" fill="${col(k)}"/>`;cx+=w;}});
+      if(r.t)g+=`<text x="${cx+4}" y="${y+12}" font-size="11" style="fill:var(--ink)">${r.t}</text>`;g+='</g>';});
+    return `<div class="evdim"><div class="mh">${D.l}</div>${svgEl(W,H,g)}</div>`;
+  }).join('');
+  bindTips(el);
+}
+
 // ---------- ตัวกรอง/กราฟตามเงื่อนไขแผนอพยพ (เลือกได้หลายข้อต่อ 1 ตัวกรอง) ----------
 const dimVals=D=>{const s=new Set(DATA.map(p=>p[D.f]));return D.order.filter(x=>s.has(x)).concat([...s].filter(x=>!D.order.includes(x)).sort());};
 document.getElementById('dimsel').innerHTML=DIMS.map(D=>`<details class="dimgrp dimmulti" data-k="${D.k}">
@@ -975,7 +1002,7 @@ function applyContext(v){
 }
 
 function render(){
-  const v=visible();kpis(v);const m0=st.moo;st.moo='all';const vAll=visible();st.moo=m0;chMoo(vAll);chEvac(vAll);chDims();chVillage();chAction(v);applyContext(v);chWeek(v);chPreg(v);chPost(v);chDx(v);chAge(v);table(v);updateMap(v);
+  const v=visible();kpis(v);const m0=st.moo;st.moo='all';const vAll=visible();st.moo=m0;chMoo(vAll);chEvac(vAll);chDimGroups(vAll);chDims();chVillage();chAction(v);applyContext(v);chWeek(v);chPreg(v);chPost(v);chDx(v);chAge(v);table(v);updateMap(v);
 }
 render();
 </script>
