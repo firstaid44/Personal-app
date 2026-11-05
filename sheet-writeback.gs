@@ -22,11 +22,30 @@
  * ============================ วิธีจับคู่แถวที่จะแก้ไข/ลบ ============================
  * สคริปต์นี้ไม่มีคอลัมน์รหัสแถวในชีต จึงจับคู่ด้วย "ชื่อ-สกุล" + "กลุ่มเปราะบาง" เป็นหลัก
  * (ชื่อผู้ป่วยหลังคลอดที่มีคำว่า "(คลอดแล้ว)" ต่อท้ายจะถูกตัดออกก่อนเทียบ)
+ * คอลัมน์ "กลุ่มเปราะบาง" ในชีตอาจเขียนคำไม่ตรงกับป้ายชื่อมาตรฐานของเว็บเป๊ะๆ (เช่นชีตเขียนแค่
+ * "หลังคลอด" แต่เว็บส่งออกเป็น "มารดาหลังคลอด") จึงเทียบด้วย "ประเภทกลุ่ม" ที่ตีความจากคำในเซลล์
+ * ด้วยกฎเดียวกับที่หน้าเว็บใช้ตอนอ่านชีต (ดู GROUP_TH) ไม่ใช่เทียบข้อความตรงตัว และจะไม่แก้ไข
+ * เซลล์คอลัมน์ "กลุ่มเปราะบาง" เดิมเลย (กลุ่มแก้ไม่ได้จากฟอร์มแก้ไขในเว็บอยู่แล้ว)
  * ถ้าพบมากกว่า 1 แถวที่ชื่อ+กลุ่มตรงกันในชีตเดียวกัน (ชื่อซ้ำ) จะลองกรองซ้ำด้วย "บ้านเลขที่"+"หมู่"
  * ถ้ายังตรงกันมากกว่า 1 แถว จะ "ไม่แก้ไขชีตนั้น" และแจ้งเตือนกลับไปที่หน้าเว็บให้ผู้ใช้ไปแก้ในชีตเอง
  * (กันเขียนทับผิดคน) — แก้ไข/ลบ จะอัปเดตทุกชีตที่พบแถวตรงกัน (เช่น ชีตรวม + ชีตรายหมู่ พร้อมกัน)
  * เพิ่มผู้ป่วยใหม่ (add) จะเพิ่มแถวในชีตแรกตาม GSHEET_TABS ของหน้าเว็บเท่านั้น (ปกติคือชีตรวม)
  */
+
+// กฎแปลข้อความในคอลัมน์ "กลุ่มเปราะบาง" เป็นรหัสกลุ่ม — อิงตาม GROUP_TH ใน index.html ทุกประการ
+var GROUP_TH = [
+  [/ตั้งครรภ์/, 'preg'],
+  [/หลังคลอด/, 'post'],
+  [/ติดเตียง/, 'bed'],
+  [/ติดบ้าน/, 'home'],
+  [/ฟอกไต|ล้างไต/, 'dial'],
+  [/เครื่องไฟฟ้า|ออกซิเจน|อุปกรณ์/, 'equip']
+];
+function groupKeyOf(text) {
+  var t = String(text || '');
+  for (var i = 0; i < GROUP_TH.length; i++) { if (GROUP_TH[i][0].test(t)) return GROUP_TH[i][1]; }
+  return null;
+}
 
 var SHARED_SECRET = 'เปลี่ยนรหัสลับตรงนี้ก่อนใช้งานจริง';
 
@@ -46,7 +65,7 @@ function doPost(e) {
     }
 
     if (action === 'edit' || action === 'del') {
-      if (!body.oldKey || !body.oldKey.name) return out({ ok: false, error: 'ไม่มีข้อมูลระบุแถวเดิม' });
+      if (!body.oldKey || !body.oldKey.name || !body.oldKey.g) return out({ ok: false, error: 'ไม่มีข้อมูลระบุแถวเดิม' });
       var sheets = ss.getSheets();
       var updated = 0;
       var ambiguous = [];
@@ -61,8 +80,8 @@ function doPost(e) {
         var matches = [];
         for (var r = 1; r < data.length; r++) {
           var nm = cleanName(data[r][cols.name]);
-          var gp = String(data[r][cols.grp] || '').trim();
-          if (nm === cleanName(body.oldKey.name) && gp === String(body.oldKey.group || '').trim()) {
+          var gk = groupKeyOf(data[r][cols.grp]);
+          if (nm === cleanName(body.oldKey.name) && gk && gk === body.oldKey.g) {
             matches.push(r);
           }
         }
@@ -150,6 +169,7 @@ function resolveCols(header) {
 
 function writeRecord(sheet, cols, rowNum, row) {
   Object.keys(cols).forEach(function (k) {
+    if (k === 'grp') return; // กลุ่มแก้ไม่ได้จากฟอร์มแก้ไขอยู่แล้ว — ไม่แตะคอลัมน์นี้ตอนแก้ไขแถวเดิม
     if (cols[k] < 0) return; // ชีตนี้ไม่มีคอลัมน์นี้ ข้ามไป
     if (!row || !(k in row)) return;
     sheet.getRange(rowNum, cols[k] + 1).setValue(row[k]);
