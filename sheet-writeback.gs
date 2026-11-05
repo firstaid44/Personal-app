@@ -69,21 +69,23 @@ function doPost(e) {
       var sheets = ss.getSheets();
       var updated = 0;
       var ambiguous = [];
+      var diag = [];
+      var wantName = cleanName(body.oldKey.name);
       for (var s = 0; s < sheets.length; s++) {
         var sh = sheets[s];
         var data = sh.getDataRange().getValues();
         if (data.length < 2) continue;
         var header = data[0];
         var cols = resolveCols(header);
-        if (cols.name < 0 || cols.grp < 0) continue; // ไม่ใช่ชีตรูปแบบทะเบียนผู้ป่วย ข้าม
+        if (cols.name < 0 || cols.grp < 0) { diag.push(sh.getName() + ': ไม่พบคอลัมน์ชื่อ/กลุ่มเปราะบาง'); continue; }
 
-        var matches = [];
+        var nameHits = 0, matches = [];
         for (var r = 1; r < data.length; r++) {
           var nm = cleanName(data[r][cols.name]);
           var gk = groupKeyOf(data[r][cols.grp]);
-          if (nm === cleanName(body.oldKey.name) && gk && gk === body.oldKey.g) {
-            matches.push(r);
-          }
+          var nameHit = nm === wantName;
+          if (nameHit) nameHits++;
+          if (nameHit && gk && gk === body.oldKey.g) matches.push(r);
         }
         if (matches.length > 1 && cols.house >= 0 && cols.moo >= 0) {
           var narrowed = matches.filter(function (r) {
@@ -93,7 +95,10 @@ function doPost(e) {
           if (narrowed.length) matches = narrowed;
         }
         if (matches.length > 1) { ambiguous.push(sh.getName()); continue; }
-        if (!matches.length) continue;
+        if (!matches.length) {
+          diag.push(sh.getName() + (nameHits ? ': เจอชื่อตรง ' + nameHits + ' แถว แต่กลุ่มไม่ตรง (' + body.oldKey.g + ')' : ': ไม่เจอชื่อตรงเลยใน ' + (data.length - 1) + ' แถว'));
+          continue;
+        }
 
         var rowIdx = matches[0]; // index ใน data[] (0 = header)
         if (action === 'del') { sh.deleteRow(rowIdx + 1); }
@@ -101,7 +106,7 @@ function doPost(e) {
         updated++;
       }
       if (!updated && !ambiguous.length) {
-        return out({ ok: false, error: 'ไม่พบแถว "' + body.oldKey.name + '" (' + body.oldKey.group + ') ในชีตใดเลย — อาจมีคนแก้ชื่อ/กลุ่มไปก่อนแล้ว กรุณา "ดึงจาก Google Sheet" ใหม่แล้วลองอีกครั้ง' });
+        return out({ ok: false, error: 'ไม่พบแถว "' + body.oldKey.name + '" (' + body.oldKey.group + ') ในชีตใดเลย — อาจมีคนแก้ชื่อ/กลุ่มไปก่อนแล้ว กรุณา "ดึงจาก Google Sheet" ใหม่แล้วลองอีกครั้ง\n' + diag.join('\n') });
       }
       return out({ ok: true, updated: updated, action: action, ambiguous: ambiguous });
     }
@@ -117,7 +122,13 @@ function doGet(e) {
 }
 
 function cleanName(v) {
-  return String(v || '').replace(/\s*\(.*?คลอดแล้ว.*?\)\s*/g, '').trim();
+  // normalize('NFC') กันกรณีสระ/วรรณยุกต์ไทยถูกเก็บคนละรูปแบบ (เช่น คัดลอกมาจากคนละแหล่ง)
+  // ตัดช่องว่างทั้งหมดออก (ไม่ใช่แค่ยุบ) กันกรณีมีช่องว่างแทรกไม่ตรงกันระหว่างชีตกับที่แอปบันทึกไว้
+  return String(v || '')
+    .normalize('NFC')
+    .replace(/\s*\(.*?คลอดแล้ว.*?\)\s*/g, '')
+    .replace(/\s+/g, '')
+    .trim();
 }
 
 // คีย์ที่หน้าเว็บส่งมาใน body.row -> วิธีหาคอลัมน์จริงในชีต (exact = ต้องตรงเป๊ะหลังตัดช่องว่าง, regex = ยืดหยุ่น)
