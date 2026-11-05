@@ -225,6 +225,12 @@ details.more>summary::before{content:'▸ ';color:var(--muted)}details.more[open
   </section>
   <div class="kpis" id="kpis"></div>
   <div class="grid" style="margin-bottom:12px">
+    <section class="card c12" id="dimgroupcard">
+      <h2>จำนวนแต่ละกลุ่มเปราะบาง จำแนกตามประเภทพื้นที่ / การอพยพ / การเคลื่อนย้าย / การยินยอม</h2>
+      <div class="desc">คลิกแท่งเพื่อกรองทั้งหน้า (เชื่อมโยงกับตัวกรองด้านบนและกราฟอื่น) · เลือกได้หลายเงื่อนไข · คลิกซ้ำเพื่อยกเลิก</div>
+      <div class="legend" id="lg-dimgrp"></div>
+      <div class="evdims" id="dim-charts"></div>
+    </section>
     <section class="card c12" id="actcard">
       <h2>ต้องดำเนินการก่อน</h2>
       <div class="desc">สรุปจากทะเบียนตามตัวกรองปัจจุบัน · คลิกชื่อเพื่อดู/แก้ไข หรือบันทึกการติดตาม</div>
@@ -245,9 +251,6 @@ details.more>summary::before{content:'▸ ';color:var(--muted)}details.more[open
       <div class="desc">นับเป็นคน · คลิกแท่งหรือแถวหมู่เพื่อกรองทั้งหน้า (เลือกได้หลายเงื่อนไข · คลิกซ้ำเพื่อยกเลิก)</div>
       <div class="evdims" id="ev-dims"></div>
       <div class="tw"><table id="ev-tbl" class="evtbl"></table></div>
-      <div class="mh" style="margin-top:14px">จำนวนแต่ละกลุ่มเปราะบาง จำแนกตามประเภทพื้นที่ / การอพยพ / การเคลื่อนย้าย / การยินยอม</div>
-      <div class="legend" id="lg-dimgrp"></div>
-      <div class="evdims" id="dim-charts"></div>
     </section>
 
 
@@ -889,26 +892,32 @@ function chEvac(v){
 }
 
 // ---------- จำนวนแต่ละกลุ่มเปราะบาง จำแนกตามมิติแผนอพยพ ----------
-function chDimGroups(v){
+function chDimGroups(){
   const el=document.getElementById('dim-charts');if(!el)return;
   const keys=GK.filter(k=>st.groups.has(k));legend('lg-dimgrp',keys);
-  const ppl=new Map();v.forEach(p=>{const q=ppl.get(p.key);if(!q)ppl.set(p.key,p);else if(!q.evac&&p.evac)ppl.set(p.key,p);});
-  const P=[...ppl.values()];
   el.innerHTML=DIMS.map(D=>{
-    const rows=dimVals(D).map(x=>({x,c:Object.fromEntries(keys.map(k=>[k,P.filter(p=>p[D.f]===x&&p.g===k).length]))})).map(r=>({...r,t:keys.reduce((a,k)=>a+r.c[k],0)})).filter(r=>r.t);
-    if(!rows.length)return `<div class="evdim"><div class="mh">${D.l}</div><div class="empty">—</div></div>`;
+    const keep=st.dim[D.k];st.dim[D.k]=new Set();const vs=visible();st.dim[D.k]=keep;
+    const ppl=new Map();vs.forEach(p=>{const q=ppl.get(p.key);if(!q)ppl.set(p.key,p);else if(!q.evac&&p.evac)ppl.set(p.key,p);});
+    const P=[...ppl.values()];
+    const rows=dimVals(D).map(x=>({x,c:Object.fromEntries(keys.map(k=>[k,P.filter(p=>p[D.f]===x&&p.g===k).length]))})).map(r=>({...r,t:keys.reduce((a,k)=>a+r.c[k],0)})).filter(r=>r.t||keep.has(r.x));
+    const head=`<div class="mh">${D.l}${keep.size?` <button class="ebtn small" data-clear="${D.k}">ยกเลิก</button>`:''}</div>`;
+    if(!rows.length)return `<div class="evdim">${head}<div class="empty">—</div></div>`;
     const max=Math.max(1,...rows.map(r=>r.t)),W=320,L=108,R=28,rh=24,H=rows.length*rh+20;
     const x=n=>n/max*(W-L-R);let g='';
     const step=max>10?5:max>5?2:1;
     for(let t=0;t<=max;t+=step){g+=`<line x1="${L+x(t)}" x2="${L+x(t)}" y1="0" y2="${H-16}" stroke="var(--grid)"/><text class="axis-t" x="${L+x(t)}" y="${H-3}" text-anchor="middle">${t}</text>`;}
-    rows.forEach((r,i)=>{const y=i*rh+2;let cx=L;
-      g+=`<g data-tip="<b>${esc(r.x)}</b> · ${r.t} ราย<br>${keys.filter(k=>r.c[k]).map(k=>`${G[k].s}: ${r.c[k]}`).join('<br>')||'—'}">
+    rows.forEach((r,i)=>{const y=i*rh+2;let cx=L;const on=keep.has(r.x),dim=keep.size&&!on;
+      g+=`<g style="cursor:pointer;opacity:${dim?.35:1}" data-k="${D.k}" data-v="${esc(r.x)}" data-tip="<b>${esc(r.x)}</b> · ${r.t} ราย<br>${keys.filter(k=>r.c[k]).map(k=>`${G[k].s}: ${r.c[k]}`).join('<br>')||'—'}<br><span class='muted'>คลิกเพื่อกรอง</span>">
         <rect x="0" y="${y-3}" width="${W}" height="${rh}" fill="transparent"/>
-        <text x="${L-8}" y="${y+12}" text-anchor="end" font-size="11">${esc(r.x)}</text>`;
+        <text x="${L-8}" y="${y+12}" text-anchor="end" font-size="11" style="${on?'font-weight:700;fill:var(--accent)':''}">${esc(r.x)}</text>`;
       keys.forEach(k=>{const w=x(r.c[k]);if(w>0){g+=`<rect x="${cx}" y="${y}" width="${Math.max(w-1,1)}" height="16" rx="2" fill="${col(k)}"/>`;cx+=w;}});
-      if(r.t)g+=`<text x="${cx+4}" y="${y+12}" font-size="11" style="fill:var(--ink)">${r.t}</text>`;g+='</g>';});
-    return `<div class="evdim"><div class="mh">${D.l}</div>${svgEl(W,H,g)}</div>`;
+      if(r.t)g+=`<text x="${cx+4}" y="${y+12}" font-size="11" style="fill:var(--ink)">${r.t}</text>`;
+      if(on)g+=`<rect x="${L-2}" y="${y-2}" width="${W-L+2}" height="20" rx="4" fill="none" stroke="var(--accent)" stroke-width="2"/>`;
+      g+='</g>';});
+    return `<div class="evdim">${head}${svgEl(W,H,g)}</div>`;
   }).join('');
+  el.querySelectorAll('svg [data-k]').forEach(n=>n.onclick=()=>{const k=n.dataset.k,val=n.dataset.v;st.dim[k].has(val)?st.dim[k].delete(val):st.dim[k].add(val);render();});
+  el.querySelectorAll('[data-clear]').forEach(b=>b.onclick=()=>{st.dim[b.dataset.clear]=new Set();render();});
   bindTips(el);
 }
 
@@ -1002,7 +1011,7 @@ function applyContext(v){
 }
 
 function render(){
-  const v=visible();kpis(v);const m0=st.moo;st.moo='all';const vAll=visible();st.moo=m0;chMoo(vAll);chEvac(vAll);chDimGroups(vAll);chDims();chVillage();chAction(v);applyContext(v);chWeek(v);chPreg(v);chPost(v);chDx(v);chAge(v);table(v);updateMap(v);
+  const v=visible();kpis(v);const m0=st.moo;st.moo='all';const vAll=visible();st.moo=m0;chMoo(vAll);chEvac(vAll);chDims();chDimGroups();chVillage();chAction(v);applyContext(v);chWeek(v);chPreg(v);chPost(v);chDx(v);chAge(v);table(v);updateMap(v);
 }
 render();
 </script>
