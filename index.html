@@ -651,6 +651,30 @@ function parseSheet(g,rows,log){const out=[],ix=REG[g].idx;
 // ---- รูปแบบใหม่ (พ.ย. 69): ชีตรวม + ชีตรายหมู่ มีคอลัมน์ ประเภทพื้นที่ / การอพยพ / กลุ่มเปราะบาง ----
 const GROUP_TH=[[/ตั้งครรภ์/,'preg'],[/หลังคลอด/,'post'],[/ติดเตียง/,'bed'],[/ติดบ้าน/,'home'],[/ฟอกไต|ล้างไต/,'dial'],[/เครื่องไฟฟ้า|ออกซิเจน|อุปกรณ์/,'equip']];
 const G_EXPORT={preg:'หญิงตั้งครรภ์',post:'มารดาหลังคลอด',bed:'ผู้ป่วยติดเตียง',home:'ผู้ป่วยติดบ้าน',dial:'ผู้ป่วยฟอกไต ที่ รพ.',equip:'ผู้ป่วยใช้เครื่องไฟฟ้า'};
+// ---- เขียนกลับ Google Sheet: ให้ค่าแถวตรงกับคีย์คอลัมน์ที่ sheet-writeback.gs จะไปจับคู่หาคอลัมน์จริงในชีต ----
+const sheetGroupLabel=r=>r.g==='dial'&&r.site==='ล้างไตที่บ้าน'?'ผู้ป่วยล้างไต เอง':G_EXPORT[r.g];
+function sheetFields(r){
+  const be=s=>{if(!s)return '';const x=d(s);return `${x.getDate()}/${x.getMonth()+1}/${x.getFullYear()+543}`;};
+  const health=r.g==='preg'?[r.info,r.risk].filter(Boolean).join(' '):r.g==='dial'?(r.sched||''):r.g==='post'?(r.info||''):[r.dx,r.g==='equip'&&r.equip&&!(r.dx||'').includes(r.equip)?r.equip:''].filter(Boolean).join(' ');
+  return {area:r.area||'',evac:r.evac||'',trans:r.transport||'',consent:r.consent||'',grp:sheetGroupLabel(r),
+    name:r.name+(r.delivered?'(คลอดแล้ว)':''),age:r.age??'',house:r.house||'',moo:r.moo??'',village:r.village||'',tambon:r.tambon||'สะบ้าย้อย',phone:r.phone||'',health,
+    edc:r.g==='preg'?be(r.edc):'',adl:r.adl??'',abil:r.g==='bed'||r.g==='home'||r.g==='equip'?(r.info||''):'',vhv:r.vhv||'',vhvphone:r.vhvphone||'',hn:r.hn||'',
+    deliv:r.g==='post'?be(r.deliv):'',days:(r.days||[]).join(' '),site:r.g==='dial'?(r.site||''):'',note:r.note||'',lat:r.lat??'',lng:r.lng??''};
+}
+async function syncToSheet(action,oldRaw,newRaw){
+  if(!SHEET_WEBAPP_URL)return;
+  try{
+    const payload={secret:SHEET_SECRET,action,mainTab:GSHEET_TABS[0],
+      oldKey:oldRaw?{name:oldRaw.name,group:sheetGroupLabel(oldRaw),house:oldRaw.house||'',moo:oldRaw.moo??''}:null,
+      row:action==='del'?null:sheetFields(newRaw)};
+    const res=await fetch(SHEET_WEBAPP_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)});
+    const js=await res.json();
+    if(!js.ok)alert('บันทึกในเครื่องนี้แล้ว แต่ส่งกลับ Google Sheet ไม่สำเร็จ: '+(js.error||'ไม่ทราบสาเหตุ')+'\n(ข้อมูลในเครื่องนี้ยังถูกต้อง — ลองแก้ไขใหม่ภายหลัง หรือแก้ในชีตโดยตรง)');
+    else if(js.ambiguous&&js.ambiguous.length)alert('บันทึกกลับ Google Sheet แล้วบางส่วน แต่พบชื่อซ้ำกันในชีต: '+js.ambiguous.join(', ')+' — กรุณาตรวจสอบและแก้ไขในชีตนั้นด้วยตนเอง');
+  }catch(e){
+    alert('บันทึกในเครื่องนี้แล้ว แต่ติดต่อ Google Sheet ไม่ได้ (ตรวจสอบอินเทอร์เน็ต): '+e.message);
+  }
+}
 const DAYRE=[['จันทร์',/จันทร์/],['อังคาร',/อังคาร/],['พุธ',/พุธ/],['พฤหัสบดี',/พฤหัส/],['ศุกร์',/ศุกร์/],['เสาร์',/เสาร์/],['อาทิตย์',/อาทิตย์/]];
 function isNewFormat(rows){const h=(rows[0]||[]).map(sv);return h.includes('กลุ่มเปราะบาง')&&h.some(x=>/ชื่อ/.test(x));}
 function fixYear(dt){if(!dt)return dt;let y=dt.getFullYear();if(y<2000)y=(y%100)+2500-543;return new Date(y,dt.getMonth(),dt.getDate());}
@@ -741,6 +765,10 @@ if(!DATA.length){document.getElementById('emptycard').style.display='';}
 // ============ ซิงก์ข้อมูลจาก Google Sheet (ทะเบียนกลุ่มเปราะบาง ต.สะบ้าย้อย) ============
 const GSHEET_ID='16XkqV2NSTsNo6l7aVQDpoZ7RVrUc_DBiINJmoamiTIc';
 const GSHEET_TABS=['สำบ้าย้อย','หมู่1','หมู่2','หมู่3','หมู่4','หมู่5','หมู่6','หมู่7','หมู่8','หมู่9'];
+// เขียนกลับ Google Sheet เมื่อแก้ไข/เพิ่ม/ลบในหน้านี้ — ตั้งค่าหลัง deploy Apps Script (ดู sheet-writeback.gs)
+// ว่างไว้ = ปิดการเขียนกลับ (บันทึกในเครื่องนี้อย่างเดียวเหมือนเดิม)
+const SHEET_WEBAPP_URL='';
+const SHEET_SECRET='';
 async function fetchSheetTab(name){
   const url=`https://docs.google.com/spreadsheets/d/${GSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(name)}`;
   const res=await fetch(url);
@@ -829,10 +857,12 @@ function collect(loose){const g=loose?editing.g:(document.getElementById('f_g')?
   if(document.getElementById('f_lat').value&&document.getElementById('f_lng').value){const ll=validLLx(lat,lng);if(ll){o.lat=ll[0];o.lng=ll[1];o.llsrc='แก้ไขบนหน้า Dashboard';}else if(!loose)throw new Error('พิกัดไม่อยู่ในพื้นที่ภาคใต้ตอนล่าง — ตรวจสอบตัวเลขอีกครั้ง');}
   return o;}
 function validLLx(lat,lng){if(!isFinite(lat)||!isFinite(lng))return null;if(lat>90&&lng<20)[lat,lng]=[lng,lat];return lat>5&&lat<8&&lng>99.5&&lng<102?[lat,lng]:null;}
-function persist(action,label,changes){
+async function persist(action,label,changes){
+  const oldRaw=editing.p?rawOf(editing.p):null;
   const all=DATA.map(rawOf);
-  if(action==='add')all.push(changes);
-  else if(action==='edit')all[editing.p.id]={...all[editing.p.id],...changes};
+  let newRaw=null;
+  if(action==='add'){all.push(changes);newRaw=changes;}
+  else if(action==='edit'){all[editing.p.id]={...all[editing.p.id],...changes};newRaw=all[editing.p.id];}
   else if(action==='del')all.splice(editing.p.id,1);
   all.forEach(p=>p.key=keyOf(p.name));
   const t=new Date().toLocaleString('th-TH',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
@@ -841,6 +871,7 @@ function persist(action,label,changes){
     notes:[`<b>บันทึกการแก้ไขบนหน้า Dashboard</b> (ล่าสุดก่อน): ${log.slice(0,50).map(esc).join(' · ')}`].concat((META.notes||[]).filter(n=>!n.startsWith('<b>บันทึกการแก้ไข')))};
   const ok=saveStored({meta:META,data:all});
   if(!ok)alert('เบราว์เซอร์ไม่อนุญาตให้บันทึกถาวร — การแก้ไขจะหายเมื่อปิดแท็บ ควรกด “ส่งออก Excel” เก็บไว้');
+  await syncToSheet(action,oldRaw,newRaw);
   try{sessionStorage.setItem('pcu_scroll',String(scrollY));}catch(e){}
   location.reload();
 }
