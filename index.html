@@ -134,6 +134,9 @@ details.more>summary::before{content:'▸ ';color:var(--muted)}details.more[open
 .evtbl tr.dim{opacity:.4}
 .evdims{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;margin-bottom:14px}
 .evdim{border:1px solid var(--border);border-radius:10px;padding:10px}
+.sankey .slink{transition:fill-opacity .15s}
+.sankey .snode.clk{cursor:pointer}
+.sankey .snode rect{transition:stroke .15s}
 .dbar{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(50px,1fr) auto;align-items:center;gap:8px;width:100%;font:inherit;font-size:13px;color:var(--ink);background:transparent;border:1px solid transparent;border-radius:8px;padding:5px 6px;cursor:pointer;text-align:left}
 .dbar:hover{background:var(--wash)}.dbar.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}.dbar.off{opacity:.45}
 .dbar .dl{display:flex;align-items:center;gap:6px;min-width:0;line-height:1.3}.dbar .dl i{width:8px;height:8px;border-radius:2px;flex:none}
@@ -226,10 +229,10 @@ details.more>summary::before{content:'▸ ';color:var(--muted)}details.more[open
   <div class="kpis" id="kpis"></div>
   <div class="grid" style="margin-bottom:12px">
     <section class="card c12" id="dimgroupcard">
-      <h2>จำนวนแต่ละกลุ่มเปราะบาง จำแนกตามประเภทพื้นที่ / การอพยพ / การเคลื่อนย้าย / การยินยอม</h2>
-      <div class="desc">คลิกแท่งเพื่อกรองทั้งหน้า (เชื่อมโยงกับตัวกรองด้านบนและกราฟอื่น) · เลือกได้หลายเงื่อนไข · คลิกซ้ำเพื่อยกเลิก</div>
+      <h2>เส้นทางผู้ป่วย: กลุ่ม → ประเภทพื้นที่ → การอพยพ → การเคลื่อนย้าย → การยินยอม</h2>
+      <div class="desc">วางเมาส์บนโหนด/เส้นเพื่อไล่เส้นทาง · คลิกโหนด (นอกคอลัมน์กลุ่ม) เพื่อกรองทั้งหน้า · แสดงภาพรวมทั้งหมดเสมอไม่ว่าจะกรองอะไรอยู่</div>
       <div class="legend" id="lg-dimgrp"></div>
-      <div class="evdims" id="dim-charts"></div>
+      <div id="dim-charts"></div>
     </section>
     <section class="card c12" id="actcard">
       <h2>ต้องดำเนินการก่อน</h2>
@@ -892,32 +895,65 @@ function chEvac(v){
 }
 
 // ---------- จำนวนแต่ละกลุ่มเปราะบาง จำแนกตามมิติแผนอพยพ ----------
-function chDimGroups(){
+function chSankey(){
   const el=document.getElementById('dim-charts');if(!el)return;
   const keys=GK.filter(k=>st.groups.has(k));legend('lg-dimgrp',keys);
-  el.innerHTML=DIMS.map(D=>{
-    const keep=st.dim[D.k];st.dim[D.k]=new Set();const vs=visible();st.dim[D.k]=keep;
-    const ppl=new Map();vs.forEach(p=>{const q=ppl.get(p.key);if(!q)ppl.set(p.key,p);else if(!q.evac&&p.evac)ppl.set(p.key,p);});
-    const P=[...ppl.values()];
-    const rows=dimVals(D).map(x=>({x,c:Object.fromEntries(keys.map(k=>[k,P.filter(p=>p[D.f]===x&&p.g===k).length]))})).map(r=>({...r,t:keys.reduce((a,k)=>a+r.c[k],0)})).filter(r=>r.t||keep.has(r.x));
-    const head=`<div class="mh">${D.l}${keep.size?` <button class="ebtn small" data-clear="${D.k}">ยกเลิก</button>`:''}</div>`;
-    if(!rows.length)return `<div class="evdim">${head}<div class="empty">—</div></div>`;
-    const max=Math.max(1,...rows.map(r=>r.t)),W=320,L=108,R=28,rh=24,H=rows.length*rh+20;
-    const x=n=>n/max*(W-L-R);let g='';
-    const step=max>10?5:max>5?2:1;
-    for(let t=0;t<=max;t+=step){g+=`<line x1="${L+x(t)}" x2="${L+x(t)}" y1="0" y2="${H-16}" stroke="var(--grid)"/><text class="axis-t" x="${L+x(t)}" y="${H-3}" text-anchor="middle">${t}</text>`;}
-    rows.forEach((r,i)=>{const y=i*rh+2;let cx=L;const on=keep.has(r.x),dim=keep.size&&!on;
-      g+=`<g style="cursor:pointer;opacity:${dim?.35:1}" data-k="${D.k}" data-v="${esc(r.x)}" data-tip="<b>${esc(r.x)}</b> · ${r.t} ราย<br>${keys.filter(k=>r.c[k]).map(k=>`${G[k].s}: ${r.c[k]}`).join('<br>')||'—'}<br><span class='muted'>คลิกเพื่อกรอง</span>">
-        <rect x="0" y="${y-3}" width="${W}" height="${rh}" fill="transparent"/>
-        <text x="${L-8}" y="${y+12}" text-anchor="end" font-size="11" style="${on?'font-weight:700;fill:var(--accent)':''}">${esc(r.x)}</text>`;
-      keys.forEach(k=>{const w=x(r.c[k]);if(w>0){g+=`<rect x="${cx}" y="${y}" width="${Math.max(w-1,1)}" height="16" rx="2" fill="${col(k)}"/>`;cx+=w;}});
-      if(r.t)g+=`<text x="${cx+4}" y="${y+12}" font-size="11" style="fill:var(--ink)">${r.t}</text>`;
-      if(on)g+=`<rect x="${L-2}" y="${y-2}" width="${W-L+2}" height="20" rx="4" fill="none" stroke="var(--accent)" stroke-width="2"/>`;
-      g+='</g>';});
-    return `<div class="evdim">${head}${svgEl(W,H,g)}</div>`;
-  }).join('');
-  el.querySelectorAll('svg [data-k]').forEach(n=>n.onclick=()=>{const k=n.dataset.k,val=n.dataset.v;st.dim[k].has(val)?st.dim[k].delete(val):st.dim[k].add(val);render();});
-  el.querySelectorAll('[data-clear]').forEach(b=>b.onclick=()=>{st.dim[b.dataset.clear]=new Set();render();});
+  const savedDim=st.dim;st.dim={area:new Set(),evac:new Set(),trans:new Set(),cons:new Set()};
+  const vs=visible();st.dim=savedDim;
+  const ppl=new Map();vs.forEach(p=>{const q=ppl.get(p.key);if(!q)ppl.set(p.key,p);else if(!q.evac&&p.evac)ppl.set(p.key,p);});
+  const P=[...ppl.values()];
+  if(!P.length){el.innerHTML='<div class="empty">—</div>';return;}
+  const STAGES=[
+    {k:'g',l:'กลุ่ม',get:p=>p.g,color:v=>col(v),label:v=>G[v].s,click:false,vals:keys},
+    ...DIMS.map(D=>({k:D.k,l:D.l,get:p=>p[D.f],color:v=>D.tone[v]?`var(--${D.tone[v]})`:'var(--s1)',label:v=>v,click:true,vals:dimVals(D)}))
+  ];
+  STAGES.forEach(S=>{S.vals=S.vals.filter(v=>P.some(p=>S.get(p)===v));});
+
+  const unitH=Math.max(5,Math.min(20,420/P.length)),nodePad=5,W=880,nodeW=12,L=104,R=150,top=26;
+  const colX=STAGES.map((_,i)=>L+i*((W-L-R)/(STAGES.length-1)));
+  const layers=STAGES.map(S=>{let y=top;return S.vals.map(v=>{const n=P.filter(p=>S.get(p)===v).length;const node={v,n,y0:y,y1:y+n*unitH};y+=n*unitH+nodePad;return node;});});
+  const H=Math.max(top,...layers.map(ns=>ns.length?ns[ns.length-1].y1:top))+16;
+
+  let g='';
+  STAGES.forEach((S,i)=>{g+=`<text x="${colX[i]+nodeW/2}" y="14" text-anchor="middle" font-size="11" font-weight="600" style="fill:var(--ink2)">${esc(S.l)}</text>`;});
+
+  for(let i=0;i<STAGES.length-1;i++){
+    const A=STAGES[i],B=STAGES[i+1],aNodes=layers[i],bNodes=layers[i+1];
+    const aCur=new Map(aNodes.map(n=>[n.v,n.y0])),bCur=new Map(bNodes.map(n=>[n.v,n.y0]));
+    aNodes.forEach(an=>{bNodes.forEach(bn=>{
+      const cnt=P.filter(p=>A.get(p)===an.v&&B.get(p)===bn.v).length;
+      if(!cnt)return;
+      const h=cnt*unitH;
+      const ay0=aCur.get(an.v),ay1=ay0+h;aCur.set(an.v,ay1);
+      const by0=bCur.get(bn.v),by1=by0+h;bCur.set(bn.v,by1);
+      const x1=colX[i]+nodeW,x2=colX[i+1],cx=(x1+x2)/2;
+      g+=`<path class="slink" data-a="${i}:${esc(an.v)}" data-b="${(i+1)}:${esc(bn.v)}" d="M${x1},${ay0} C${cx},${ay0} ${cx},${by0} ${x2},${by0} L${x2},${by1} C${cx},${by1} ${cx},${ay1} ${x1},${ay1} Z" fill="${A.color(an.v)}" fill-opacity=".38" data-tip="${esc(A.label(an.v))} → ${esc(B.label(bn.v))}<br><b>${cnt}</b> ราย"></path>`;
+    });});
+  }
+
+  STAGES.forEach((S,i)=>{
+    layers[i].forEach(n=>{
+      const h=Math.max(n.y1-n.y0,1),on=S.click&&st.dim[S.k].has(n.v);
+      const side=i===0?'left':i===STAGES.length-1?'right':null;
+      g+=`<g class="snode${S.click?' clk':''}" data-id="${i}:${esc(n.v)}" data-k="${S.k}" data-v="${esc(n.v)}" data-tip="<b>${esc(S.label(n.v))}</b><br>${n.n} ราย${S.click?'<br><span class=\'muted\'>คลิกเพื่อกรอง</span>':''}">
+        <rect x="${colX[i]}" y="${n.y0}" width="${nodeW}" height="${h}" rx="2" fill="${S.color(n.v)}" stroke="${on?'var(--accent)':'none'}" stroke-width="${on?2:0}"></rect>
+        ${side?`<text x="${side==='left'?colX[i]-6:colX[i]+nodeW+6}" y="${n.y0+h/2+4}" text-anchor="${side==='left'?'end':'start'}" font-size="11" style="${on?'font-weight:700;fill:var(--accent)':''}">${esc(S.label(n.v))}</text>`:''}
+      </g>`;
+    });
+  });
+
+  el.innerHTML=`<div class="sankey">${svgEl(W,H,g)}</div>`;
+  const svg=el.querySelector('svg');
+  svg.querySelectorAll('.snode').forEach(node=>{
+    const id=node.dataset.id;
+    node.addEventListener('mouseenter',()=>svg.querySelectorAll('.slink').forEach(p=>{p.style.fillOpacity=(p.dataset.a===id||p.dataset.b===id)?'.8':'.08';}));
+    node.addEventListener('mouseleave',()=>svg.querySelectorAll('.slink').forEach(p=>{p.style.fillOpacity='';}));
+    if(node.classList.contains('clk'))node.addEventListener('click',()=>{const k=node.dataset.k,v=node.dataset.v;st.dim[k].has(v)?st.dim[k].delete(v):st.dim[k].add(v);render();});
+  });
+  svg.querySelectorAll('.slink').forEach(link=>{
+    link.addEventListener('mouseenter',()=>svg.querySelectorAll('.slink').forEach(p=>{p.style.fillOpacity=p===link?'.85':'.08';}));
+    link.addEventListener('mouseleave',()=>svg.querySelectorAll('.slink').forEach(p=>{p.style.fillOpacity='';}));
+  });
   bindTips(el);
 }
 
@@ -1011,7 +1047,7 @@ function applyContext(v){
 }
 
 function render(){
-  const v=visible();kpis(v);const m0=st.moo;st.moo='all';const vAll=visible();st.moo=m0;chMoo(vAll);chEvac(vAll);chDims();chDimGroups();chVillage();chAction(v);applyContext(v);chWeek(v);chPreg(v);chPost(v);chDx(v);chAge(v);table(v);updateMap(v);
+  const v=visible();kpis(v);const m0=st.moo;st.moo='all';const vAll=visible();st.moo=m0;chMoo(vAll);chEvac(vAll);chDims();chSankey();chVillage();chAction(v);applyContext(v);chWeek(v);chPreg(v);chPost(v);chDx(v);chAge(v);table(v);updateMap(v);
 }
 render();
 </script>
