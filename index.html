@@ -767,8 +767,8 @@ const GSHEET_ID='16XkqV2NSTsNo6l7aVQDpoZ7RVrUc_DBiINJmoamiTIc';
 const GSHEET_TABS=['สำบ้าย้อย','หมู่1','หมู่2','หมู่3','หมู่4','หมู่5','หมู่6','หมู่7','หมู่8','หมู่9'];
 // เขียนกลับ Google Sheet เมื่อแก้ไข/เพิ่ม/ลบในหน้านี้ — ตั้งค่าหลัง deploy Apps Script (ดู sheet-writeback.gs)
 // ว่างไว้ = ปิดการเขียนกลับ (บันทึกในเครื่องนี้อย่างเดียวเหมือนเดิม)
-const SHEET_WEBAPP_URL='';
-const SHEET_SECRET='';
+const SHEET_WEBAPP_URL='https://script.google.com/macros/s/AKfycbzVtn2fc7fkeu-Qb6FwuQVJPvJBdVaKwcBdK-DeqDfY2lFq7-boky_rKwrVxLuXanE5/exec';
+const SHEET_SECRET='tvadp4QkBc9SSrwKu-gk-t13ShJ8pZVn';
 async function fetchSheetTab(name){
   const url=`https://docs.google.com/spreadsheets/d/${GSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(name)}`;
   const res=await fetch(url);
