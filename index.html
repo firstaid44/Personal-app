@@ -673,7 +673,8 @@ async function syncToSheet(action,oldRaw,newRaw){
   try{
     const payload={secret:SHEET_SECRET,action,mainTab:GSHEET_TABS[0],
       oldKey:oldRaw?{name:oldRaw.name,g:oldRaw.g,group:sheetGroupLabel(oldRaw),house:oldRaw.house||'',moo:oldRaw.moo??''}:null,
-      row:action==='del'?null:sheetFields(newRaw)};
+      row:action==='del'?null:sheetFields(newRaw),
+      groupChanged:!!(oldRaw&&newRaw&&oldRaw.g!==newRaw.g)};
     const res=await fetch(SHEET_WEBAPP_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)});
     const js=await res.json();
     if(!js.ok)alert('บันทึกในเครื่องนี้แล้ว แต่ส่งกลับ Google Sheet ไม่สำเร็จ: '+(js.error||'ไม่ทราบสาเหตุ')+'\n(ข้อมูลในเครื่องนี้ยังถูกต้อง — ลองแก้ไขใหม่ภายหลัง หรือแก้ในชีตโดยตรง)');

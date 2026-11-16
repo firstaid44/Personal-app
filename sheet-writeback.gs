@@ -102,7 +102,7 @@ function doPost(e) {
 
         var rowIdx = matches[0]; // index ใน data[] (0 = header)
         if (action === 'del') { sh.deleteRow(rowIdx + 1); }
-        else { writeRecord(sh, cols, rowIdx + 1, body.row); }
+        else { writeRecord(sh, cols, rowIdx + 1, body.row, body.groupChanged); }
         updated++;
       }
       if (!updated && !ambiguous.length) {
@@ -178,9 +178,11 @@ function resolveCols(header) {
   return cols;
 }
 
-function writeRecord(sheet, cols, rowNum, row) {
+function writeRecord(sheet, cols, rowNum, row, allowGroupWrite) {
   Object.keys(cols).forEach(function (k) {
-    if (k === 'grp') return; // กลุ่มแก้ไม่ได้จากฟอร์มแก้ไขอยู่แล้ว — ไม่แตะคอลัมน์นี้ตอนแก้ไขแถวเดิม
+    // คอลัมน์กลุ่มเปราะบาง: ปกติแก้ไม่ได้จากฟอร์มแก้ไข จึงไม่แตะเพื่อกันคำที่ใช้ในชีตถูกเขียนทับโดยไม่จำเป็น
+    // ยกเว้นตอนที่หน้าเว็บเปลี่ยนกลุ่มจริง (เช่น ทำเครื่องหมาย "คลอดแล้ว" ย้ายจากตั้งครรภ์ไปหลังคลอด)
+    if (k === 'grp' && !allowGroupWrite) return;
     if (cols[k] < 0) return; // ชีตนี้ไม่มีคอลัมน์นี้ ข้ามไป
     if (!row || !(k in row)) return;
     sheet.getRange(rowNum, cols[k] + 1).setValue(row[k]);
