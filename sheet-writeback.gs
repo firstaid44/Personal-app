@@ -47,7 +47,7 @@ function groupKeyOf(text) {
   return null;
 }
 
-var SHARED_SECRET = 'เปลี่ยนรหัสลับตรงนี้ก่อนใช้งานจริง';
+var SHARED_SECRET = 'tvadp4QkBc9SSrwKu-gk-t13ShJ8pZVn';
 
 function doPost(e) {
   try {
