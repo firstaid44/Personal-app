@@ -153,7 +153,10 @@ details.more>summary::before{content:'▸ ';color:var(--muted)}details.more[open
 .dimpop-actions{display:flex;gap:8px;padding:2px 2px 6px;border-bottom:1px solid var(--border);margin-bottom:4px}
 .dimpop .mi{display:flex;align-items:center;gap:7px;padding:7px 8px;font-size:13px;border-radius:6px;color:var(--ink);text-decoration:none;white-space:nowrap;border:0;background:transparent;font:inherit;cursor:pointer;width:100%;box-sizing:border-box;text-align:left}
 .dimpop .mi:hover{background:var(--wash)}
+.dimpop .mi[aria-pressed="true"]{color:var(--accent);font-weight:600}
 #hdr-menu-pop{right:0;left:auto;min-width:230px}
+tr.deceased{opacity:.55}
+tr.deceased .an{text-decoration:line-through;text-decoration-color:var(--muted)}
 .ebtn{font:inherit;border:1px solid var(--border);background:transparent;color:var(--ink2);border-radius:6px;padding:2px 8px;cursor:pointer}.ebtn:hover{background:var(--wash);color:var(--ink)}
 .namecall summary{border:0;background:transparent;padding:0;font-size:inherit;box-shadow:none;color:inherit;text-decoration:underline dotted;text-decoration-color:var(--muted)}
 .namecall summary::after{content:' 📞';font-size:11px;opacity:.6}
@@ -189,6 +192,7 @@ details.more>summary::before{content:'▸ ';color:var(--muted)}details.more[open
           <label class="mi" title="เลือกไฟล์ทะเบียน Excel (เลือกได้หลายไฟล์ เช่น ไฟล์หลัก + ไฟล์ ANC)">⬆ อัปเดตข้อมูลผู้ป่วย (Excel)<input type="file" id="reg-file" accept=".xlsx,.xls" multiple hidden></label>
           <a class="mi" href="https://docs.google.com/spreadsheets/d/16XkqV2NSTsNo6l7aVQDpoZ7RVrUc_DBiINJmoamiTIc/edit" target="_blank" rel="noopener" title="เปิดไฟล์ Google Sheet ต้นทางเพื่อแก้ไขข้อมูล">📝 เปิด Google Sheet ต้นทาง</a>
           <button type="button" class="mi" id="export-btn">⬇ ส่งออก Excel</button>
+          <button type="button" class="mi" id="toggle-dead" aria-pressed="false" title="แสดง/ซ่อนผู้ป่วยที่บันทึกว่าเสียชีวิตแล้ว">🕯 แสดงผู้เสียชีวิต</button>
           <button type="button" class="mi" id="reg-reset" style="display:none">ล้างข้อมูลที่แก้ไข/อัปโหลด</button>
           <button type="button" class="mi" id="theme" title="สลับโหมดสว่าง/มืด">โหมดมืด</button>
           <button type="button" class="mi" onclick="window.print()">พิมพ์</button>
@@ -316,7 +320,7 @@ details.more>summary::before{content:'▸ ';color:var(--muted)}details.more[open
 <dialog id="editdlg"><form method="dialog" onsubmit="return false">
   <h2 id="edit-title" style="margin:0 0 10px"></h2>
   <div id="editform" class="fgrid"></div>
-  <div class="dlgbar"><button type="button" class="btn" id="edit-del" style="color:var(--crit)">ลบออกจากทะเบียน</button><span style="flex:1"></span><button type="button" class="btn" id="edit-cancel">ยกเลิก</button><button class="btn" id="edit-save" style="background:var(--accent);color:#fff;border-color:var(--accent)">บันทึก</button></div>
+  <div class="dlgbar"><button type="button" class="btn" id="edit-del" style="color:var(--crit)">ลบออกจากทะเบียน</button><button type="button" class="btn" id="edit-dead">🕯 บันทึกว่าเสียชีวิต</button><span style="flex:1"></span><button type="button" class="btn" id="edit-cancel">ยกเลิก</button><button class="btn" id="edit-save" style="background:var(--accent);color:#fff;border-color:var(--accent)">บันทึก</button></div>
   <div class="small muted" style="margin-top:8px">บันทึกไว้ในเบราว์เซอร์เครื่องนี้ · กด “ส่งออก Excel” เพื่อเก็บสำรองหรือส่งต่อ</div>
 </form></dialog>
 
@@ -361,6 +365,7 @@ DATA.forEach((p,i)=>{
   p.mooL = p.moo==null ? 'ไม่ระบุ' : (typeof p.moo==='number' ? 'หมู่ '+p.moo : p.moo);
   p.others = DATA.filter(o=>o.key===p.key && o!==p).map(o=>o.g);
   p.flags=[];
+  if(p.deceased)p.flags.push(['info','🕯','เสียชีวิต'+(p.deceasedNote?': '+p.deceasedNote:'')]);
   if(p.g==='preg'&&!p.edc)p.edc=isoX(today);
   if(p.g==='post'&&!p.deliv){p.deliv=isoX(today);p.pp45=isoX(new Date(today.getTime()+45*DAY));}
   if(p.g==='dial'&&!p.days)p.days=[];
@@ -407,10 +412,10 @@ const DIMS=[
   {k:'evac',l:'การอพยพ (ไปที่)',f:'evacC',order:['ศูนย์พักพิงทางการแพทย์','พื้นที่ปลอดภัย/ศูนย์พักพิง','รพ.สะบ้าย้อย','ไม่มีแผนอพยพ'],tone:{}},
   {k:'trans',l:'ประเภทการเคลื่อนย้าย',f:'transC',order:['รถนอน','รถนั่ง','ไม่ระบุการเคลื่อนย้าย'],tone:{}},
   {k:'cons',l:'สถานะยินยอมอพยพ',f:'consC',order:['ยินยอม','ไม่ยินยอม','ยังไม่ระบุการยินยอม'],tone:{'ยินยอม':'good','ไม่ยินยอม':'serious'}}];
-const st={groups:new Set(GK),moo:'all',village:new Set(),dim:{area:new Set(),evac:new Set(),trans:new Set(),cons:new Set()},q:'',mask:false,sort:{k:'flags',dir:-1}};
+const st={groups:new Set(GK),moo:'all',village:new Set(),dim:{area:new Set(),evac:new Set(),trans:new Set(),cons:new Set()},q:'',mask:false,showDead:false,sort:{k:'flags',dir:-1}};
 function passDims(p,except){return DIMS.every(D=>D.k===except||st.dim[D.k].size===0||st.dim[D.k].has(p[D.f]));}
 const VILLAGE_NONE='__none__';
-const visible = () => DATA.filter(p=>st.groups.has(p.g) && (st.moo==='all'||p.mooL===st.moo) && (st.village.size===0||st.village.has(p.village||VILLAGE_NONE)) && passDims(p) && (!st.q || [p.name,p.dx,p.risk,p.info,p.house,p.village,p.site,p.equip,p.mooL,p.note,p.evac,p.area].join(' ').toLowerCase().includes(st.q.toLowerCase())));
+const visible = () => DATA.filter(p=>(st.showDead||!p.deceased) && st.groups.has(p.g) && (st.moo==='all'||p.mooL===st.moo) && (st.village.size===0||st.village.has(p.village||VILLAGE_NONE)) && passDims(p) && (!st.q || [p.name,p.dx,p.risk,p.info,p.house,p.village,p.site,p.equip,p.mooL,p.note,p.evac,p.area].join(' ').toLowerCase().includes(st.q.toLowerCase())));
 const nm = p => st.mask ? p.name.replace(/^(นางสาว|น\.ส\.?|นาง|นาย|พระครู)?\s*(\S)\S*\s*(\S)?.*$/,(m,a,b,c)=>`${a||''}${b}*** ${c?c+'***':''}`) : p.name;
 const ph = s => !s ? '' : st.mask ? s.replace(/\d(?=[\d-]{4})/g,'x') : s;
 const telHref = s => String(s||'').replace(/[^0-9+]/g,'');
@@ -442,6 +447,7 @@ sel.onchange=()=>{st.moo=sel.value;render();};
 document.getElementById('q').oninput=e=>{st.q=e.target.value.trim();render();};
 document.getElementById('reset').onclick=()=>{st.groups=new Set(GK);st.moo='all';st.village=new Set();DIMS.forEach(D=>st.dim[D.k]=new Set());st.q='';document.getElementById('q').value='';render();};
 const mb=document.getElementById('mask');mb.onclick=()=>{st.mask=!st.mask;mb.setAttribute('aria-pressed',st.mask);render();};
+const tdb=document.getElementById('toggle-dead');tdb.onclick=()=>{st.showDead=!st.showDead;tdb.setAttribute('aria-pressed',st.showDead);render();};
 const tb=document.getElementById('theme');
 function setThemeLabel(){const dark=document.documentElement.dataset.theme?document.documentElement.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches;tb.textContent=dark?'โหมดสว่าง':'โหมดมืด';}
 tb.onclick=()=>{const dark=tb.textContent==='โหมดสว่าง';document.documentElement.dataset.theme=dark?'light':'dark';setThemeLabel();};
@@ -598,7 +604,7 @@ function table(v){
   const all=[...v].sort((a,b)=>{const x=c.v(a),y=c.v(b);return (x>y?1:x<y?-1:a.id-b.id)*s.dir;});
   document.querySelector('#tbl thead').innerHTML='<tr>'+COLS.map(c=>`<th data-k="${c.k}">${c.l}${s.k===c.k?(s.dir>0?' ↑':' ↓'):''}</th>`).join('')+'</tr>';
   const rows=st.showAll?all:all.slice(0,20);
-  document.querySelector('#tbl tbody').innerHTML=rows.length?rows.map(p=>'<tr>'+COLS.map(c=>`<td class="${c.c||''}">${c.r(p)}</td>`).join('')+'</tr>').join(''):`<tr><td colspan="8" class="empty">ไม่พบรายการตามตัวกรอง</td></tr>`;
+  document.querySelector('#tbl tbody').innerHTML=rows.length?rows.map(p=>`<tr class="${p.deceased?'deceased':''}">`+COLS.map(c=>`<td class="${c.c||''}">${c.r(p)}</td>`).join('')+'</tr>').join(''):`<tr><td colspan="8" class="empty">ไม่พบรายการตามตัวกรอง</td></tr>`;
   document.querySelectorAll('#tbl th').forEach(th=>th.onclick=()=>{const k=th.dataset.k;st.sort={k,dir:st.sort.k===k?-st.sort.dir:(k==='flags'?-1:1)};table(visible());});
   document.getElementById('tcount').textContent=`ตามตัวกรอง ${all.length} จาก ${DATA.length} รายการ`;
   const mb=document.getElementById('tbl-more');mb.style.display=all.length>20?'inline-block':'none';mb.textContent=st.showAll?'แสดงแค่ 20 รายการแรก':`แสดงทั้งหมด ${all.length} รายการ`;
@@ -659,7 +665,8 @@ function sheetFields(r){
   return {area:r.area||'',evac:r.evac||'',trans:r.transport||'',consent:r.consent||'',grp:sheetGroupLabel(r),
     name:r.name+(r.delivered?'(คลอดแล้ว)':''),age:r.age??'',house:r.house||'',moo:r.moo??'',village:r.village||'',tambon:r.tambon||'สะบ้าย้อย',phone:r.phone||'',health,
     edc:r.g==='preg'?be(r.edc):'',adl:r.adl??'',abil:r.g==='bed'||r.g==='home'||r.g==='equip'?(r.info||''):'',vhv:r.vhv||'',vhvphone:r.vhvphone||'',hn:r.hn||'',
-    deliv:r.g==='post'?be(r.deliv):'',days:(r.days||[]).join(' '),site:r.g==='dial'?(r.site||''):'',note:r.note||'',lat:r.lat??'',lng:r.lng??''};
+    deliv:r.g==='post'?be(r.deliv):'',days:(r.days||[]).join(' '),site:r.g==='dial'?(r.site||''):'',
+    note:(r.deceased?`🕯 เสียชีวิต${r.deceasedNote?' ('+r.deceasedNote+')':''} · `:'')+(r.note||''),lat:r.lat??'',lng:r.lng??''};
 }
 async function syncToSheet(action,oldRaw,newRaw){
   if(!SHEET_WEBAPP_URL)return;
@@ -852,6 +859,9 @@ function openEdit(p,g){
   document.getElementById('f_hll').onclick=()=>{const m=parseInt(document.getElementById('f_moo').value),h=document.getElementById('f_house').value.replace(/\s+/g,'').replace(/^0+(?=\d)/,'');
     const ll=HOUSE_LL[m+'|'+h];if(ll){document.getElementById('f_lat').value=ll[0];document.getElementById('f_lng').value=ll[1];msg.textContent='พบพิกัดบ้านใน JHCIS';}else msg.textContent='ไม่พบบ้านเลขที่นี้ใน JHCIS';};
   document.getElementById('edit-del').style.display=p?'inline-block':'none';
+  const db=document.getElementById('edit-dead');
+  db.style.display=p?'inline-block':'none';
+  db.textContent=p&&p.deceased?'↩ ยกเลิกการบันทึกเสียชีวิต':'🕯 บันทึกว่าเสียชีวิต';
   dlg.showModal();
 }
 function collect(loose){const g=loose?editing.g:(document.getElementById('f_g')?.value||editing.g);const o={g};
@@ -888,7 +898,14 @@ document.getElementById('edit-save').onclick=e=>{e.preventDefault();if(!dlg.quer
   if(o.g==='dial'&&!o.days)o.days=[];
   if(editing.p){const what=diffLabel(rawOf(editing.p),o);if(!what){dlg.close();return;}persist('edit',`แก้ไข ${o.name} (${G[o.g].s}): ${what}`,o);}
   else persist('add',`เพิ่ม ${o.name} (${G[o.g].s})`,o);};
-document.getElementById('edit-del').onclick=()=>{const p=editing.p;const why=prompt(`ลบ ${p.name} ออกจากทะเบียน${G[p.g].s}?\nระบุเหตุผล (เช่น คลอดแล้ว / เสียชีวิต / ย้ายออก):`,'');if(why===null)return;persist('del',`ลบ ${p.name} (${G[p.g].s})${why?': '+why:''}`);};
+document.getElementById('edit-del').onclick=()=>{const p=editing.p;const why=prompt(`ลบ ${p.name} ออกจากทะเบียน${G[p.g].s}?\nระบุเหตุผล (เช่น คลอดแล้ว / ย้ายออก):`,'');if(why===null)return;persist('del',`ลบ ${p.name} (${G[p.g].s})${why?': '+why:''}`);};
+document.getElementById('edit-dead').onclick=()=>{
+  const p=editing.p;
+  if(p.deceased){persist('edit',`ยกเลิกการบันทึกเสียชีวิต ${p.name} (${G[p.g].s})`,{deceased:false,deceasedNote:''});return;}
+  const why=prompt(`บันทึกว่า ${p.name} เสียชีวิตแล้ว?\nระบุวันที่/สาเหตุ (ถ้ามี):`,'');
+  if(why===null)return;
+  persist('edit',`บันทึกว่าเสียชีวิต ${p.name} (${G[p.g].s})${why?': '+why:''}`,{deceased:true,deceasedNote:why});
+};
 document.getElementById('edit-cancel').onclick=()=>dlg.close();
 document.getElementById('add-btn').onclick=()=>openEdit(null,[...st.groups][0]||'home');
 document.querySelector('#tbl tbody').addEventListener('click',e=>{const b=e.target.closest('[data-edit]');if(b)openEdit(DATA[+b.dataset.edit]);});
@@ -899,7 +916,7 @@ document.getElementById('export-btn').onclick=()=>{
   const H=['ประเภทพื้นที่','ลำดับ','การอพยบ','ประเภทการเคลื่อนย้าย','สถานะยินยอม อพยบ','กลุ่มเปราะบาง','ชื่อ-สกุล','อายุ','บ้านเลขที','หมู่','บ้าน','ตำบล','รพ.สต.','เบอร์โทร','ภาวะสุขภาพ','กำหนดคลอด','ADL','ความสามารถช่วยเหลือตนเอง','พื้นที่ อสม.','เบอร์โทร อสม.','HN','วันที่คลอด','วันฟอก','สถานที่ฟอกไต','หมายเหตุ','ละติจูด','ลองจิจูด'];
   const rowOf=(p,i)=>{const r=rawOf(p);const grp=r.g==='dial'&&r.site==='ล้างไตที่บ้าน'?'ผู้ป่วยล้างไต เอง':G_EXPORT[r.g];
     const health=r.g==='preg'?[r.info,r.risk].filter(Boolean).join(' '):r.g==='dial'?(r.sched||''):r.g==='post'?(r.info||''):[r.dx,r.g==='equip'&&r.equip&&!(r.dx||'').includes(r.equip)?r.equip:''].filter(Boolean).join(' ');
-    return [r.area||'',i+1,r.evac||'',r.transport||'',r.consent||'',grp,r.name+(r.delivered?'(คลอดแล้ว)':''),r.age??'',r.house,r.moo??'',r.village||'',r.tambon||'สะบ้าย้อย','PCU',r.phone||'',health,r.g==='preg'?be(r.edc):'',r.adl??'',r.g==='bed'||r.g==='home'||r.g==='equip'?(r.info||''):'',r.vhv||'',r.vhvphone||'',r.hn||'',r.g==='post'?be(r.deliv):'',(r.days||[]).join(' '),r.g==='dial'?(r.site||''):'',r.note||'',r.lat??'',r.lng??''];};
+    return [r.area||'',i+1,r.evac||'',r.transport||'',r.consent||'',grp,r.name+(r.delivered?'(คลอดแล้ว)':''),r.age??'',r.house,r.moo??'',r.village||'',r.tambon||'สะบ้าย้อย','PCU',r.phone||'',health,r.g==='preg'?be(r.edc):'',r.adl??'',r.g==='bed'||r.g==='home'||r.g==='equip'?(r.info||''):'',r.vhv||'',r.vhvphone||'',r.hn||'',r.g==='post'?be(r.deliv):'',(r.days||[]).join(' '),r.g==='dial'?(r.site||''):'',(r.deceased?`🕯 เสียชีวิต${r.deceasedNote?' ('+r.deceasedNote+')':''} · `:'')+(r.note||''),r.lat??'',r.lng??''];};
   const wb=XLSX.utils.book_new();const sorted=[...DATA].sort((a,b)=>mooOrder(a.mooL)-mooOrder(b.mooL)||GK.indexOf(a.g)-GK.indexOf(b.g));
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([H,...sorted.map(rowOf)]),'สะบ้าย้อย');
   [...new Set(sorted.map(p=>p.mooL))].forEach(m=>{const ps=sorted.filter(p=>p.mooL===m);XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([H,...ps.map(rowOf)]),m.replace(/\s/g,'').slice(0,31));});
