@@ -156,7 +156,7 @@ details.more>summary::before{content:'▸ ';color:var(--muted)}details.more[open
 .dimpop .mi[aria-pressed="true"]{color:var(--accent);font-weight:600}
 #hdr-menu-pop{right:0;left:auto;min-width:230px}
 tr.deceased{opacity:.55}
-tr.deceased .an{text-decoration:line-through;text-decoration-color:var(--muted)}
+tr.deceased .an,tr.deceased .namecall summary{text-decoration-line:underline line-through;text-decoration-color:var(--muted)}
 .ebtn{font:inherit;border:1px solid var(--border);background:transparent;color:var(--ink2);border-radius:6px;padding:2px 8px;cursor:pointer}.ebtn:hover{background:var(--wash);color:var(--ink)}
 .namecall summary{border:0;background:transparent;padding:0;font-size:inherit;box-shadow:none;color:inherit;text-decoration:underline dotted;text-decoration-color:var(--muted)}
 .namecall summary::after{content:' 📞';font-size:11px;opacity:.6}
@@ -424,7 +424,7 @@ function nameCallHTML(p){
   const nums=[p.phone?['ผู้ป่วย',p.phone]:null,p.vhvphone?[`อสม.${p.vhv?' '+esc(p.vhv):''}`,p.vhvphone]:null].filter(Boolean);
   const opts=nums.map(([t,n])=>`<a href="tel:${telHref(n)}" class="callopt">📞 โทร ${t} ${esc(ph(n))}</a>`);
   opts.push(`<a href="map.html?q=${encodeURIComponent(p.name)}" class="callopt">📍 ดูพิกัดบ้านในแผนที่</a>`);
-  return `<details class="dimmulti namecall"><summary>${esc(nm(p))}</summary><div class="dimpop callpop">${opts.join('')}</div></details>`;
+  return `<details class="dimmulti namecall"><summary>${p.deceased?'🕯 ':''}${esc(nm(p))}</summary><div class="dimpop callpop">${opts.join('')}</div></details>`;
 }
 
 // ---------- tooltip ----------
