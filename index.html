@@ -320,7 +320,7 @@ tr.deceased .an,tr.deceased .namecall summary{text-decoration-line:underline lin
 <dialog id="editdlg"><form method="dialog" onsubmit="return false">
   <h2 id="edit-title" style="margin:0 0 10px"></h2>
   <div id="editform" class="fgrid"></div>
-  <div class="dlgbar"><button type="button" class="btn" id="edit-del" style="color:var(--crit)">ลบออกจากทะเบียน</button><button type="button" class="btn" id="edit-dead">🕯 บันทึกว่าเสียชีวิต</button><span style="flex:1"></span><button type="button" class="btn" id="edit-cancel">ยกเลิก</button><button class="btn" id="edit-save" style="background:var(--accent);color:#fff;border-color:var(--accent)">บันทึก</button></div>
+  <div class="dlgbar"><button type="button" class="btn" id="edit-del" style="color:var(--crit)">ลบออกจากทะเบียน</button><span style="flex:1"></span><button type="button" class="btn" id="edit-cancel">ยกเลิก</button><button class="btn" id="edit-save" style="background:var(--accent);color:#fff;border-color:var(--accent)">บันทึก</button></div>
   <div class="small muted" style="margin-top:8px">บันทึกไว้ในเบราว์เซอร์เครื่องนี้ · กด “ส่งออก Excel” เพื่อเก็บสำรองหรือส่งต่อ</div>
 </form></dialog>
 
@@ -848,10 +848,20 @@ function openEdit(p,g){
   ef.innerHTML=`${p?'':`<label class="fl wide">กลุ่ม<select id="f_g">${GK.map(k=>`<option value="${k}"${k===g?' selected':''}>${G[k].n}</option>`).join('')}</select></label>`}
     ${FIELDS._.map(f=>fieldHTML(f,r[f[0]])).join('')}
     ${FIELDS[g].map(f=>fieldHTML(f,r[f[0]])).join('')}
-    <label class="fl wide">หมายเหตุ / การติดตามล่าสุด<textarea id="f_note" rows="2" placeholder="เช่น คลอดแล้ว 9 ต.ค., ย้ายไปอยู่บ้านญาติ ม.3, เยี่ยมบ้านแล้ว">${esc(r.note||'')}</textarea></label>
+    ${g==='preg'&&p?`<div class="fl wide" id="f_delivered_wrap">
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="f_delivered_now"> คลอดแล้ว — ย้ายไปกลุ่มมารดาหลังคลอดอัตโนมัติ</label>
+      <input id="f_deliv_date" type="date" style="margin-top:6px;display:none"></div>`:''}
+    <label class="fl wide">หมายเหตุ / การติดตามล่าสุด<textarea id="f_note" rows="2" placeholder="เช่น ย้ายไปอยู่บ้านญาติ ม.3, เยี่ยมบ้านแล้ว">${esc(r.note||'')}</textarea></label>
     <div class="fl wide"><span>พิกัดบ้าน</span><div class="llrow"><input id="f_lat" placeholder="ละติจูด เช่น 6.61" value="${r.lat??''}"><input id="f_lng" placeholder="ลองจิจูด เช่น 100.95" value="${r.lng??''}"></div>
-      <div class="llrow"><button type="button" class="btn small" id="f_gps">📍 ใช้ตำแหน่งปัจจุบัน (GPS)</button><button type="button" class="btn small" id="f_hll">ค้นจากบ้านเลขที่ (JHCIS)</button><span id="f_llmsg" class="small muted"></span></div></div>`;
+      <div class="llrow"><button type="button" class="btn small" id="f_gps">📍 ใช้ตำแหน่งปัจจุบัน (GPS)</button><button type="button" class="btn small" id="f_hll">ค้นจากบ้านเลขที่ (JHCIS)</button><span id="f_llmsg" class="small muted"></span></div></div>
+    ${p?`<div class="fl wide" id="f_dead_wrap">
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="f_deceased"${r.deceased?' checked':''}> เสียชีวิตแล้ว</label>
+      <input id="f_deceasedNote" placeholder="วันที่/สาเหตุ (ถ้ามี)" value="${esc(r.deceasedNote||'')}" style="margin-top:6px;${r.deceased?'':'display:none'}"></div>`:''}`;
   if(!p)document.getElementById('f_g').onchange=e=>{const keep=collect(true);openEdit(null,e.target.value);Object.entries(keep).forEach(([k,v])=>{if(k==='g')return;const el=document.getElementById('f_'+k);if(el&&v!=null&&typeof v!=='object')el.value=v;});};
+  const delNow=document.getElementById('f_delivered_now');
+  if(delNow)delNow.onchange=()=>{document.getElementById('f_deliv_date').style.display=delNow.checked?'':'none';};
+  const deadCb=document.getElementById('f_deceased');
+  if(deadCb)deadCb.onchange=()=>{document.getElementById('f_deceasedNote').style.display=deadCb.checked?'':'none';};
   const msg=document.getElementById('f_llmsg');
   document.getElementById('f_gps').onclick=()=>{if(!navigator.geolocation){msg.textContent='เครื่องนี้ไม่รองรับ GPS';return;}msg.textContent='กำลังหาตำแหน่ง…';
     navigator.geolocation.getCurrentPosition(pos=>{document.getElementById('f_lat').value=pos.coords.latitude.toFixed(6);document.getElementById('f_lng').value=pos.coords.longitude.toFixed(6);msg.textContent=`ได้ตำแหน่งแล้ว (คลาดเคลื่อน ~${Math.round(pos.coords.accuracy)} ม.)`;},
@@ -859,9 +869,6 @@ function openEdit(p,g){
   document.getElementById('f_hll').onclick=()=>{const m=parseInt(document.getElementById('f_moo').value),h=document.getElementById('f_house').value.replace(/\s+/g,'').replace(/^0+(?=\d)/,'');
     const ll=HOUSE_LL[m+'|'+h];if(ll){document.getElementById('f_lat').value=ll[0];document.getElementById('f_lng').value=ll[1];msg.textContent='พบพิกัดบ้านใน JHCIS';}else msg.textContent='ไม่พบบ้านเลขที่นี้ใน JHCIS';};
   document.getElementById('edit-del').style.display=p?'inline-block':'none';
-  const db=document.getElementById('edit-dead');
-  db.style.display=p?'inline-block':'none';
-  db.textContent=p&&p.deceased?'↩ ยกเลิกการบันทึกเสียชีวิต':'🕯 บันทึกว่าเสียชีวิต';
   dlg.showModal();
 }
 function collect(loose){const g=loose?editing.g:(document.getElementById('f_g')?.value||editing.g);const o={g};
@@ -870,6 +877,8 @@ function collect(loose){const g=loose?editing.g:(document.getElementById('f_g')?
   o.note=document.getElementById('f_note').value.trim();
   const lat=+document.getElementById('f_lat').value,lng=+document.getElementById('f_lng').value;o.lat=null;o.lng=null;
   if(document.getElementById('f_lat').value&&document.getElementById('f_lng').value){const ll=validLLx(lat,lng);if(ll){o.lat=ll[0];o.lng=ll[1];o.llsrc='แก้ไขบนหน้า Dashboard';}else if(!loose)throw new Error('พิกัดไม่อยู่ในพื้นที่ภาคใต้ตอนล่าง — ตรวจสอบตัวเลขอีกครั้ง');}
+  const deadCb=document.getElementById('f_deceased');
+  if(deadCb){o.deceased=deadCb.checked;o.deceasedNote=deadCb.checked?document.getElementById('f_deceasedNote').value.trim():'';}
   return o;}
 function validLLx(lat,lng){if(!isFinite(lat)||!isFinite(lng))return null;if(lat>90&&lng<20)[lat,lng]=[lng,lat];return lat>5&&lat<8&&lng>99.5&&lng<102?[lat,lng]:null;}
 async function persist(action,label,changes){
@@ -890,22 +899,29 @@ async function persist(action,label,changes){
   try{sessionStorage.setItem('pcu_scroll',String(scrollY));}catch(e){}
   location.reload();
 }
-const FL={note:'หมายเหตุ',days:'วันฟอก'};Object.values(FIELDS).flat().forEach(f=>FL[f[0]]=f[1].replace(/ \(.*\)/,''));
-function diffLabel(o,n){const ch=[];Object.keys(n).forEach(k=>{if(['key','g','llsrc'].includes(k))return;const a=JSON.stringify(o[k]??''),b=JSON.stringify(n[k]??'');if(a!==b)ch.push(k==='lat'||k==='lng'?'พิกัด':(FL[k]||k));});return [...new Set(ch)].join(', ');}
+const FL={note:'หมายเหตุ',days:'วันฟอก',deceased:'สถานะเสียชีวิต',deceasedNote:'บันทึกเสียชีวิต'};Object.values(FIELDS).flat().forEach(f=>FL[f[0]]=f[1].replace(/ \(.*\)/,''));
+function diffLabel(o,n){const nv=v=>v==null||v===false?'':v;const ch=[];Object.keys(n).forEach(k=>{if(['key','g','llsrc'].includes(k))return;const a=JSON.stringify(nv(o[k])),b=JSON.stringify(nv(n[k]));if(a!==b)ch.push(k==='lat'||k==='lng'?'พิกัด':(FL[k]||k));});return [...new Set(ch)].join(', ');}
 document.getElementById('edit-save').onclick=e=>{e.preventDefault();if(!dlg.querySelector('form').reportValidity())return;let o;try{o=collect();}catch(err){alert(err.message);return;}
-  if(editing.g==='preg'&&!o.edc){alert('กรุณาใส่กำหนดคลอด');return;}if(editing.g==='post'&&!o.deliv){alert('กรุณาใส่วันที่คลอด');return;}
+  let movedLabel=null;
+  const delNow=document.getElementById('f_delivered_now');
+  if(delNow&&delNow.checked){
+    const dv=document.getElementById('f_deliv_date').value;
+    if(!dv){alert('กรุณาระบุวันที่คลอด');return;}
+    o.g='post';o.deliv=dv;
+    movedLabel=`คลอดแล้ว (${dv}) — ย้ายไปกลุ่มมารดาหลังคลอด`;
+  }
+  if(editing.g==='preg'&&o.g==='preg'&&!o.edc){alert('กรุณาใส่กำหนดคลอด');return;}
+  if(editing.g==='post'&&o.g==='post'&&!o.deliv){alert('กรุณาใส่วันที่คลอด');return;}
   if(o.g==='post'&&o.deliv){const x=d(o.deliv);o.pp45=iso(new Date(x.getTime()+45*DAY));}
   if(o.g==='dial'&&!o.days)o.days=[];
-  if(editing.p){const what=diffLabel(rawOf(editing.p),o);if(!what){dlg.close();return;}persist('edit',`แก้ไข ${o.name} (${G[o.g].s}): ${what}`,o);}
+  if(editing.p){
+    const what=diffLabel(rawOf(editing.p),o);
+    const label=movedLabel?(what?`${movedLabel}, ${what}`:movedLabel):what;
+    if(!label){dlg.close();return;}
+    persist('edit',`แก้ไข ${o.name} (${G[o.g].s}): ${label}`,o);
+  }
   else persist('add',`เพิ่ม ${o.name} (${G[o.g].s})`,o);};
-document.getElementById('edit-del').onclick=()=>{const p=editing.p;const why=prompt(`ลบ ${p.name} ออกจากทะเบียน${G[p.g].s}?\nระบุเหตุผล (เช่น คลอดแล้ว / ย้ายออก):`,'');if(why===null)return;persist('del',`ลบ ${p.name} (${G[p.g].s})${why?': '+why:''}`);};
-document.getElementById('edit-dead').onclick=()=>{
-  const p=editing.p;
-  if(p.deceased){persist('edit',`ยกเลิกการบันทึกเสียชีวิต ${p.name} (${G[p.g].s})`,{deceased:false,deceasedNote:''});return;}
-  const why=prompt(`บันทึกว่า ${p.name} เสียชีวิตแล้ว?\nระบุวันที่/สาเหตุ (ถ้ามี):`,'');
-  if(why===null)return;
-  persist('edit',`บันทึกว่าเสียชีวิต ${p.name} (${G[p.g].s})${why?': '+why:''}`,{deceased:true,deceasedNote:why});
-};
+document.getElementById('edit-del').onclick=()=>{const p=editing.p;const why=prompt(`ลบ ${p.name} ออกจากทะเบียน${G[p.g].s}?\nระบุเหตุผล (เช่น ย้ายออก):`,'');if(why===null)return;persist('del',`ลบ ${p.name} (${G[p.g].s})${why?': '+why:''}`);};
 document.getElementById('edit-cancel').onclick=()=>dlg.close();
 document.getElementById('add-btn').onclick=()=>openEdit(null,[...st.groups][0]||'home');
 document.querySelector('#tbl tbody').addEventListener('click',e=>{const b=e.target.closest('[data-edit]');if(b)openEdit(DATA[+b.dataset.edit]);});
