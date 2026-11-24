@@ -109,7 +109,8 @@
     <!-- พื้นที่อินโฟกราฟิกหลัก (ที่จะถูกแปลงเป็นรูปภาพเมื่อกดปุ่มบันทึก) -->
     <!-- ===================================================================== -->
     <div id="infographic-canvas" class="w-full max-w-[960px] bg-white shadow-2xl rounded-none sm:rounded-2xl overflow-hidden border border-slate-300">
-        
+        <!-- หน้า 1 เมื่อบันทึกเป็นรูป: ส่วนหัว + แผนที่สังเขป -->
+        <div id="page1-canvas">
         <!-- 1. ส่วนหัว (HEADER) -->
         <header class="bg-gradient-to-r from-[#0a192f] via-[#112240] to-[#0a192f] text-white relative">
             <div class="p-5 sm:p-7 flex flex-col md:flex-row items-center justify-between gap-4">
@@ -437,7 +438,10 @@
                 </div>
             </div>
         </section>
+        </div>
 
+        <!-- หน้า 2 เมื่อบันทึกเป็นรูป: ตารางรายชื่อ อสม. + ส่วนท้าย -->
+        <div id="page2-canvas">
         <!-- 3. ส่วนตารางรายชื่อ อสม. / เบอร์โทรผู้ประสานงาน (เรียงลำดับตามแผนที่สังเขป) -->
         <section class="p-4 sm:p-6 bg-white">
             <div class="flex items-center gap-2.5 mb-4">
@@ -687,6 +691,7 @@
                 สายด่วนฉุกเฉิน: 1669 (เจ็บป่วยฉุกเฉิน) • 1784 (ปภ.)
             </div>
         </footer>
+        </div>
 
     </div>
 
@@ -756,31 +761,40 @@
             const btn = document.getElementById('btn-download-png');
             const originalHTML = btn.innerHTML;
             btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>กำลังสร้างรูปภาพคมชัด...</span>';
 
             try {
                 // รอให้ฟอนต์โหลดสมบูรณ์
                 await document.fonts.ready;
 
-                const targetElement = document.getElementById('infographic-canvas');
-                
-                // ใช้ scale: 2.5 เพื่อให้ตัวอักษรคมกริบแม้ซูมดูในมือถือ
-                const canvas = await html2canvas(targetElement, {
-                    scale: 2.5,
-                    useCORS: true,
-                    backgroundColor: '#ffffff',
-                    logging: false
-                });
+                // แบ่งบันทึกเป็น 2 รูป: หน้า 1 = ส่วนหัว+แผนที่สังเขป, หน้า 2 = ตารางรายชื่อ อสม.+ส่วนท้าย
+                const pages = [
+                    { el: document.getElementById('page1-canvas'), suffix: '_หน้า1_แผนที่' },
+                    { el: document.getElementById('page2-canvas'), suffix: '_หน้า2_รายชื่อ อสม.' }
+                ];
+                for (let i = 0; i < pages.length; i++) {
+                    btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>กำลังสร้างรูปภาพคมชัด (${i + 1}/${pages.length})...</span>`;
 
-                const imageData = canvas.toDataURL('image/png', 1.0);
-                const downloadLink = document.createElement('a');
-                downloadLink.href = imageData;
-                downloadLink.download = 'อินโฟกราฟิก_อสม_ศูนย์อพยพน้ำท่วม_ต_สะบ้าย้อย.png';
-                document.body.appendChild(downloadLink);
-                downloadLink.click();
-                document.body.removeChild(downloadLink);
+                    // ใช้ scale: 2.5 เพื่อให้ตัวอักษรคมกริบแม้ซูมดูในมือถือ
+                    const canvas = await html2canvas(pages[i].el, {
+                        scale: 2.5,
+                        useCORS: true,
+                        backgroundColor: '#ffffff',
+                        logging: false
+                    });
 
-                showToast('ดาวน์โหลดรูปภาพความละเอียดสูงสำเร็จ!', 'success');
+                    const imageData = canvas.toDataURL('image/png', 1.0);
+                    const downloadLink = document.createElement('a');
+                    downloadLink.href = imageData;
+                    downloadLink.download = `อินโฟกราฟิก_อสม_ศูนย์อพยพน้ำท่วม_ต_สะบ้าย้อย${pages[i].suffix}.png`;
+                    document.body.appendChild(downloadLink);
+                    downloadLink.click();
+                    document.body.removeChild(downloadLink);
+
+                    // เว้นจังหวะเล็กน้อยกันเบราว์เซอร์บล็อกการดาวน์โหลดหลายไฟล์พร้อมกัน
+                    await new Promise(r => setTimeout(r, 400));
+                }
+
+                showToast('ดาวน์โหลดรูปภาพความละเอียดสูงสำเร็จ (2 หน้า)!', 'success');
             } catch (error) {
                 console.error('เกิดข้อผิดพลาดในการสร้างรูปภาพ:', error);
                 showToast('ไม่สามารถสร้างไฟล์อัตโนมัติได้ กรุณากดปุ่ม พิมพ์ / PDF แทน', 'error');
