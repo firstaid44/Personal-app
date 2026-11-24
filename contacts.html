@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>รายชื่อ อสม. / เบอร์โทรผู้ประสานงานศูนย์อพยพน้ำท่วม - ต.สะบ้าย้อย</title>
+    
+    <!-- โหลด Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- โหลด Google Fonts: Prompt เพื่อตัวอักษรภาษาไทยที่คมชัด อ่านง่ายระดับเวกเตอร์ -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- โหลด html2canvas สำหรับแปลงหน้าเว็บเป็นรูปภาพ PNG ความละเอียดสูง -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <!-- โหลด Font Awesome สำหรับไอคอน -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            font-family: 'Prompt', sans-serif;
+            background-color: #e2e8f0;
+            color: #0f172a;
+        }
+
+        /* ลวดลายแถบเตือนภัยฉุกเฉิน */
+        .hazard-stripe {
+            background: repeating-linear-gradient(
+                -45deg,
+                #dc2626,
+                #dc2626 12px,
+                #facc15 12px,
+                #facc15 24px
+            );
+        }
+
+        /* สไตล์โหมดแก้ไขข้อมูล */
+        .edit-mode-active [contenteditable="true"] {
+            background-color: #fef9c3;
+            outline: 2px dashed #eab308;
+            border-radius: 4px;
+            padding: 1px 4px;
+            cursor: text;
+        }
+
+        /* ปรับแต่งการพิมพ์ (Print / PDF) */
+        @media print {
+            body {
+                background: white !important;
+                padding: 0 !important;
+            }
+            #control-toolbar, #toast-notification {
+                display: none !important;
+            }
+            #infographic-canvas {
+                box-shadow: none !important;
+                margin: 0 !important;
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen py-4 px-2 sm:px-4 flex flex-col items-center">
+
+    <!-- แถบเครื่องมือควบคุม (อยู่นอกกรอบอินโฟกราฟิก จะไม่ติดไปในรูปภาพที่บันทึก) -->
+    <div id="control-toolbar" class="w-full max-w-[960px] bg-white rounded-2xl shadow-lg p-3 sm:p-4 mb-5 border border-slate-200 flex flex-wrap items-center justify-between gap-3 sticky top-2 z-50">
+        <div class="flex items-center gap-2.5">
+            <div class="w-10 h-10 rounded-xl bg-blue-900 text-white flex items-center justify-center text-lg shadow-sm">
+                <i class="fa-solid fa-file-image"></i>
+            </div>
+            <div>
+                <h2 class="text-sm sm:text-base font-bold text-slate-800 leading-tight">ระบบสร้างอินโฟกราฟิกความคมชัดสูง</h2>
+                <p class="text-xs text-slate-500">ตัวอักษรคมชัด 100% แก้ไขข้อมูลได้ทันทีก่อนบันทึกภาพ</p>
+            </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
+            <!-- ปุ่มสลับโหมดแก้ไขข้อมูล -->
+            <button id="btn-toggle-edit" onclick="toggleEditMode()" class="flex-1 sm:flex-none px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 transition flex items-center justify-center gap-2 shadow-sm">
+                <i class="fa-solid fa-pen-to-square"></i>
+                <span id="edit-btn-text">แก้ไขข้อมูล / เพิ่มรายชื่อ ม.7-ม.8</span>
+            </button>
+
+            <!-- ปุ่มพิมพ์ / PDF -->
+            <button onclick="window.print()" class="px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 transition flex items-center justify-center gap-1.5 shadow-sm" title="พิมพ์เอกสารหรือบันทึกเป็น PDF">
+                <i class="fa-solid fa-print"></i>
+                <span class="hidden md:inline">พิมพ์ / PDF</span>
+            </button>
+
+            <!-- ปุ่มบันทึกเป็นรูปภาพ PNG -->
+            <button id="btn-download-png" onclick="downloadInfographic()" class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition flex items-center justify-center gap-2 shadow-md">
+                <i class="fa-solid fa-download"></i>
+                <span>บันทึกเป็นรูปภาพ (PNG)</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- แถบแจ้งเตือนสถานะ (Toast Notification) -->
+    <div id="toast-notification" class="fixed bottom-5 right-5 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl text-sm font-medium flex items-center gap-2.5 transform translate-y-24 opacity-0 transition-all duration-300 z-50">
+        <i id="toast-icon" class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>
+        <span id="toast-message">ดำเนินการสำเร็จ</span>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- พื้นที่อินโฟกราฟิกหลัก (ที่จะถูกแปลงเป็นรูปภาพเมื่อกดปุ่มบันทึก) -->
+    <!-- ===================================================================== -->
+    <div id="infographic-canvas" class="w-full max-w-[960px] bg-white shadow-2xl rounded-none sm:rounded-2xl overflow-hidden border border-slate-300">
+        
+        <!-- 1. ส่วนหัว (HEADER) -->
+        <header class="bg-gradient-to-r from-[#0a192f] via-[#112240] to-[#0a192f] text-white relative">
+            <div class="p-5 sm:p-7 flex flex-col md:flex-row items-center justify-between gap-4">
+                
+                <!-- ไอคอนเตือนภัยน้ำท่วมด้านซ้าย -->
+                <div class="flex items-center gap-3.5 shrink-0">
+                    <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 p-1 shadow-lg flex items-center justify-center border-2 border-amber-300">
+                        <div class="text-center">
+                            <i class="fa-solid fa-house-flood-water text-3xl sm:text-4xl text-white drop-shadow"></i>
+                        </div>
+                    </div>
+                    <div class="md:hidden text-left">
+                        <span class="inline-block bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full tracking-wider uppercase mb-1">EMERGENCY • ศูนย์ประสานงานฉุกเฉิน</span>
+                        <h1 class="text-xl font-extrabold leading-tight text-white">รายชื่อ อสม. / เบอร์โทรผู้ประสานงานศูนย์อพยพน้ำท่วม</h1>
+                    </div>
+                </div>
+
+                <!-- ข้อความหัวข้อหลัก (แสดงบนจอใหญ่) -->
+                <div class="hidden md:block text-center flex-1 px-2">
+                    <div class="inline-flex items-center gap-2 bg-red-600/90 border border-red-400/50 text-white text-xs font-bold px-3 py-1 rounded-full tracking-wider mb-2 shadow-sm">
+                        <span class="w-2 h-2 rounded-full bg-yellow-300 animate-pulse"></span>
+                        ศูนย์ประสานงานช่วยเหลือผู้ประสบอุทกภัย • EMERGENCY
+                    </div>
+                    <h1 class="text-2xl lg:text-[28px] font-extrabold tracking-tight text-white leading-snug drop-shadow-sm">
+                        รายชื่อ อสม. / เบอร์โทรผู้ประสานงานศูนย์อพยพน้ำท่วม
+                    </h1>
+                    <p class="text-amber-300 font-semibold text-sm lg:text-base mt-1">
+                        เฉพาะพื้นที่ที่เสี่ยงน้ำท่วมและเส้นทางตัดขาด (ตำบลสะบ้าย้อย อำเภอสะบ้าย้อย จังหวัดสงขลา)
+                    </p>
+                </div>
+
+                <!-- ป้ายสัญลักษณ์หน่วยงาน/พื้นที่ด้านขวา -->
+                <div class="flex items-center gap-2.5 shrink-0">
+                    <div class="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-3 py-2 text-center">
+                        <div class="w-10 h-10 mx-auto rounded-full bg-emerald-600 border-2 border-white flex items-center justify-center text-white mb-1 shadow">
+                            <i class="fa-solid fa-staff-snake text-lg"></i>
+                        </div>
+                        <span class="block text-[10px] font-semibold text-slate-200 leading-tight">เครือข่าย อสม.</span>
+                    </div>
+                    <div class="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-3 py-2 text-center">
+                        <div class="w-10 h-10 mx-auto rounded-full bg-blue-600 border-2 border-white flex items-center justify-center text-white mb-1 shadow">
+                            <i class="fa-solid fa-shield-heart text-lg"></i>
+                        </div>
+                        <span class="block text-[10px] font-semibold text-slate-200 leading-tight">ต.สะบ้าย้อย</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- หัวข้อรองสำหรับมือถือ -->
+            <div class="md:hidden bg-blue-950/80 px-4 py-2 text-center border-t border-white/10">
+                <p class="text-amber-300 font-semibold text-xs leading-relaxed">
+                    เฉพาะพื้นที่ที่เสี่ยงน้ำท่วมและเส้นทางตัดขาด<br>(ตำบลสะบ้าย้อย อำเภอสะบ้าย้อย จังหวัดสงขลา)
+                </p>
+            </div>
+
+            <!-- แถบคาดเตือนภัยสีแดง-เหลือง -->
+            <div class="h-2.5 w-full hazard-stripe"></div>
+        </header>
+
+        <!-- 2. ส่วนแผนที่สังเขปตำบลสะบ้าย้อย (SVG MAP SECTION) -->
+        <section class="p-4 sm:p-6 bg-gradient-to-b from-slate-50 to-slate-100 border-b-2 border-slate-300">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-3">
+                <div class="flex items-center gap-2">
+                    <span class="w-8 h-8 rounded-lg bg-red-600 text-white flex items-center justify-center font-bold shadow-sm">
+                        <i class="fa-solid fa-map-location-dot"></i>
+                    </span>
+                    <div>
+                        <h2 class="text-base sm:text-lg font-extrabold text-slate-800 leading-tight">แผนที่สังเขปตำบลสะบ้าย้อย และตำแหน่งจุดอพยพ / ศูนย์อพยพน้ำท่วม</h2>
+                        <p class="text-xs text-slate-500">แสดงขอบเขตหมู่บ้าน พื้นที่เสี่ยงน้ำท่วม เส้นทางสัญจร และจุดอพยพในพื้นที่</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3 text-xs font-semibold bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm">
+                    <span class="flex items-center gap-1.5 text-red-700">
+                        <span class="w-3.5 h-3.5 rounded-full bg-red-600 inline-flex items-center justify-center text-[8px] text-white"><i class="fa-solid fa-house"></i></span>
+                        จุดอพยพ / ศูนย์อพยพ
+                    </span>
+                    <span class="flex items-center gap-1.5 text-orange-700">
+                        <span class="w-3.5 h-3.5 rounded bg-orange-400/60 border border-orange-500 inline-block"></span>
+                        พื้นที่เสี่ยงน้ำท่วม
+                    </span>
+                </div>
+            </div>
+
+            <!-- กล่องแสดงแผนที่ SVG ความคมชัดสูง (อ้างอิงรูปร่างและการเรียงลำดับหมู่บ้านตามแผนที่สังเขปตำบลสะบ้าย้อย) -->
+            <div class="bg-white rounded-2xl border-2 border-slate-200 shadow-inner p-2 sm:p-4 relative overflow-hidden">
+                <svg viewBox="0 0 920 560" class="w-full h-auto block select-none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <!-- เงาสำหรับป้ายชื่อ -->
+                        <filter id="labelShadow" x="-10%" y="-10%" width="120%" height="130%">
+                            <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#0f172a" flood-opacity="0.25"/>
+                        </filter>
+                        <!-- ลวดลายพื้นที่เสี่ยงน้ำท่วม -->
+                        <pattern id="floodZonePattern" width="12" height="12" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
+                            <line x1="0" y1="0" x2="0" y2="12" stroke="#f97316" stroke-width="2" stroke-opacity="0.25" />
+                        </pattern>
+                    </defs>
+
+                    <!-- พื้นหลังแผนที่ -->
+                    <rect x="0" y="0" width="920" height="560" rx="14" fill="#f8fafc" />
+
+                    <!-- ข้อความทิศรอบแผนที่ (ตามแผนที่สังเขปตำบลสะบ้าย้อย) -->
+                    <g fill="#475569" font-size="12" font-weight="600" text-anchor="middle">
+                        <!-- ทิศเหนือ -->
+                        <text x="640" y="34" fill="#1e293b" font-weight="700">ทิศเหนือ</text>
+                        <text x="640" y="50">ต.ลำไพล อ.เทพา จ.สงขลา</text>
+                        
+                        <!-- ทิศตะวันตก -->
+                        <text x="145" y="315" fill="#1e293b" font-weight="700">ทิศตะวันตก</text>
+                        <text x="145" y="332">ต.คูหา อ.สะบ้าย้อย</text>
+                        <text x="145" y="348">จ.สงขลา</text>
+
+                        <!-- ทิศตะวันออก -->
+                        <text x="735" y="245" fill="#1e293b" font-weight="700">ทิศตะวันออก</text>
+                        <text x="735" y="262">ต.เปียน อ.สะบ้าย้อย</text>
+                        <text x="735" y="278">จ.สงขลา</text>
+
+                        <!-- ทิศใต้ -->
+                        <text x="380" y="475" fill="#1e293b" font-weight="700">ทิศใต้</text>
+                        <text x="380" y="492">ต.ทุ่งพอ อ.สะบ้าย้อย จ.สงขลา</text>
+                    </g>
+
+                    <!-- เข็มทิศ (North Arrow) -->
+                    <g transform="translate(640, 105)">
+                        <polygon points="0,-32 14,12 0,4 -14,12" fill="#0f172a"/>
+                        <polygon points="0,-32 14,12 0,4" fill="#475569"/>
+                        <text x="0" y="30" text-anchor="middle" font-size="16" font-weight="800" fill="#0f172a">N</text>
+                    </g>
+
+                    <!-- แม่น้ำสายหลักไหลผ่านพื้นที่ -->
+                    <path d="M 555,20 C 540,95 510,165 445,235 C 390,295 340,340 265,375" fill="none" stroke="#38bdf8" stroke-width="10" stroke-linecap="round" opacity="0.55"/>
+                    <path d="M 465,260 C 515,310 565,375 635,445" fill="none" stroke="#38bdf8" stroke-width="7" stroke-linecap="round" opacity="0.5"/>
+
+                    <!-- ========================================================= -->
+                    <!-- โครงสร้างขอบเขตหมู่บ้านตำบลสะบ้าย้อย (เรียงจากเหนือลงตะวันออกเฉียงใต้) -->
+                    <!-- ========================================================= -->
+                    <g stroke="#475569" stroke-width="1.8" stroke-linejoin="round">
+                        <!-- ม.2 ปลักบ่อ (เหนือสุด) -->
+                        <path d="M 495,30 L 555,25 L 570,65 L 560,105 L 515,105 L 495,85 L 485,60 Z" fill="#fef3c7"/>
+                        
+                        <!-- ม.9 บ่อคุย -->
+                        <path d="M 515,105 L 560,105 L 565,145 L 545,175 L 505,165 L 495,130 Z" fill="#fef3c7"/>
+                        
+                        <!-- ม.3 เพ็งยา -->
+                        <path d="M 505,165 L 545,175 L 525,225 L 475,245 L 420,225 L 435,190 L 475,165 Z" fill="#fef3c7"/>
+
+                        <!-- ม.1 สะบ้าย้อย (พื้นที่ใหญ่ตอนกลาง แบ่งโซนเสี่ยงน้ำท่วม) -->
+                        <path d="M 420,225 L 475,245 L 485,295 L 445,355 L 365,385 L 275,375 L 265,315 L 295,245 L 365,220 Z" fill="#fed7aa"/>
+                        <!-- ลวดลายทับ ม.1 พื้นที่เสี่ยง -->
+                        <path d="M 420,225 L 475,245 L 485,295 L 445,355 L 365,385 L 275,375 L 265,315 L 295,245 L 365,220 Z" fill="url(#floodZonePattern)"/>
+
+                        <!-- ม.4 บ่อทอง (ถัดลงมาทางตะวันออกเฉียงใต้) -->
+                        <path d="M 445,355 L 485,295 L 545,320 L 565,365 L 515,395 L 475,385 Z" fill="#fdba74"/>
+
+                        <!-- ม.8 น้ำค้าง -->
+                        <path d="M 515,395 L 565,365 L 605,395 L 595,435 L 540,435 L 510,415 Z" fill="#fed7aa"/>
+
+                        <!-- ม.6 ทำเนียบ -->
+                        <path d="M 595,435 L 605,395 L 655,425 L 665,465 L 615,475 L 595,455 Z" fill="#fdba74"/>
+
+                        <!-- ม.7 ยาเร๊ะ (ด้านล่างซ้ายของส่วนหาง) -->
+                        <path d="M 540,435 L 595,435 L 615,475 L 645,525 L 590,535 L 550,510 L 535,470 Z" fill="#fed7aa"/>
+
+                        <!-- ม.5 บ้านไร่ (ล่างสุดด้านขวา) -->
+                        <path d="M 615,475 L 665,465 L 715,505 L 725,530 L 645,525 Z" fill="#fdba74"/>
+                    </g>
+
+                    <!-- เส้นถนนสายหลัก / เส้นทางเสี่ยงถูกตัดขาด (สีแดง) -->
+                    <path d="M 530,55 L 535,135 L 510,195 L 435,265 L 360,315 L 470,345 L 555,405 L 625,450 L 675,505" fill="none" stroke="#dc2626" stroke-width="3" stroke-dasharray="6,3"/>
+
+                    <!-- ชื่อหมู่บ้านภายในแผนที่ -->
+                    <g font-size="11" font-weight="700" fill="#334155" text-anchor="middle">
+                        <text x="530" y="65">ม.2 ปลักบ่อ</text>
+                        <text x="532" y="138">ม.9 บ่อคุย</text>
+                        <text x="485" y="205">ม.3 เพ็งยา</text>
+                        
+                        <!-- โซนใน ม.1 -->
+                        <text x="335" y="265" fill="#9a3412" font-size="11.5">ม.1 โซนแลแบงตก-</text>
+                        <text x="335" y="279" fill="#9a3412" font-size="11.5">ทรายขาวใหม่</text>
+                        <text x="425" y="280" fill="#9a3412" font-size="11.5">ม.1 โซนแลแบงออก</text>
+                        <text x="365" y="345" fill="#9a3412" font-size="11.5">ม.1 โซนแขวง</text>
+
+                        <text x="515" y="348" fill="#7c2d12">ม.4 บ่อทอง</text>
+                        <text x="556" y="416" fill="#7c2d12">ม.8 น้ำค้าง</text>
+                        <text x="632" y="445" fill="#7c2d12">ม.6 ทำเนียบ</text>
+                        <text x="578" y="495" fill="#7c2d12">ม.7 ยาเร๊ะ</text>
+                        <text x="676" y="512" fill="#7c2d12">ม.5 บ้านไร่</text>
+                    </g>
+
+                    <!-- ========================================================= -->
+                    <!-- หมุดและป้ายชื่อ "จุดอพยพ / ศูนย์อพยพน้ำท่วม" (8 จุด - ไม่มีหมายเลข) -->
+                    <!-- ========================================================= -->
+
+                    <!-- จุดที่ 1: โรงเรียนสะบ้าย้อย ม.1 -->
+                    <g transform="translate(325, 232)">
+                        <line x1="0" y1="0" x2="-95" y2="-45" stroke="#0f172a" stroke-width="2"/>
+                        <circle cx="0" cy="0" r="11" fill="#dc2626" stroke="#ffffff" stroke-width="2"/>
+                        <text x="0" y="4" text-anchor="middle" fill="#ffffff" font-size="10" font-family="FontAwesome">&#xf015;</text>
+                        <g transform="translate(-235, -62)" filter="url(#labelShadow)">
+                            <rect x="0" y="0" width="165" height="28" rx="6" fill="#0f172a"/>
+                            <text x="82.5" y="18" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="600">โรงเรียนสะบ้าย้อย ม.1</text>
+                        </g>
+                    </g>
+
+                    <!-- จุดที่ 2: บ้านทรายขาวใหม่ ม.1 -->
+                    <g transform="translate(300, 305)">
+                        <line x1="0" y1="0" x2="-90" y2="-25" stroke="#0f172a" stroke-width="2"/>
+                        <circle cx="0" cy="0" r="11" fill="#dc2626" stroke="#ffffff" stroke-width="2"/>
+                        <text x="0" y="4" text-anchor="middle" fill="#ffffff" font-size="10" font-family="FontAwesome">&#xf015;</text>
+                        <g transform="translate(-235, -42)" filter="url(#labelShadow)">
+                            <rect x="0" y="0" width="165" height="28" rx="6" fill="#0f172a"/>
+                            <text x="82.5" y="18" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="600">บ้านทรายขาวใหม่ ม.1</text>
+                        </g>
+                    </g>
+
+                    <!-- จุดที่ 3: อาคารเอนกประสงค์บ้านบ่อทอง ม.4 -->
+                    <g transform="translate(495, 365)">
+                        <line x1="0" y1="0" x2="-155" y2="45" stroke="#0f172a" stroke-width="2"/>
+                        <circle cx="0" cy="0" r="11" fill="#dc2626" stroke="#ffffff" stroke-width="2"/>
+                        <text x="0" y="4" text-anchor="middle" fill="#ffffff" font-size="10" font-family="FontAwesome">&#xf015;</text>
+                        <g transform="translate(-365, 32)" filter="url(#labelShadow)">
+                            <rect x="0" y="0" width="230" height="28" rx="6" fill="#0f172a"/>
+                            <text x="115" y="18" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="600">อาคารเอนกประสงค์บ้านบ่อทอง ม.4</text>
+                        </g>
+                    </g>
+
+                    <!-- จุดที่ 4: โรงรมน้ำยางเก่า ม.8 -->
+                    <g transform="translate(530, 405)">
+                        <line x1="0" y1="0" x2="-165" y2="45" stroke="#0f172a" stroke-width="2"/>
+                        <circle cx="0" cy="0" r="11" fill="#dc2626" stroke="#ffffff" stroke-width="2"/>
+                        <text x="0" y="4" text-anchor="middle" fill="#ffffff" font-size="10" font-family="FontAwesome">&#xf015;</text>
+                        <g transform="translate(-325, 35)" filter="url(#labelShadow)">
+                            <rect x="0" y="0" width="175" height="28" rx="6" fill="#0f172a"/>
+                            <text x="87.5" y="18" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="600">โรงรมน้ำยางเก่า ม.8</text>
+                        </g>
+                    </g>
+
+                    <!-- จุดที่ 5: บ้านน้ำค้าง ม.8 -->
+                    <g transform="translate(575, 422)">
+                        <line x1="0" y1="0" x2="105" y2="-75" stroke="#0f172a" stroke-width="2"/>
+                        <circle cx="0" cy="0" r="11" fill="#dc2626" stroke="#ffffff" stroke-width="2"/>
+                        <text x="0" y="4" text-anchor="middle" fill="#ffffff" font-size="10" font-family="FontAwesome">&#xf015;</text>
+                        <g transform="translate(85, -95)" filter="url(#labelShadow)">
+                            <rect x="0" y="0" width="140" height="28" rx="6" fill="#0f172a"/>
+                            <text x="70" y="18" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="600">บ้านน้ำค้าง ม.8</text>
+                        </g>
+                    </g>
+
+                    <!-- จุดที่ 6: จุดตรวจชรบ บ้านทำเนียบ ม.6 -->
+                    <g transform="translate(630, 458)">
+                        <line x1="0" y1="0" x2="85" y2="-45" stroke="#0f172a" stroke-width="2"/>
+                        <circle cx="0" cy="0" r="11" fill="#dc2626" stroke="#ffffff" stroke-width="2"/>
+                        <text x="0" y="4" text-anchor="middle" fill="#ffffff" font-size="10" font-family="FontAwesome">&#xf015;</text>
+                        <g transform="translate(65, -62)" filter="url(#labelShadow)">
+                            <rect x="0" y="0" width="195" height="28" rx="6" fill="#0f172a"/>
+                            <text x="97.5" y="18" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="600">จุดตรวจชรบ บ้านทำเนียบ ม.6</text>
+                        </g>
+                    </g>
+
+                    <!-- จุดที่ 7: บ้านยาเร๊ะ ม.7 -->
+                    <g transform="translate(565, 515)">
+                        <line x1="0" y1="0" x2="-95" y2="15" stroke="#0f172a" stroke-width="2"/>
+                        <circle cx="0" cy="0" r="11" fill="#dc2626" stroke="#ffffff" stroke-width="2"/>
+                        <text x="0" y="4" text-anchor="middle" fill="#ffffff" font-size="10" font-family="FontAwesome">&#xf015;</text>
+                        <g transform="translate(-225, 2)" filter="url(#labelShadow)">
+                            <rect x="0" y="0" width="140" height="28" rx="6" fill="#0f172a"/>
+                            <text x="70" y="18" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="600">บ้านยาเร๊ะ ม.7</text>
+                        </g>
+                    </g>
+
+                    <!-- จุดที่ 8: อาคารเอนกประสงค์บ้านไร่ ม.5 -->
+                    <g transform="translate(680, 492)">
+                        <line x1="0" y1="0" x2="45" y2="-35" stroke="#0f172a" stroke-width="2"/>
+                        <circle cx="0" cy="0" r="11" fill="#dc2626" stroke="#ffffff" stroke-width="2"/>
+                        <text x="0" y="4" text-anchor="middle" fill="#ffffff" font-size="10" font-family="FontAwesome">&#xf015;</text>
+                        <g transform="translate(15, -52)" filter="url(#labelShadow)">
+                            <rect x="0" y="0" width="215" height="28" rx="6" fill="#0f172a"/>
+                            <text x="107.5" y="18" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="600">อาคารเอนกประสงค์บ้านไร่ ม.5</text>
+                        </g>
+                    </g>
+                </svg>
+            </div>
+
+            <!-- กล่องสรุปรายชื่อจุดอพยพ / ศูนย์อพยพน้ำท่วม (8 แห่ง ไม่มีหมายเลข) -->
+            <div class="mt-3.5 bg-white rounded-2xl border-2 border-red-200 shadow-sm overflow-hidden">
+                <div class="bg-red-700 text-white px-4 py-2 flex items-center justify-between">
+                    <div class="flex items-center gap-2 font-bold text-sm sm:text-base">
+                        <i class="fa-solid fa-house-chimney-medical"></i>
+                        <span>จุดอพยพ / ศูนย์อพยพน้ำท่วม (8 จุดหลัก)</span>
+                    </div>
+                    <span class="text-xs bg-red-800 px-2.5 py-0.5 rounded-full text-red-100">คลิกแก้ไขข้อความได้</span>
+                </div>
+                <div class="p-3.5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs sm:text-sm font-semibold text-slate-800">
+                    <div class="flex items-center gap-2 bg-red-50/70 px-3 py-2 rounded-xl border border-red-100">
+                        <span class="w-2.5 h-2.5 rounded-full bg-red-600 shrink-0"></span>
+                        <span contenteditable="false" class="editable-text">โรงเรียนสะบ้าย้อย ม.1</span>
+                    </div>
+                    <div class="flex items-center gap-2 bg-red-50/70 px-3 py-2 rounded-xl border border-red-100">
+                        <span class="w-2.5 h-2.5 rounded-full bg-red-600 shrink-0"></span>
+                        <span contenteditable="false" class="editable-text">บ้านทรายขาวใหม่ ม.1</span>
+                    </div>
+                    <div class="flex items-center gap-2 bg-red-50/70 px-3 py-2 rounded-xl border border-red-100">
+                        <span class="w-2.5 h-2.5 rounded-full bg-red-600 shrink-0"></span>
+                        <span contenteditable="false" class="editable-text">อาคารเอนกประสงค์บ้านบ่อทอง ม.4</span>
+                    </div>
+                    <div class="flex items-center gap-2 bg-red-50/70 px-3 py-2 rounded-xl border border-red-100">
+                        <span class="w-2.5 h-2.5 rounded-full bg-red-600 shrink-0"></span>
+                        <span contenteditable="false" class="editable-text">อาคารเอนกประสงค์บ้านไร่ ม.5</span>
+                    </div>
+                    <div class="flex items-center gap-2 bg-red-50/70 px-3 py-2 rounded-xl border border-red-100">
+                        <span class="w-2.5 h-2.5 rounded-full bg-red-600 shrink-0"></span>
+                        <span contenteditable="false" class="editable-text">โรงรมน้ำยางเก่า ม.8</span>
+                    </div>
+                    <div class="flex items-center gap-2 bg-red-50/70 px-3 py-2 rounded-xl border border-red-100">
+                        <span class="w-2.5 h-2.5 rounded-full bg-red-600 shrink-0"></span>
+                        <span contenteditable="false" class="editable-text">จุดตรวจชรบ บ้านทำเนียบ ม.6</span>
+                    </div>
+                    <div class="flex items-center gap-2 bg-red-50/70 px-3 py-2 rounded-xl border border-red-100">
+                        <span class="w-2.5 h-2.5 rounded-full bg-red-600 shrink-0"></span>
+                        <span contenteditable="false" class="editable-text">บ้านน้ำค้าง ม.8</span>
+                    </div>
+                    <div class="flex items-center gap-2 bg-red-50/70 px-3 py-2 rounded-xl border border-red-100">
+                        <span class="w-2.5 h-2.5 rounded-full bg-red-600 shrink-0"></span>
+                        <span contenteditable="false" class="editable-text">บ้านยาเร๊ะ ม.7</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. ส่วนตารางรายชื่อ อสม. / เบอร์โทรผู้ประสานงาน (เรียงลำดับตามแผนที่สังเขป) -->
+        <section class="p-4 sm:p-6 bg-white">
+            <div class="flex items-center gap-2.5 mb-4">
+                <div class="w-9 h-9 rounded-xl bg-blue-900 text-white flex items-center justify-center text-base shadow-sm">
+                    <i class="fa-solid fa-phone-volume"></i>
+                </div>
+                <div>
+                    <h2 class="text-base sm:text-lg font-extrabold text-slate-900 leading-tight">รายชื่อ อสม. และเบอร์โทรผู้ประสานงานประจำจุดเสี่ยง</h2>
+                    <p class="text-xs text-slate-500">จัดเรียงลำดับหมู่บ้านตามภูมิศาสตร์ในแผนที่สังเขปตำบลสะบ้าย้อย</p>
+                </div>
+            </div>
+
+            <!-- แถวที่ 1: โซนหมู่ที่ 1 (3 โซนย่อย) -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5 mb-4">
+                
+                <!-- ม.1 โซนแลแบงตก-ทรายขาวใหม่ -->
+                <div class="rounded-2xl border-2 border-slate-800 overflow-hidden shadow-sm flex flex-col">
+                    <div class="bg-slate-800 text-white px-3.5 py-2.5 font-bold text-sm flex items-center justify-between">
+                        <span contenteditable="false" class="editable-text">ม.1 โซนแลแบงตก-ทรายขาวใหม่</span>
+                        <span class="text-[11px] bg-white/20 px-2 py-0.5 rounded-md">3 ราย</span>
+                    </div>
+                    <div class="p-3 bg-slate-50 flex-1 space-y-2 text-xs sm:text-[13px]">
+                        <div class="flex justify-between items-center bg-white p-2 rounded-lg border border-slate-200">
+                            <span contenteditable="false" class="editable-text font-semibold text-slate-800">1. นารีสันติ์ หมินเส็น</span>
+                            <span contenteditable="false" class="editable-text font-bold text-blue-900 tracking-wide">0979528267</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-white p-2 rounded-lg border border-slate-200">
+                            <span contenteditable="false" class="editable-text font-semibold text-slate-800">2. มุทิตา ตุวันปูเต๊ะ</span>
+                            <span contenteditable="false" class="editable-text font-bold text-blue-900 tracking-wide">0847446350</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-white p-2 rounded-lg border border-slate-200">
+                            <span contenteditable="false" class="editable-text font-semibold text-slate-800">3. ฮาปีซะ สะหรีมะสัน</span>
+                            <span contenteditable="false" class="editable-text font-bold text-blue-900 tracking-wide">0895190713</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ม.1 โซนแลแบงออก -->
+                <div class="rounded-2xl border-2 border-orange-600 overflow-hidden shadow-sm flex flex-col">
+                    <div class="bg-orange-600 text-white px-3.5 py-2.5 font-bold text-sm flex items-center justify-between">
+                        <span contenteditable="false" class="editable-text">ม.1 โซนแลแบงออก</span>
+                        <span class="text-[11px] bg-white/20 px-2 py-0.5 rounded-md">3 ราย</span>
+                    </div>
+                    <div class="p-3 bg-orange-50/60 flex-1 space-y-2 text-xs sm:text-[13px]">
+                        <div class="flex justify-between items-center bg-white p-2 rounded-lg border border-orange-200">
+                            <span contenteditable="false" class="editable-text font-semibold text-slate-800">1. บีเดาะ สังเกะ</span>
+                            <span contenteditable="false" class="editable-text font-bold text-orange-900 tracking-wide">08283143269</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-white p-2 rounded-lg border border-orange-200">
+                            <span contenteditable="false" class="editable-text font-semibold text-slate-800">2. ยามีละ กือนิ</span>
+                            <span contenteditable="false" class="editable-text font-bold text-orange-900 tracking-wide">0980874733</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-white p-2 rounded-lg border border-orange-200">
+                            <span contenteditable="false" class="editable-text font-semibold text-slate-800">3. นิเปาะ เตะเด็ง</span>
+                            <span contenteditable="false" class="editable-text font-bold text-orange-900 tracking-wide">0895330475</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ม.1 โซนแขวง -->
+                <div class="rounded-2xl border-2 border-red-700 overflow-hidden shadow-sm flex flex-col">
+                    <div class="bg-red-700 text-white px-3.5 py-2.5 font-bold text-sm flex items-center justify-between">
+                        <span contenteditable="false" class="editable-text">ม.1 โซนแขวง</span>
+                        <span class="text-[11px] bg-white/20 px-2 py-0.5 rounded-md">3 ราย</span>
+                    </div>
+                    <div class="p-3 bg-red-50/50 flex-1 space-y-2 text-xs sm:text-[13px]">
+                        <div class="flex justify-between items-center bg-white p-2 rounded-lg border border-red-200">
+                            <span contenteditable="false" class="editable-text font-semibold text-slate-800">1. สุคนธ์ อนุพันธ์</span>
+                            <span contenteditable="false" class="editable-text font-bold text-red-900 tracking-wide">0655840663</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-white p-2 rounded-lg border border-red-200">
+                            <span contenteditable="false" class="editable-text font-semibold text-slate-800">2. ทิวดี หมะมุสอ</span>
+                            <span contenteditable="false" class="editable-text font-bold text-red-900 tracking-wide">0872979684</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-white p-2 rounded-lg border border-red-200">
+                            <span contenteditable="false" class="editable-text font-semibold text-slate-800">3. เจ๊ะมะแอ และสม</span>
+                            <span contenteditable="false" class="editable-text font-bold text-red-900 tracking-wide">0937142312</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- แถวที่ 2: หมู่บ้านเรียงตามแผนที่ (ม.4 บ่อทอง -> ม.8 น้ำค้าง -> ม.6 ทำเนียบ -> ม.7 ยาเร๊ะ -> ม.5 บ้านไร่) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                <!-- ม.4 บ่อทอง -->
+                <div class="rounded-2xl border-2 border-[#0f294a] overflow-hidden shadow-sm">
+                    <div class="bg-[#0f294a] text-white px-4 py-2.5 font-bold text-sm sm:text-base flex items-center justify-between">
+                        <span contenteditable="false" class="editable-text">ม.4 บ่อทอง</span>
+                        <span class="text-xs bg-white/15 px-2.5 py-0.5 rounded-md">5 ราย</span>
+                    </div>
+                    <div class="p-3.5 bg-blue-50/40 space-y-2 text-xs sm:text-sm">
+                        <div class="flex justify-between items-center bg-white px-3 py-2 rounded-xl border border-slate-200">
+                            <span contenteditable="false" class="editable-text font-semibold text-slate-800">1. อุษณียาภรณ์ บุญก่อเกื้อ</span>
+                            <span contenteditable="false" class="editable-text font-bold text-[#0f294a]">โทร. 0801750749</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-white px-3 py-2 rounded-xl border border-slate-200">
+                            <span contenteditable="false" class="editable-text font-semibold text-slate-800">2. กาญจนารมณ์ แก้วมณี</span>
+                            <span contenteditable="false" class="editable-text font-bold text-[#0f294a]">โทร. 0986924248</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-white px-3 py-2 rounded-xl border border-slate-200">
+                            <span contenteditable="false" class="editable-text font-semibold text-slate-800">3. วราภรณ์ หลีหะ</span>
+                            <span contenteditable="false" class="editable-text font-bold text-[#0f294a]">โทร. 0625493118</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-white px-3 py-2 rounded-xl border border-slate-200">
+                            <span contenteditable="false" class="editable-text font-semibold text-slate-800">4. สุนีย์ เด็นมะเระ</span>
+                            <span contenteditable="false" class="editable-text font-bold text-[#0f294a]">โทร. 0614854818</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-white px-3 py-2 rounded-xl border border-slate-200">
+                            <span contenteditable="false" class="editable-text font-semibold text-slate-800">5. อุมมีย์ฟาตีมะห์ มะณีหิยา</span>
+                            <span contenteditable="false" class="editable-text font-bold text-[#0f294a]">โทร. 0933108363</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ม.8 น้ำค้าง (เรียงต่อจาก ม.4 บ่อทอง ตามแผนที่) -->
+                <div class="rounded-2xl border-2 border-slate-700 overflow-hidden shadow-sm">
+                    <div class="bg-slate-700 text-white px-4 py-2.5 font-bold text-sm sm:text-base flex items-center justify-between">
+                        <span contenteditable="false" class="editable-text">ม.8 น้ำค้าง</span>
+                        <span class="text-xs bg-amber-400 text-slate-900 font-bold px-2.5 py-0.5 rounded-md">อัปเดตข้อมูลได้</span>
+                    </div>
+                    <div class="p-3.5 bg-slate-50 space-y-2 text-xs sm:text-sm">
+                        <div class="flex justify-between items-center bg-white px-3 py-2 rounded-xl border border-slate-200">
+                            <span contenteditable="false" class="editable-text font-semibold text-slate-700">1. (กำลังอัปเดตข้อมูล)</span>
+                            <span contenteditable="false" class="editable-text font-medium text-slate-400">โทร. -</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-white px-3 py-2 rounded-xl border border-slate-200">
+                            <span contenteditable="false" class="editable-text font-semibold text-slate-700">2. (กำลังอัปเดตข้อมูล)</span>
+                            <span contenteditable="false" class="editable-text font-medium text-slate-400">โทร. -</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-white px-3 py-2 rounded-xl border border-slate-200">
+                            <span contenteditable="false" class="editable-text font-semibold text-slate-700">3. (กำลังอัปเดตข้อมูล)</span>
+                            <span contenteditable="false" class="editable-text font-medium text-slate-400">โทร. -</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-white px-3 py-2 rounded-xl border border-slate-200">
+                            <span contenteditable="false" class="editable-text font-semibold text-slate-700">4. (กำลังอัปเดตข้อมูล)</span>
+                            <span contenteditable="false" class="editable-text font-medium text-slate-400">โทร. -</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-white px-3 py-2 rounded-xl border border-slate-200">
+                            <span contenteditable="false" class="editable-text font-semibold text-slate-700">5. (กำลังอัปเดตข้อมูล)</span>
+                            <span contenteditable="false" class="editable-text font-medium text-slate-400">โทร. -</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ม.6 ทำเนียบ -->
+                <div class="rounded-2xl border-2 border-red-800 overflow-hidden shadow-sm">
+                    <div class="bg-red-800 text-white px-4 py-2.5 font-bold text-sm sm:text-base flex items-center justify-between">
+                        <span contenteditable="false" class="editable-text">ม.6 ทำเนียบ</span>
+                        <span class="text-xs bg-white/15 px-2.5 py-0.5 rounded-md">5 ราย</span>
+                    </div>
+                    <div class="p-3.5 bg-red-50/40 space-y-2 text-xs sm:text-sm">
+                        <div class="flex justify-between items-center bg-white px-3 py-2 rounded-xl border border-red-100">
+                            <span contenteditable="false" class="editable-text font-semibold text-slate-800">1. น.ส.จรินารภ แก้วกับทอง</span>
+                            <span contenteditable="false" class="editable-text font-bold text-red-900">โทร. 0612918135</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-white px-3 py-2 rounded-xl border border-red-100">
+                            <span contenteditable="false" class="editable-text font-semibold text-slate-800">2. น.ส.นาฏยา ยอสมเพ็ชร</span>
+                            <span contenteditable="false" class="editable-text font-bold text-red-900">โทร. 0953091920</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-white px-3 py-2 rounded-xl border border-red-100">
+                            <span contenteditable="false" class="editable-text font-semibold text-slate-800">3. น.ส.หยาดพิรุณ ปานลุง</span>
+                            <span contenteditable="false" class="editable-text font-bold text-red-900">โทร. 0612607541</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-white px-3 py-2 rounded-xl border border-red-100">
+                            <span contenteditable="false" class="editable-text font-semibold text-slate-800">4. น.ส.อนงค์ โสภาพงศ์</span>
+                            <span contenteditable="false" class="editable-text font-bold text-red-900">โทร. 0631345195</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-white px-3 py-2 rounded-xl border border-red-100">
+                            <span contenteditable="false" class="editable-text font-semibold text-slate-800">5. นางสุภาพ อนุพันธ์</span>
+                            <span contenteditable="false" class="editable-text font-bold text-red-900">โทร. 0937385690</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ม.7 ยาเร๊ะ (สะกดคำว่า "ยาเร๊ะ" ถูกต้อง 100%) -->
+                <div class="rounded-2xl border-2 border-slate-700 overflow-hidden shadow-sm">
+                    <div class="bg-slate-700 text-white px-4 py-2.5 font-bold text-sm sm:text-base flex items-center justify-between">
+                        <span contenteditable="false" class="editable-text">ม.7 ยาเร๊ะ</span>
+                        <span class="text-xs bg-amber-400 text-slate-900 font-bold px-2.5 py-0.5 rounded-md">อัปเดตข้อมูลได้</span>
+                    </div>
+                    <div class="p-3.5 bg-slate-50 space-y-2 text-xs sm:text-sm">
+                        <div class="flex justify-between items-center bg-white px-3 py-2 rounded-xl border border-slate-200">
+                            <span contenteditable="false" class="editable-text font-semibold text-slate-700">1. (กำลังอัปเดตข้อมูล)</span>
+                            <span contenteditable="false" class="editable-text font-medium text-slate-400">โทร. -</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-white px-3 py-2 rounded-xl border border-slate-200">
+                            <span contenteditable="false" class="editable-text font-semibold text-slate-700">2. (กำลังอัปเดตข้อมูล)</span>
+                            <span contenteditable="false" class="editable-text font-medium text-slate-400">โทร. -</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-white px-3 py-2 rounded-xl border border-slate-200">
+                            <span contenteditable="false" class="editable-text font-semibold text-slate-700">3. (กำลังอัปเดตข้อมูล)</span>
+                            <span contenteditable="false" class="editable-text font-medium text-slate-400">โทร. -</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-white px-3 py-2 rounded-xl border border-slate-200">
+                            <span contenteditable="false" class="editable-text font-semibold text-slate-700">4. (กำลังอัปเดตข้อมูล)</span>
+                            <span contenteditable="false" class="editable-text font-medium text-slate-400">โทร. -</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-white px-3 py-2 rounded-xl border border-slate-200">
+                            <span contenteditable="false" class="editable-text font-semibold text-slate-700">5. (กำลังอัปเดตข้อมูล)</span>
+                            <span contenteditable="false" class="editable-text font-medium text-slate-400">โทร. -</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ม.5 บ้านไร่ (ล่างสุดด้านขวาตามแผนที่ - ขยายเต็มความกว้างด้านล่างเพื่อความสมดุล) -->
+                <div class="md:col-span-2 rounded-2xl border-2 border-orange-600 overflow-hidden shadow-sm">
+                    <div class="bg-orange-600 text-white px-4 py-2.5 font-bold text-sm sm:text-base flex items-center justify-between">
+                        <span contenteditable="false" class="editable-text">ม.5 บ้านไร่</span>
+                        <span class="text-xs bg-white/20 px-2.5 py-0.5 rounded-md">5 ราย</span>
+                    </div>
+                    <div class="p-3.5 bg-orange-50/40 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 text-xs sm:text-sm">
+                        <div class="flex justify-between items-center bg-white px-3 py-2 rounded-xl border border-orange-200">
+                            <span contenteditable="false" class="editable-text font-semibold text-slate-800">1. สมศักดิ์ ราชแก้ว</span>
+                            <span contenteditable="false" class="editable-text font-bold text-orange-900">โทร. 0840802523</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-white px-3 py-2 rounded-xl border border-orange-200">
+                            <span contenteditable="false" class="editable-text font-semibold text-slate-800">2. อุไรวรรณ แกมแก้ว</span>
+                            <span contenteditable="false" class="editable-text font-bold text-orange-900">โทร. 0618305839</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-white px-3 py-2 rounded-xl border border-orange-200">
+                            <span contenteditable="false" class="editable-text font-semibold text-slate-800">3. ณัฐรส อ่อนสสเพชร</span>
+                            <span contenteditable="false" class="editable-text font-bold text-orange-900">โทร. 0907161085</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-white px-3 py-2 rounded-xl border border-orange-200">
+                            <span contenteditable="false" class="editable-text font-semibold text-slate-800">4. ประทุมวัลย์ ยอกอราช</span>
+                            <span contenteditable="false" class="editable-text font-bold text-orange-900">โทร. 0621300877</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-white px-3 py-2 rounded-xl border border-orange-200 sm:col-span-2 lg:col-span-2">
+                            <span contenteditable="false" class="editable-text font-semibold text-slate-800">5. พิลาศ แก้วสมหนู</span>
+                            <span contenteditable="false" class="editable-text font-bold text-orange-900">โทร. 0932685417</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- 4. ส่วนท้ายอินโฟกราฟิก (FOOTER) -->
+        <footer class="bg-[#0a192f] text-slate-300 px-5 py-3.5 text-xs flex flex-col sm:flex-row items-center justify-between gap-2 border-t-4 border-red-600">
+            <div class="flex items-center gap-2 font-medium">
+                <i class="fa-solid fa-circle-info text-amber-400"></i>
+                <span contenteditable="false" class="editable-text">ข้อมูลประสานงานเหตุอุทกภัย ตำบลสะบ้าย้อย อำเภอสะบ้าย้อย จังหวัดสงขลา</span>
+            </div>
+            <div class="text-amber-300 font-semibold">
+                สายด่วนฉุกเฉิน: 1669 (เจ็บป่วยฉุกเฉิน) • 1784 (ปภ.)
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- สคริปต์ควบคุมการแก้ไขข้อความและการบันทึกเป็นไฟล์รูปภาพ PNG -->
+    <script>
+        let isEditMode = false;
+
+        /**
+         * ฟังก์ชันแสดงการแจ้งเตือนมุมขวาล่าง
+         */
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast-notification');
+            const toastMsg = document.getElementById('toast-message');
+            const toastIcon = document.getElementById('toast-icon');
+
+            toastMsg.textContent = message;
+            if (type === 'success') {
+                toastIcon.className = 'fa-solid fa-circle-check text-emerald-400 text-lg';
+            } else if (type === 'info') {
+                toastIcon.className = 'fa-solid fa-pen-to-square text-amber-400 text-lg';
+            } else {
+                toastIcon.className = 'fa-solid fa-circle-exclamation text-red-400 text-lg';
+            }
+
+            toast.classList.remove('translate-y-24', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-24', 'opacity-0');
+            }, 3500);
+        }
+
+        /**
+         * สลับโหมดแก้ไขข้อความ (เปิด/ปิด contenteditable)
+         */
+        function toggleEditMode() {
+            isEditMode = !isEditMode;
+            const canvas = document.getElementById('infographic-canvas');
+            const editables = document.querySelectorAll('.editable-text');
+            const btn = document.getElementById('btn-toggle-edit');
+            const btnText = document.getElementById('edit-btn-text');
+
+            if (isEditMode) {
+                canvas.classList.add('edit-mode-active');
+                editables.forEach(el => el.setAttribute('contenteditable', 'true'));
+                btn.classList.remove('bg-amber-100', 'text-amber-900', 'border-amber-300');
+                btn.classList.add('bg-blue-600', 'text-white', 'border-blue-700');
+                btnText.textContent = 'เสร็จสิ้นการแก้ไข';
+                showToast('เปิดโหมดแก้ไขแล้ว คลิกที่ข้อความใดก็ได้เพื่อพิมพ์แก้ไข', 'info');
+            } else {
+                canvas.classList.remove('edit-mode-active');
+                editables.forEach(el => el.setAttribute('contenteditable', 'false'));
+                btn.classList.remove('bg-blue-600', 'text-white', 'border-blue-700');
+                btn.classList.add('bg-amber-100', 'text-amber-900', 'border-amber-300');
+                btnText.textContent = 'แก้ไขข้อมูล / เพิ่มรายชื่อ ม.7-ม.8';
+                showToast('บันทึกข้อความเรียบร้อย พร้อมกดบันทึกเป็นรูปภาพ', 'success');
+            }
+        }
+
+        /**
+         * แปลงอินโฟกราฟิกทั้งหมดเป็นรูปภาพ PNG ความละเอียดสูงด้วย html2canvas
+         */
+        async function downloadInfographic() {
+            // หากเปิดโหมดแก้ไขอยู่ ให้ปิดกรอบเส้นประสีเหลืองก่อนบันทึกภาพ
+            if (isEditMode) {
+                toggleEditMode();
+            }
+
+            const btn = document.getElementById('btn-download-png');
+            const originalHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>กำลังสร้างรูปภาพคมชัด...</span>';
+
+            try {
+                // รอให้ฟอนต์โหลดสมบูรณ์
+                await document.fonts.ready;
+
+                const targetElement = document.getElementById('infographic-canvas');
+                
+                // ใช้ scale: 2.5 เพื่อให้ตัวอักษรคมกริบแม้ซูมดูในมือถือ
+                const canvas = await html2canvas(targetElement, {
+                    scale: 2.5,
+                    useCORS: true,
+                    backgroundColor: '#ffffff',
+                    logging: false
+                });
+
+                const imageData = canvas.toDataURL('image/png', 1.0);
+                const downloadLink = document.createElement('a');
+                downloadLink.href = imageData;
+                downloadLink.download = 'อินโฟกราฟิก_อสม_ศูนย์อพยพน้ำท่วม_ต_สะบ้าย้อย.png';
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                document.body.removeChild(downloadLink);
+
+                showToast('ดาวน์โหลดรูปภาพความละเอียดสูงสำเร็จ!', 'success');
+            } catch (error) {
+                console.error('เกิดข้อผิดพลาดในการสร้างรูปภาพ:', error);
+                showToast('ไม่สามารถสร้างไฟล์อัตโนมัติได้ กรุณากดปุ่ม พิมพ์ / PDF แทน', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+            }
+        }
+    </script>
+</body>
+</html>
