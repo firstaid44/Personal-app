@@ -20,11 +20,19 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
+        html {
+            /* ขยายขนาดตัวอักษรทั้งหน้าในคราวเดียว (คลาส text-xs/sm/base/lg ของ Tailwind อิงหน่วย rem) */
+            font-size: 130%;
+        }
         body {
             font-family: 'Prompt', sans-serif;
             background-color: #e2e8f0;
             color: #0f172a;
         }
+
+        /* แถว ชื่อ ↔ เบอร์โทร: ตัวอักษรใหญ่ขึ้นแล้ว ห้ามเบอร์โทรขึ้นบรรทัดใหม่กลางเลข ให้ชื่อตัดบรรทัดแทน */
+        #page2-canvas .justify-between { gap: 0.75rem; }
+        #page2-canvas .justify-between > span:last-child { white-space: nowrap; }
 
         /* ลวดลายแถบเตือนภัยฉุกเฉิน */
         .hazard-stripe {
@@ -67,7 +75,7 @@
 <body class="min-h-screen py-4 px-2 sm:px-4 flex flex-col items-center">
 
     <!-- แถบเครื่องมือควบคุม (อยู่นอกกรอบอินโฟกราฟิก จะไม่ติดไปในรูปภาพที่บันทึก) -->
-    <div id="control-toolbar" class="w-full max-w-[960px] bg-white rounded-2xl shadow-lg p-3 sm:p-4 mb-5 border border-slate-200 flex flex-wrap items-center justify-between gap-3 sticky top-2 z-50">
+    <div id="control-toolbar" class="w-full max-w-[1800px] bg-white rounded-2xl shadow-lg p-3 sm:p-4 mb-5 border border-slate-200 flex flex-wrap items-center justify-between gap-3 sticky top-2 z-50">
         <div class="flex items-center gap-2.5">
             <div class="w-10 h-10 rounded-xl bg-blue-900 text-white flex items-center justify-center text-lg shadow-sm">
                 <i class="fa-solid fa-file-image"></i>
@@ -79,6 +87,12 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
+            <!-- ปุ่มกลับหน้าหลัก -->
+            <a href="index.html" class="flex-1 sm:flex-none px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 transition flex items-center justify-center gap-2 shadow-sm no-underline">
+                <i class="fa-solid fa-arrow-left"></i>
+                <span>กลับหน้าหลัก</span>
+            </a>
+
             <!-- ปุ่มสลับโหมดแก้ไขข้อมูล -->
             <button id="btn-toggle-edit" onclick="toggleEditMode()" class="flex-1 sm:flex-none px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 transition flex items-center justify-center gap-2 shadow-sm">
                 <i class="fa-solid fa-pen-to-square"></i>
@@ -108,7 +122,7 @@
     <!-- ===================================================================== -->
     <!-- พื้นที่อินโฟกราฟิกหลัก (ที่จะถูกแปลงเป็นรูปภาพเมื่อกดปุ่มบันทึก) -->
     <!-- ===================================================================== -->
-    <div id="infographic-canvas" class="w-full max-w-[960px] bg-white shadow-2xl rounded-none sm:rounded-2xl overflow-hidden border border-slate-300">
+    <div id="infographic-canvas" class="w-full max-w-[1800px] bg-white shadow-2xl rounded-none sm:rounded-2xl overflow-hidden border border-slate-300">
         <!-- หน้า 1 เมื่อบันทึกเป็นรูป: ส่วนหัว + แผนที่สังเขป -->
         <div id="page1-canvas">
         <!-- 1. ส่วนหัว (HEADER) -->
@@ -402,7 +416,7 @@
                     </div>
                     <span class="text-xs bg-red-800 px-2.5 py-0.5 rounded-full text-red-100">คลิกแก้ไขข้อความได้</span>
                 </div>
-                <div class="p-3.5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs sm:text-sm font-semibold text-slate-800">
+                <div class="p-3.5 grid grid-cols-1 md:grid-cols-2 gap-2.5 text-base sm:text-lg font-semibold text-slate-800">
                     <div class="flex items-center gap-2 bg-red-50/70 px-3 py-2 rounded-xl border border-red-100">
                         <span class="w-2.5 h-2.5 rounded-full bg-red-600 shrink-0"></span>
                         <span contenteditable="false" class="editable-text">โรงเรียนสะบ้าย้อย ม.1</span>
@@ -455,15 +469,15 @@
             </div>
 
             <!-- แถวที่ 1: โซนหมู่ที่ 1 (3 โซนย่อย) -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5 mb-4">
+            <div class="grid grid-cols-1 min-[1440px]:grid-cols-3 gap-3.5 mb-4">
                 
                 <!-- ม.1 โซนแลแบงตก-ทรายขาวใหม่ -->
                 <div class="rounded-2xl border-2 border-slate-800 overflow-hidden shadow-sm flex flex-col">
-                    <div class="bg-slate-800 text-white px-3.5 py-2.5 font-bold text-sm flex items-center justify-between">
+                    <div class="bg-slate-800 text-white px-3.5 py-2.5 font-bold text-lg flex items-center justify-between">
                         <span contenteditable="false" class="editable-text">ม.1 โซนแลแบงตก-ทรายขาวใหม่</span>
-                        <span class="text-[11px] bg-white/20 px-2 py-0.5 rounded-md">3 ราย</span>
+                        <span class="text-sm bg-white/20 px-2 py-0.5 rounded-md">3 ราย</span>
                     </div>
-                    <div class="p-3 bg-slate-50 flex-1 space-y-2 text-xs sm:text-[13px]">
+                    <div class="p-3 bg-slate-50 flex-1 space-y-2 text-base sm:text-lg">
                         <div class="flex justify-between items-center bg-white p-2 rounded-lg border border-slate-200">
                             <span contenteditable="false" class="editable-text font-semibold text-slate-800">1. นารีสันติ์ หมินเส็น</span>
                             <span contenteditable="false" class="editable-text font-bold text-blue-900 tracking-wide">0979528267</span>
@@ -481,11 +495,11 @@
 
                 <!-- ม.1 โซนแลแบงออก -->
                 <div class="rounded-2xl border-2 border-orange-600 overflow-hidden shadow-sm flex flex-col">
-                    <div class="bg-orange-600 text-white px-3.5 py-2.5 font-bold text-sm flex items-center justify-between">
+                    <div class="bg-orange-600 text-white px-3.5 py-2.5 font-bold text-lg flex items-center justify-between">
                         <span contenteditable="false" class="editable-text">ม.1 โซนแลแบงออก</span>
-                        <span class="text-[11px] bg-white/20 px-2 py-0.5 rounded-md">3 ราย</span>
+                        <span class="text-sm bg-white/20 px-2 py-0.5 rounded-md">3 ราย</span>
                     </div>
-                    <div class="p-3 bg-orange-50/60 flex-1 space-y-2 text-xs sm:text-[13px]">
+                    <div class="p-3 bg-orange-50/60 flex-1 space-y-2 text-base sm:text-lg">
                         <div class="flex justify-between items-center bg-white p-2 rounded-lg border border-orange-200">
                             <span contenteditable="false" class="editable-text font-semibold text-slate-800">1. บีเดาะ สังเกะ</span>
                             <span contenteditable="false" class="editable-text font-bold text-orange-900 tracking-wide">08283143269</span>
@@ -503,11 +517,11 @@
 
                 <!-- ม.1 โซนแขวง -->
                 <div class="rounded-2xl border-2 border-red-700 overflow-hidden shadow-sm flex flex-col">
-                    <div class="bg-red-700 text-white px-3.5 py-2.5 font-bold text-sm flex items-center justify-between">
+                    <div class="bg-red-700 text-white px-3.5 py-2.5 font-bold text-lg flex items-center justify-between">
                         <span contenteditable="false" class="editable-text">ม.1 โซนแขวง</span>
-                        <span class="text-[11px] bg-white/20 px-2 py-0.5 rounded-md">3 ราย</span>
+                        <span class="text-sm bg-white/20 px-2 py-0.5 rounded-md">3 ราย</span>
                     </div>
-                    <div class="p-3 bg-red-50/50 flex-1 space-y-2 text-xs sm:text-[13px]">
+                    <div class="p-3 bg-red-50/50 flex-1 space-y-2 text-base sm:text-lg">
                         <div class="flex justify-between items-center bg-white p-2 rounded-lg border border-red-200">
                             <span contenteditable="false" class="editable-text font-semibold text-slate-800">1. สุคนธ์ อนุพันธ์</span>
                             <span contenteditable="false" class="editable-text font-bold text-red-900 tracking-wide">0655840663</span>
@@ -526,15 +540,15 @@
             </div>
 
             <!-- แถวที่ 2: หมู่บ้านเรียงตามแผนที่ (ม.4 บ่อทอง -> ม.8 น้ำค้าง -> ม.6 ทำเนียบ -> ม.7 ยาเร๊ะ -> ม.5 บ้านไร่) -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
 
                 <!-- ม.4 บ่อทอง -->
                 <div class="rounded-2xl border-2 border-[#0f294a] overflow-hidden shadow-sm">
-                    <div class="bg-[#0f294a] text-white px-4 py-2.5 font-bold text-sm sm:text-base flex items-center justify-between">
+                    <div class="bg-[#0f294a] text-white px-4 py-2.5 font-bold text-lg sm:text-xl flex items-center justify-between">
                         <span contenteditable="false" class="editable-text">ม.4 บ่อทอง</span>
                         <span class="text-xs bg-white/15 px-2.5 py-0.5 rounded-md">5 ราย</span>
                     </div>
-                    <div class="p-3.5 bg-blue-50/40 space-y-2 text-xs sm:text-sm">
+                    <div class="p-3.5 bg-blue-50/40 space-y-2 text-base sm:text-lg">
                         <div class="flex justify-between items-center bg-white px-3 py-2 rounded-xl border border-slate-200">
                             <span contenteditable="false" class="editable-text font-semibold text-slate-800">1. อุษณียาภรณ์ บุญก่อเกื้อ</span>
                             <span contenteditable="false" class="editable-text font-bold text-[#0f294a]">โทร. 0801750749</span>
@@ -560,11 +574,11 @@
 
                 <!-- ม.8 น้ำค้าง (เรียงต่อจาก ม.4 บ่อทอง ตามแผนที่) -->
                 <div class="rounded-2xl border-2 border-slate-700 overflow-hidden shadow-sm">
-                    <div class="bg-slate-700 text-white px-4 py-2.5 font-bold text-sm sm:text-base flex items-center justify-between">
+                    <div class="bg-slate-700 text-white px-4 py-2.5 font-bold text-lg sm:text-xl flex items-center justify-between">
                         <span contenteditable="false" class="editable-text">ม.8 น้ำค้าง</span>
                         <span class="text-xs bg-amber-400 text-slate-900 font-bold px-2.5 py-0.5 rounded-md">อัปเดตข้อมูลได้</span>
                     </div>
-                    <div class="p-3.5 bg-slate-50 space-y-2 text-xs sm:text-sm">
+                    <div class="p-3.5 bg-slate-50 space-y-2 text-base sm:text-lg">
                         <div class="flex justify-between items-center bg-white px-3 py-2 rounded-xl border border-slate-200">
                             <span contenteditable="false" class="editable-text font-semibold text-slate-700">1. (กำลังอัปเดตข้อมูล)</span>
                             <span contenteditable="false" class="editable-text font-medium text-slate-400">โทร. -</span>
@@ -590,11 +604,11 @@
 
                 <!-- ม.6 ทำเนียบ -->
                 <div class="rounded-2xl border-2 border-red-800 overflow-hidden shadow-sm">
-                    <div class="bg-red-800 text-white px-4 py-2.5 font-bold text-sm sm:text-base flex items-center justify-between">
+                    <div class="bg-red-800 text-white px-4 py-2.5 font-bold text-lg sm:text-xl flex items-center justify-between">
                         <span contenteditable="false" class="editable-text">ม.6 ทำเนียบ</span>
                         <span class="text-xs bg-white/15 px-2.5 py-0.5 rounded-md">5 ราย</span>
                     </div>
-                    <div class="p-3.5 bg-red-50/40 space-y-2 text-xs sm:text-sm">
+                    <div class="p-3.5 bg-red-50/40 space-y-2 text-base sm:text-lg">
                         <div class="flex justify-between items-center bg-white px-3 py-2 rounded-xl border border-red-100">
                             <span contenteditable="false" class="editable-text font-semibold text-slate-800">1. น.ส.จรินารภ แก้วกับทอง</span>
                             <span contenteditable="false" class="editable-text font-bold text-red-900">โทร. 0612918135</span>
@@ -620,41 +634,41 @@
 
                 <!-- ม.7 ยาเร๊ะ (สะกดคำว่า "ยาเร๊ะ" ถูกต้อง 100%) -->
                 <div class="rounded-2xl border-2 border-slate-700 overflow-hidden shadow-sm">
-                    <div class="bg-slate-700 text-white px-4 py-2.5 font-bold text-sm sm:text-base flex items-center justify-between">
+                    <div class="bg-slate-700 text-white px-4 py-2.5 font-bold text-lg sm:text-xl flex items-center justify-between">
                         <span contenteditable="false" class="editable-text">ม.7 ยาเร๊ะ</span>
-                        <span class="text-xs bg-amber-400 text-slate-900 font-bold px-2.5 py-0.5 rounded-md">อัปเดตข้อมูลได้</span>
+                        <span class="text-xs bg-white/15 px-2.5 py-0.5 rounded-md">5 ราย</span>
                     </div>
-                    <div class="p-3.5 bg-slate-50 space-y-2 text-xs sm:text-sm">
+                    <div class="p-3.5 bg-slate-50 space-y-2 text-base sm:text-lg">
                         <div class="flex justify-between items-center bg-white px-3 py-2 rounded-xl border border-slate-200">
-                            <span contenteditable="false" class="editable-text font-semibold text-slate-700">1. (กำลังอัปเดตข้อมูล)</span>
+                            <span contenteditable="false" class="editable-text font-semibold text-slate-800">1. น.ส.อารี เด็นอาเร๊ะ</span>
                             <span contenteditable="false" class="editable-text font-medium text-slate-400">โทร. -</span>
                         </div>
                         <div class="flex justify-between items-center bg-white px-3 py-2 rounded-xl border border-slate-200">
-                            <span contenteditable="false" class="editable-text font-semibold text-slate-700">2. (กำลังอัปเดตข้อมูล)</span>
+                            <span contenteditable="false" class="editable-text font-semibold text-slate-800">2. น.ส.กัลยา หมัดตานี</span>
                             <span contenteditable="false" class="editable-text font-medium text-slate-400">โทร. -</span>
                         </div>
                         <div class="flex justify-between items-center bg-white px-3 py-2 rounded-xl border border-slate-200">
-                            <span contenteditable="false" class="editable-text font-semibold text-slate-700">3. (กำลังอัปเดตข้อมูล)</span>
+                            <span contenteditable="false" class="editable-text font-semibold text-slate-800">3. นางนูรียัน มะแอ</span>
                             <span contenteditable="false" class="editable-text font-medium text-slate-400">โทร. -</span>
                         </div>
                         <div class="flex justify-between items-center bg-white px-3 py-2 rounded-xl border border-slate-200">
-                            <span contenteditable="false" class="editable-text font-semibold text-slate-700">4. (กำลังอัปเดตข้อมูล)</span>
+                            <span contenteditable="false" class="editable-text font-semibold text-slate-800">4. น.ส.สมิตนันท์ ศรศิษ</span>
                             <span contenteditable="false" class="editable-text font-medium text-slate-400">โทร. -</span>
                         </div>
                         <div class="flex justify-between items-center bg-white px-3 py-2 rounded-xl border border-slate-200">
-                            <span contenteditable="false" class="editable-text font-semibold text-slate-700">5. (กำลังอัปเดตข้อมูล)</span>
+                            <span contenteditable="false" class="editable-text font-semibold text-slate-800">5. น.ส.เสาวนิตย์ ทองดอเลาะ</span>
                             <span contenteditable="false" class="editable-text font-medium text-slate-400">โทร. -</span>
                         </div>
                     </div>
                 </div>
 
                 <!-- ม.5 บ้านไร่ (ล่างสุดด้านขวาตามแผนที่ - ขยายเต็มความกว้างด้านล่างเพื่อความสมดุล) -->
-                <div class="md:col-span-2 rounded-2xl border-2 border-orange-600 overflow-hidden shadow-sm">
-                    <div class="bg-orange-600 text-white px-4 py-2.5 font-bold text-sm sm:text-base flex items-center justify-between">
+                <div class="xl:col-span-2 rounded-2xl border-2 border-orange-600 overflow-hidden shadow-sm">
+                    <div class="bg-orange-600 text-white px-4 py-2.5 font-bold text-lg sm:text-xl flex items-center justify-between">
                         <span contenteditable="false" class="editable-text">ม.5 บ้านไร่</span>
                         <span class="text-xs bg-white/20 px-2.5 py-0.5 rounded-md">5 ราย</span>
                     </div>
-                    <div class="p-3.5 bg-orange-50/40 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 text-xs sm:text-sm">
+                    <div class="p-3.5 bg-orange-50/40 grid grid-cols-1 xl:grid-cols-2 gap-2.5 text-base sm:text-lg">
                         <div class="flex justify-between items-center bg-white px-3 py-2 rounded-xl border border-orange-200">
                             <span contenteditable="false" class="editable-text font-semibold text-slate-800">1. สมศักดิ์ ราชแก้ว</span>
                             <span contenteditable="false" class="editable-text font-bold text-orange-900">โทร. 0840802523</span>
@@ -671,7 +685,7 @@
                             <span contenteditable="false" class="editable-text font-semibold text-slate-800">4. ประทุมวัลย์ ยอกอราช</span>
                             <span contenteditable="false" class="editable-text font-bold text-orange-900">โทร. 0621300877</span>
                         </div>
-                        <div class="flex justify-between items-center bg-white px-3 py-2 rounded-xl border border-orange-200 sm:col-span-2 lg:col-span-2">
+                        <div class="flex justify-between items-center bg-white px-3 py-2 rounded-xl border border-orange-200 xl:col-span-2">
                             <span contenteditable="false" class="editable-text font-semibold text-slate-800">5. พิลาศ แก้วสมหนู</span>
                             <span contenteditable="false" class="editable-text font-bold text-orange-900">โทร. 0932685417</span>
                         </div>
